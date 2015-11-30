@@ -3,7 +3,6 @@
 #include <math.h>
 #include "iniparser.h"
 #include "utilities.h"
-
 extern int DEBUGGING;
 
 char warning[WARNING_LENGTH];  /* this is global, so rename if conflict */ 
@@ -457,7 +456,7 @@ int tokenizeDelimiter(char *input, char *tokenArray[MAX_TOKENS], char *delimiter
         }
       }
       if (unprintable == 1) {
-        bzero(input,strlen(input));
+        memset(input, '\0', strlen(input));
         length = 0;
       }
     }

@@ -10,9 +10,6 @@
 #include "utilities.h"
 #include "fitphase.h"
 #include "fitamplitude.h"
-#ifndef LINUX
-  #include "bzero.c"
-#endif
 #include "test.h"
 #include "pointingangles.h"
 #include "getarrays.h"
