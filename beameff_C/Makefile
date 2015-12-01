@@ -1,4 +1,4 @@
-# Project: Project1
+# Project: beameff_64
 # Makefile created by Dev-C++ 4.9.9.2
 # then modified by T. Hunter for linux
 
