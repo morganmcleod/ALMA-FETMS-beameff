@@ -1,4 +1,5 @@
 #include "SCANDATA.h"
+#include "constants.h"
 
 extern char stdOutDirectory[];
 
@@ -36,7 +37,7 @@ extern int RemoveKeys(dictionary *scan_file_dict);
 extern int GetNumberOfScanSetsForBand(dictionary *scan_file_dict, int band);
 extern int GetNumberOfScanSets(dictionary *scan_file_dict);
 extern int tokenizeDelimiter(char *input, char *tokenArray[MAX_TOKENS], char *delimiter);
-extern int PickNominalAngles(int almaBand, float *xtarget, float *ytarget, int ACA7meter);
+extern int PickNominalAngles(int almaBand, float *xtarget, float *ytarget, PointingOptionType pointing);
 extern int GetUniqueArrayInt(int invals[],int arrsize);
 extern int ReplaceDelimiter(char input[400], const char *olddelim, const char *newdelim);
 

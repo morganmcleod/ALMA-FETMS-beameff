@@ -4,7 +4,7 @@
 #include "utilities.h"
 #include "plotcircles.h"
 #include "outputfilefunctions.h"
-#define SUBREF_RADIUS_DEGREES 3.58
+#include "constants.h"
 
 int PlotCircles(dictionary *scan_file_dict){
     char commandfile[400];
@@ -31,7 +31,8 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
     char linebuffer[500];
     char *title,pointtitle[100];
     char titlebuffer[500];
-    float radius = SUBREF_RADIUS_DEGREES, xcenter, ycenter;
+    float subreflector_radius = subreflector_radius12m;
+    float xcenter, ycenter;
     char plotcommand[500];
     char bandkey[10];
     SCANDATA *scan_array;
@@ -42,7 +43,7 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
     char tempseckey[200];
     char centers[10];
     char nomLegend[30];
-    int ACA7meter = 0;
+    PointingOptionType pointingOption = NOMINAL;
     
     num_scans = GetNumberOfScans(scan_file_dict);
     scan_array = (SCANDATA *) malloc (num_scans * sizeof(SCANDATA));
@@ -57,10 +58,13 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
      }
     
     strcpy(centers, iniparser_getstring (scan_file_dict, "settings:centers", "nominal"));
-    if(!strcmp(centers, "7meter")) {
-        ACA7meter = 1;
-    }
+    if (!strcmp(centers, "7meter")) {
+        pointingOption = ACA_7METER;
+        subreflector_radius = subreflector_radius7m;
 
+    } else if(!strcmp(centers, "band1test")) {
+        pointingOption = BAND1_TEST;
+    }
     
     gnuplot = iniparser_getstring (scan_file_dict,"settings:gnuplot", "null");
 
@@ -72,7 +76,7 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
 
     if (bandfound == 1){
         remove(commandfile);
-        PickNominalAngles(band, &xcenter, &ycenter, ACA7meter);
+        PickNominalAngles(band, &xcenter, &ycenter, pointingOption);
         outputdirectory = iniparser_getstring (scan_file_dict,"settings:outputdirectory", "null");
         sprintf(plotfilename,"%sband%d_pointingangles.png",outputdirectory,band);
         sprintf(titlebuffer,"Band %d Pointing Angles",band);
@@ -96,13 +100,13 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
         fputs("set key outside\r\n",fileptr);
         
         
-        sprintf(plotcommand,"set xrange [%f:%f]\r\n",xcenter-(0.5*radius)-2,xcenter+(0.5*radius)+2);
+        sprintf(plotcommand,"set xrange [%f:%f]\r\n",xcenter-(0.5*subreflector_radius)-2,xcenter+(0.5*subreflector_radius)+2);
         fputs(plotcommand,fileptr);
-        sprintf(plotcommand,"set yrange [%f:%f]\r\n",ycenter-(0.5*radius)-2,ycenter+(0.5*radius)+2);
+        sprintf(plotcommand,"set yrange [%f:%f]\r\n",ycenter-(0.5*subreflector_radius)-2,ycenter+(0.5*subreflector_radius)+2);
         fputs(plotcommand,fileptr);
         fputs("set size square\r\n",fileptr);
         sprintf(plotcommand,"plot [0:2*pi] %f+%.2f*sin(t),%f+%.2f*cos(t) title 'subreflector'",
-		xcenter,SUBREF_RADIUS_DEGREES,ycenter,SUBREF_RADIUS_DEGREES);
+                xcenter, subreflector_radius, ycenter, subreflector_radius);
         //fputs(plotcommand,fileptr);
         //Print nominal pointing angle
         

@@ -15,6 +15,11 @@
 
 extern int DEBUGGING;
 
+// forward declare helper function.
+int GetAdditionalEfficiencies(SCANDATA *copol_pol0, SCANDATA *xpol_pol0,
+                              SCANDATA *copol_pol1, SCANDATA *xpol_pol1,
+                              PointingOptionType pointingOption);
+
 int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilename) {
     SCANDATA scans[5];
     int num_scans_in_file, i, pol;
@@ -26,7 +31,7 @@ int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilenam
     char centers[10];       // 'nominal', 'actual', or '7meter'
     char sectionName_pkey[200];
     float subreflector_radius = subreflector_radius12m;
-    int ACA7meter = 0;
+    PointingOptionType pointingOption = NOMINAL;
 
     if (DEBUGGING) {
         fprintf(stderr,"Enter GetEfficiencies.\n");
@@ -52,9 +57,12 @@ int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilenam
     }
 
     strcpy(centers, iniparser_getstring (scan_file_dict, "settings:centers", "nominal"));
-    if(!strcmp(centers, "7meter")) {
+    if (!strcmp(centers, "7meter")) {
+        pointingOption = ACA_7METER;
         subreflector_radius = subreflector_radius7m;
-        ACA7meter = 1;
+
+    } else if(!strcmp(centers, "band1test")) {
+        pointingOption = BAND1_TEST;
     }
 
     if (DEBUGGING) {
@@ -92,7 +100,7 @@ int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilenam
                     GetScanData(scan_file_dict, sectionname, &scans[1]);
                     beamCenters(&scans[1],"nf",delimiter);
                     beamCenters(&scans[1],"ff",delimiter);
-                    PickNominalAngles(scans[1].band,&scans[1].az_nominal,&scans[1].el_nominal, ACA7meter);
+                    PickNominalAngles(scans[1].band,&scans[1].az_nominal,&scans[1].el_nominal, pointingOption);
                     CheckSideband(&scans[1]);
                 }
                 if ((pol == 0) && !strcmp(scantype,"xpol")){
@@ -102,7 +110,7 @@ int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilenam
                     GetScanData(scan_file_dict, sectionname, &scans[3]);
                     beamCenters(&scans[3],"nf",delimiter);
                     beamCenters(&scans[3],"ff",delimiter);
-                    PickNominalAngles(scans[3].band,&scans[3].az_nominal,&scans[3].el_nominal, ACA7meter);
+                    PickNominalAngles(scans[3].band,&scans[3].az_nominal,&scans[3].el_nominal, pointingOption);
                     CheckSideband(&scans[3]);
                 }
                 if ((pol == 1) && !strcmp(scantype,"xpol")){
@@ -157,7 +165,7 @@ int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilenam
     scans[3].squint = (100.0 * scans[3].squint_arcseconds) / (1.15 * lambda * 57.3 * 60 * 60 /12000.0 );
 */
 
-    GetAdditionalEfficiencies(&scans[1], &scans[2], &scans[3], &scans[4], centers);
+    GetAdditionalEfficiencies(&scans[1], &scans[2], &scans[3], &scans[4], pointingOption);
 
     WriteCopolData(scan_file_dict, &scans[1], outputfilename);
     PlotCopol(&scans[1], scan_file_dict);
@@ -182,7 +190,7 @@ int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilenam
 
 int GetAdditionalEfficiencies(SCANDATA *copol_pol0, SCANDATA *xpol_pol0,
                               SCANDATA *copol_pol1, SCANDATA *xpol_pol1,
-                              char *centers)
+                              PointingOptionType pointingOption)
 {
 
     float tau=0.25;
@@ -194,7 +202,7 @@ int GetAdditionalEfficiencies(SCANDATA *copol_pol0, SCANDATA *xpol_pol0,
     float pi=PI;
     float beta;
 
-    if(!strcmp(centers,"7meter")) {
+    if(pointingOption == ACA_7METER) {
         M=21.775537595;
         psi_o=68.4694425916;
         psi_m=3.5798212165;

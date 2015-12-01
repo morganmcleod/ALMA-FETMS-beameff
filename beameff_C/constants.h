@@ -8,4 +8,11 @@ extern float PI;
 extern float subreflector_radius12m;
 extern float subreflector_radius7m;
 
+typedef enum {
+    NOMINAL,
+    ACTUAL,
+    ACA_7METER,
+    BAND1_TEST
+} PointingOptionType;
+
 #endif
