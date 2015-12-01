@@ -16,7 +16,7 @@ const int nterms_amplitude = 6;
 int FitAmplitude(SCANDATA *currentscan) { 
     float ftol = 1.0e-5;
     int iter_amp; 
-    float fret_amp, amp_fit_term;
+    float fret_amp;
     float p[nterms_amplitude+1];
     void (*dfunctionamp)(float p[], float df[]);
     float (*functionamp)(float p[]);

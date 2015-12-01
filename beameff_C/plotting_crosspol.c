@@ -9,12 +9,11 @@ extern char *VersionNumber;
 
 int PlotCrosspol(SCANDATA *xpolscan, dictionary *scan_file_dict){ 
  
-    char *opencommand, *commandfilename, *gnuplot, *outputdirectory, *outputfilename;
+    char *gnuplot, *outputdirectory;
     char fnamebuffer[500];
     char commandfilebuffer[500];
     char commandbuffer[500];
     char contourfilenamebuffer[500];
-    char *contourfilename;
     
     gnuplot = iniparser_getstring (scan_file_dict,"settings:gnuplot", "null");
     outputdirectory = iniparser_getstring (scan_file_dict,"settings:outputdirectory", "null");
@@ -59,7 +58,7 @@ int PlotCrosspol(SCANDATA *xpolscan, dictionary *scan_file_dict){
 }
 
 int WriteCrosspolDataFile(SCANDATA *currentscan, char *outfilename, char *listingtype){
-    FILE *fileptr,*fileptrcontour;
+    FILE *fileptr;
     char textline[500];
     long int i;
     int seriescount;
@@ -81,29 +80,6 @@ int WriteCrosspolDataFile(SCANDATA *currentscan, char *outfilename, char *listin
   //If Nearfield listing
   amp_norm_value = currentscan->max_nf_amp_db - currentscan->max_dbdifference_nf;
 
-  //Previous version
-  /*
-  if (!strcmp(listingtype,"nf")){
-      serieslength_float = sqrt(currentscan->nf_pts);
-      serieslength_int=serieslength_float;
-      seriescount=0;
-      //for (i=0;i<currentscan->nf_pts;i++){
-      for (i=0;i<currentscan->nf_pts;i++){
-        //amp_norm_value = currentscan->nf_amp_db[i] + fabs(currentscan->max_nf_amp_db) - currentscan->max_dbdifference_nf;  
-        sprintf(textline, "%f\t%f\t%f\t%f\r\n", currentscan->nf_x[currentscan->nf_pts - i - 1],currentscan->nf_y[currentscan->nf_pts - i - 1],
-        currentscan->nf_amp_db[i] - (currentscan->max_nf_amp_db + currentscan->max_dbdifference_nf),
-        currentscan->nf_phase_deg[i]);
-        fputs(textline,fileptr);
-        seriescount++;
-       // if (seriescount==serieslength_int){
-        if (seriescount==currentscan->nf_xpts){                                   
-            fputs("\r\n",fileptr);
-            seriescount=0;
-        }
-      }
-  }*/
-  
-  //New version
   if (!strcmp(listingtype,"nf")){
       serieslength_float = sqrt(currentscan->nf_pts);
       serieslength_int=serieslength_float;
@@ -133,31 +109,6 @@ int WriteCrosspolDataFile(SCANDATA *currentscan, char *outfilename, char *listin
       }
   }
   
-  
-  
-  float tempamp;
-
-  //Previous version
-  /*
-  if (!strcmp(listingtype,"ff")){                         
-      serieslength_float = sqrt(currentscan->ff_pts);
-      serieslength_int=serieslength_float;
-      seriescount=0;
-      for (i=0;i<currentscan->ff_pts;i++){
-        sprintf(textline, "%f\t%f\t%f\t%f\r\n", currentscan->ff_az[currentscan->ff_pts - i - 1],currentscan->ff_el[currentscan->ff_pts - i - 1],
-        currentscan->ff_amp_db[i] - (currentscan->max_ff_amp_db + currentscan->max_dbdifference),
-        currentscan->ff_phase_deg[i]);
-        fputs(textline,fileptr);
-        seriescount++;
-        if (seriescount==serieslength_int){
-            fputs("\r\n",fileptr);
-            seriescount=0;
-        }
-      }
-  } */
-  
-  
-  //Test version
   if (!strcmp(listingtype,"ff")){                         
       serieslength_float = sqrt(currentscan->ff_pts);
       serieslength_int=serieslength_float;
@@ -184,22 +135,22 @@ int WriteCrosspolDataFile(SCANDATA *currentscan, char *outfilename, char *listin
 int WriteCrosspolNF_CommandFile(SCANDATA *currentscan, char *outfilename, 
     dictionary *scan_file_dict,char *datafilename,char *datatype){
     FILE *fileptr;
-    char textline[500];
-    long int i;
-    int seriescount;
-    float serieslength_float;
-    long int serieslength_int;
-    char plotfilename[500],*outputdirectory;
-    char plotnametemp[500];
+    char plotfilename[500], *outputdirectory;
     char linebuffer[500];
     char *title;
     char titlebuffer[500];
-    char *writeval;
 
     remove(outfilename);
     outputdirectory = iniparser_getstring (scan_file_dict,"settings:outputdirectory", "null");
-    sprintf(plotfilename,"%sband%d_pol%d_%s_%dghz_nf%s_tilt%d_scanset_%d.png",outputdirectory,currentscan->band,
-    currentscan->pol,currentscan->type,currentscan->f,datatype,currentscan->tilt,currentscan->scanset);
+    sprintf(plotfilename, "%sband%d_pol%d_%s_%dghz_nf%s_tilt%d_scanset_%d.png",
+            outputdirectory,
+            currentscan -> band,
+            currentscan -> pol,
+            currentscan -> type,
+            currentscan -> f,
+            datatype,
+            currentscan -> tilt,
+            currentscan->scanset);
     sprintf(titlebuffer,"band %d, pol %d %s, %d ghz, tilt %d",currentscan->band,currentscan->pol
     ,currentscan->type,currentscan->f,currentscan->tilt);
     title = titlebuffer;
@@ -277,12 +228,7 @@ int WriteCrosspolNF_CommandFile(SCANDATA *currentscan, char *outfilename,
 int WriteCrosspolFF_CommandFile(SCANDATA *currentscan, char *outfilename, 
    dictionary *scan_file_dict,char *datafilename, char *listingtype){
     FILE *fileptr;
-    char textline[500];
-    long int i;
-    int seriescount;
-    float serieslength_float;
-    long int serieslength_int;
-    char plotfilename[500],*outputdirectory;
+    char plotfilename[500], *outputdirectory;
     char linebuffer[500];
     char *title;
     char titlebuffer[500];

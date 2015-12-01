@@ -329,7 +329,7 @@ int GetNumberOfScanSetsForBand(dictionary *scan_file_dict, int band){
     int result=0;
     int tempmin=0;
     int num_sets=0;
-    int i,tempband;
+    int i;
     char ibuf[5];
     char sectionname[10];
     char section_key[30];
@@ -539,8 +539,7 @@ int GetUniqueArrayInt(int invals[], int arrsize) {
     char *result = NULL;
 
     // Initialize the two string buffers to empty:
-    sprintf(tempstr1, "");
-    sprintf(tempstr2, "");
+    tempstr1[0] = tempstr2[0] = '\0';
 
     // Print all the values into the two temporary strings, separated by the delimiter:
     for (i = 0; i < arrsize; i++) {
@@ -580,7 +579,7 @@ int ReplaceDelimiter(char input[400], const char *olddelim, const char *newdelim
 
     printf("input= %s\n",input);
     
-    sprintf(resultstr,"");
+    resultstr[0] = '\0';
     temptoken = strtok(input,olddelim);
     sprintf(resultstr,"%s%s%s",resultstr,temptoken,newdelim);
     while(temptoken) {

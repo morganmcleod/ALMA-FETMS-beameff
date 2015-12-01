@@ -9,11 +9,7 @@
 int PlotCircles(dictionary *scan_file_dict){
     char commandfile[400];
     char *outputdirectory;
-    char commandline[400];
-    dictionary *input_dict, *output_dict;
-    int i, num_scans;
-    SCANDATA *scanarray;
-    char *sectionname;
+    int i;
     
     outputdirectory = iniparser_getstring (scan_file_dict,"settings:outputdirectory", "null");
     sprintf(commandfile,"%scirclecommands.txt",outputdirectory);
@@ -28,24 +24,18 @@ int PlotCircles(dictionary *scan_file_dict){
 int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile){
 
     FILE *fileptr;
-    char textline[500],commandline[500];
-    int i,num_scans;
-    int seriescount;
+    char commandline[500];
+    int i, num_scans;
     char *gnuplot;
-    float serieslength_float;
-    long int serieslength_int;
     char plotfilename[500],*outputdirectory;
-    char plotnametemp[500],sectionname[10];
     char linebuffer[500];
     char *title,pointtitle[100];
     char titlebuffer[500];
-    char *writeval;
-    float radius=SUBREF_RADIUS_DEGREES,xcenter,ycenter;
+    float radius = SUBREF_RADIUS_DEGREES, xcenter, ycenter;
     char plotcommand[500];
     char bandkey[10];
     SCANDATA *scan_array;
     int bandfound = 0, scancount=0;
-    char *linestyle;
     char plotkey[10];
     char *linestype, *lineswidth;
     char *tempsec;

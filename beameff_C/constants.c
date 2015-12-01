@@ -1,7 +1,8 @@
 #include "constants.h"
 
-char *VersionNumber = "1.3.3";
-/* 1.3.3:  Fixed bugs and improved commenting in main.c, nsi.c, z.c
+char *VersionNumber = "1.3.4";
+/* 1.3.4:  Removed dead code and unused variables throughout.
+ * 1.3.3:  Fixed bugs and improved commenting in main.c, nsi.c, z.c
  * 1.3.2:  Option to calculate pol.eff and spillover using "TICRA" or "default" method.
  * 1.3.1:  Calculation for ACA 7-meter antenna;  Merging earlier code cleanup work.
  * 1.3.0:  Revert back to calculating pol.eff with total powers like 1.1.3.

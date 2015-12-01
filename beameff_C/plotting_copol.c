@@ -11,12 +11,11 @@ extern char *VersionNumber;
 
 int PlotCopol(SCANDATA *currentscan, dictionary *scan_file_dict){ 
  
-    char *opencommand, *commandfilename, *gnuplot, *outputdirectory, *outputfilename;
+    char *gnuplot, *outputdirectory;
     char fnamebuffer[500];
     char commandfilebuffer[500];
     char commandbuffer[500];
     char contourfilenamebuffer[500];
-    char *contourfilename;
     
     gnuplot = iniparser_getstring (scan_file_dict,"settings:gnuplot", "null");
     outputdirectory = iniparser_getstring (scan_file_dict,"settings:outputdirectory", "null");
@@ -59,14 +58,12 @@ int PlotCopol(SCANDATA *currentscan, dictionary *scan_file_dict){
 }
 
 int WriteCopolDataFile(SCANDATA *currentscan, char *outfilename, char *listingtype){
-    FILE *fileptr,*fileptrcontour;
+    FILE *fileptr;
     char textline[500];
     long int i;
     int seriescount;
     float serieslength_float;
     long int serieslength_int;
-    float tempradius;
-    float tempamp;
     
     if (DEBUGGING) {
         fprintf(stderr,"WriteCopolDataFile(%s, %s)\n", outfilename, listingtype);
@@ -135,17 +132,10 @@ int WriteCopolDataFile(SCANDATA *currentscan, char *outfilename, char *listingty
 int WriteCopolNF_CommandFile(SCANDATA *currentscan, char *outfilename, 
     dictionary *scan_file_dict,char *datafilename,char *datatype){
     FILE *fileptr;
-    char textline[500];
-    long int i;
-    int seriescount;
-    float serieslength_float;
-    long int serieslength_int;
     char plotfilename[500],*outputdirectory;
-    char plotnametemp[500];
     char linebuffer[500];
     char *title;
     char titlebuffer[500];
-    char *writeval;
 
     remove(outfilename);
     outputdirectory = iniparser_getstring (scan_file_dict,"settings:outputdirectory", "null");
@@ -193,9 +183,9 @@ int WriteCopolNF_CommandFile(SCANDATA *currentscan, char *outfilename,
 		fputs(linebuffer,fileptr);
 
 
-        sprintf(linebuffer,"splot '%s' using 1:2:3 title ''\r\n",datafilename,title);
+        sprintf(linebuffer,"splot '%s' using 1:2:3 title ''\r\n", datafilename);
         fputs(linebuffer,fileptr);
-        sprintf(linebuffer,"set title '%s'\r\n",title);
+        sprintf(linebuffer,"set title '%s'\r\n", title);
         fputs(linebuffer,fileptr);
         fputs("replot\r\n",fileptr);
         fputs("\r\n",fileptr);
@@ -238,12 +228,7 @@ int WriteCopolFF_CommandFile(SCANDATA *currentscan,
                              char *listingtype)
 {
     FILE *fileptr;
-    char textline[500];
-    long int i;
-    int seriescount;
-    float serieslength_float;
-    long int serieslength_int;
-    char plotfilename[500],*outputdirectory;
+    char plotfilename[500], *outputdirectory;
     char linebuffer[500];
     char *title;
     char titlebuffer[500];

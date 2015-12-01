@@ -17,18 +17,16 @@ extern int DEBUGGING;
 
 int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilename) {
     SCANDATA scans[5];
-    int num_scans_in_file, i, pol, sb;
+    int num_scans_in_file, i, pol;
     char *sectionName_p;    // section name returned from ini file library
     char sectionname[20];
     char sectiontemp[20];
     char scantype[20];      // 'copol' or 'xpol'
     char delimiter[2];      // '\t' or ','
     char centers[10];       // 'nominal', 'actual', or '7meter'
-    char ibuf[5];
     char sectionName_pkey[200];
     float subreflector_radius = subreflector_radius12m;
     int ACA7meter = 0;
-    float lambda;
 
     if (DEBUGGING) {
         fprintf(stderr,"Enter GetEfficiencies.\n");

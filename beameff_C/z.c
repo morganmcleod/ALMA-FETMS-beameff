@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "iniparser.h"
 #include "utilities.h"
+#include "outputfilefunctions.h"
 #include "z.h"
 extern int DEBUGGING;
 
@@ -93,7 +94,7 @@ int GetZplusOrZminus(dictionary *scan_file_dict, char *sectionname, char *nf_or_
 
     // Make a scanf string based on delimiter:
     delimiter = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
-    sprintf(scanStr, "%s%s%s%s%s%s%s%s", "%f", delimiter, "%f", delimiter, "%f", delimiter, "%f");
+    sprintf(scanStr, "%s%s%s%s%s%s%s", "%f", delimiter, "%f", delimiter, "%f", delimiter, "%f");
 
     // Init vars to accumulate max amplitude and phase:
     maxamp1 = -900;
@@ -197,8 +198,7 @@ int CreateZlisting(dictionary *scan_file_dict, char *sectionname_z1, char *secti
     int z1_startrow;
     int z2_startrow;
     int i;
-    char *ptr1,*ptr2,*ptrz;
-    float maxamp1,maxamp2,maxphase1,maxphase2;
+    char *ptr1, *ptr2;
     FILE *fileptrZ1, *fileptrZ2, *zfile;
     char buf[500];
     char buf2[500];
@@ -208,9 +208,8 @@ int CreateZlisting(dictionary *scan_file_dict, char *sectionname_z1, char *secti
     float ampZ,phaseZ;
     int narg1, narg2;
     char printmsg[200];
-    float intensity1,intensity2;
-    float magZPLUS,magZMINUS;
-    float z1real,z1imag,z2real,z2imag,newZreal,newZimag;
+    float intensity1, intensity2;
+    float z1real, z1imag, z2real, z2imag, newZreal, newZimag;
     char zline[200];
     char scanStr[100];
     char *scansection, *scankey;
@@ -240,7 +239,7 @@ int CreateZlisting(dictionary *scan_file_dict, char *sectionname_z1, char *secti
 
     // Make a scanf string based on delimiter:
     delimiter = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
-    sprintf(scanStr, "%s%s%s%s%s%s%s%s", "%f", delimiter, "%f", delimiter, "%f", delimiter, "%f");
+    sprintf(scanStr, "%s%s%s%s%s%s%s", "%f", delimiter, "%f", delimiter, "%f", delimiter, "%f");
 
     // Copy z1 header into new Z-listing file:
     for (i = 1; i < z1_startrow; i++) {

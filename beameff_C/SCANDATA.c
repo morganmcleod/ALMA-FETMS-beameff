@@ -153,8 +153,8 @@ int SCANDATA_computeSums(SCANDATA *data, float maskRadius) {
     }
     
     if (DEBUGGING) {
-        printf("data -> ff_pts: %d\n",data -> ff_pts);
-        printf("data -> sum_maskE: %d\n",data -> sum_maskE);
+        printf("data -> ff_pts: %ld\n", data -> ff_pts);
+        printf("data -> sum_maskE: %f\n", data -> sum_maskE);
     }
 
     return 1;

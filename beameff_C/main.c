@@ -18,25 +18,21 @@
 #include "plotting_crosspol.h"
 #include "plotcircles.h"
 #include "nsi.h"
+#include "z.h"
 
 int DEBUGGING = 0;
 
 int main(int argc, char *argv[])
 {
-  int i,num_scans,num_scansets;
-  char *counter;
+  int i, num_scansets;
   char outfilename[400];
-  char sectionname[20];
-  char *delimiter;
-  dictionary *scan_file_dict,*scan_file_dict2;
+  dictionary *scan_file_dict;
   char *inputfile;
-  char *outputfilename;
   char *outputdirectory;
-  int *scansetnumbers;
   int scanset_array[200];
   char printmsg[200];
 
-  printf("********************************************<br>\n");
+  printf("<br>********************************************<br>\n");
   printf("Beam Efficiency Calculator Version  %s<br>\n",VersionNumber);
   printf("********************************************<br>\n<br>\n");
 
@@ -56,7 +52,7 @@ int main(int argc, char *argv[])
 
   // Each [scan_n] section specifies which scanset it is part of.
   // Scansets are numbered 1,2,3...   Up to 200 can be loaded:
-  num_scansets = GetScanSetNumberArray(scan_file_dict, &scanset_array, 200);
+  num_scansets = GetScanSetNumberArray(scan_file_dict, scanset_array, 200);
 
   // Get the specified output directory
   outputdirectory = iniparser_getstring(scan_file_dict, "settings:outputdirectory", "null");

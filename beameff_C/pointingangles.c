@@ -11,8 +11,7 @@ int beamCenters(SCANDATA *currentscan, char *listingtype, char *delimiter) {
     FILE *fileptr;
     int narg, startrow;
     long int i, npts, number_of_points;
-    char *ptr, *filename, scanstringtemp[10];
-    const char *scanstring;
+    char *ptr, *filename;
     char buf[500];
     float az_temp,el_temp, amp_temp, amplitude_max;
     float threshold;
@@ -69,19 +68,6 @@ int beamCenters(SCANDATA *currentscan, char *listingtype, char *delimiter) {
     SumCtrMassEL = 0.0;
     SumAmpCofM = 0.0;
     tempAmpCofM = 0.0;
-    
-    /*
-    strcpy(scanstringtemp,"%f");
-    strcat(scanstringtemp,delimiter);
-    strcat(scanstringtemp,"%f");
-    strcat(scanstringtemp,delimiter);
-    strcat(scanstringtemp,"%f");
-    scanstring=scanstringtemp;
-    
-    printf("scanstring= %s\r\n",scanstring);
-    getchar();
-   */
-
 
     int once = 1;
     /********************
@@ -120,7 +106,7 @@ int beamCenters(SCANDATA *currentscan, char *listingtype, char *delimiter) {
                     } 
                 }
         if (narg != 3) {
-            printf("Error parsing line %d, %s\r\n",i,filename);
+            printf("Error parsing line %ld, %s\r\n",i,filename);
             getchar();
             exit(ERR_LINE_FORMAT_PROBLEM);
         }
@@ -166,7 +152,7 @@ int beamCenters(SCANDATA *currentscan, char *listingtype, char *delimiter) {
             } 
 
         if (narg != 3) {
-            printf("Error parsing line %d, %s\r\n",npts+=startrow,filename);
+            printf("Error parsing line %ld, %s\r\n",npts+=startrow,filename);
             getchar();
             exit(ERR_LINE_FORMAT_PROBLEM);
         }

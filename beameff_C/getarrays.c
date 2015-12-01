@@ -8,11 +8,14 @@
 
 extern int DEBUGGING;
 
+int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantype, char *delimiter);
+//Declare helper function defined below.
+
 int ReadCopolFile(SCANDATA *currentscan, dictionary *scan_file_dict, float subreflector_radius) {
 //Read the farfield listing and fill the dynamic arrays for the current scan
 
     FILE *fileptr;
-    int narg, startrow;
+    int narg;
     float az, el, amp, phase, stepsize;
     long int i;
     char *ptr;
@@ -74,7 +77,7 @@ int ReadCopolFile(SCANDATA *currentscan, dictionary *scan_file_dict, float subre
             narg = sscanf(ptr,"%f\t%f\t%f\t%f", &az, &el, &amp, &phase);   
         }
         if (narg != 4) {
-            sprintf(printmsg,"Error parsing line %d, %s\n",i,currentscan -> ff);
+            sprintf(printmsg, "Error parsing line %ld, %s\n", i, currentscan -> ff);
             PRINT_STDOUT(printmsg);
             exit(ERR_LINE_FORMAT_PROBLEM);
         }
@@ -128,7 +131,7 @@ int ReadCrosspolFile(SCANDATA *crosspolscan, SCANDATA *copolscan, dictionary *sc
 //Read the farfield listing and fill the dynamic arrays for the current scan
     
     FILE *fileptr;
-    int narg, startrow;
+    int narg;
     float az, el, amp, phase;
     long int i;
     char *ptr;
@@ -137,7 +140,6 @@ int ReadCrosspolFile(SCANDATA *crosspolscan, SCANDATA *copolscan, dictionary *sc
     long int arrayindex;
     float maxamp_xpol;
     
-    float ifatten_difference;
     char printmsg[200];
     
     if (DEBUGGING) {
@@ -204,7 +206,7 @@ int ReadCrosspolFile(SCANDATA *crosspolscan, SCANDATA *copolscan, dictionary *sc
              narg = sscanf(ptr,"%f\t%f\t%f\t%f",&az,&el,&amp,&phase);   
         }
         if (narg != 4) {
-            sprintf(printmsg,"Error parsing line %d, %s\n",i, crosspolscan -> ff);
+            sprintf(printmsg, "Error parsing line %ld, %s\n", i, crosspolscan -> ff);
             PRINT_STDOUT(printmsg);
             exit(ERR_LINE_FORMAT_PROBLEM);
         }
@@ -261,7 +263,7 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
     //Read the nearfield listing and fill the dynamic arrays
     //for the current scan
     FILE *fileptrnf;
-    int narg, startrow;
+    int narg;
     float az, el, amp,phase;
     long int i;
     char *ptr;
@@ -289,9 +291,8 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
     maxamp=-300.0;
     //Fill up the arrays
     arrayindex=0;
-    int xpts_found = 0;
-    int ypts_found = 0;
 
+    int ypts_found = 0;
     float tempy;
     float tempx;
 
@@ -367,7 +368,7 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
             }
         }
         if (narg != 4) {
-            sprintf(printmsg,"Error parsing line %d, %s\n",i,currentscan -> nf);
+            sprintf(printmsg,"Error parsing line %ld, %s\n", i, currentscan -> nf);
             PRINT_STDOUT(printmsg);
             exit(ERR_LINE_FORMAT_PROBLEM);
         }

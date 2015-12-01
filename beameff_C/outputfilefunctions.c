@@ -111,14 +111,11 @@ int WriteCrosspolData(dictionary *scan_file_dict, SCANDATA *currentscan, char *o
         fprintf(stderr,"Done max_dbdifference = %f (ptr=%p)\n",currentscan->max_dbdifference,
                 &(currentscan->max_dbdifference));
     }
-
- return 1;                            
+    return 1;
 }
 
-int GetOutputFilename(dictionary *scan_file_dict,char outname[400]) {
-    char outfiletemp[400];
-    char *outputfilename;
-    sprintf(outname,"%soutput.txt",iniparser_getstring (scan_file_dict, "settings:outputdirectory", "null"));
+int GetOutputFilename(dictionary *scan_file_dict, char *outputfilename) {
+    sprintf(outputfilename, "%soutput.txt", iniparser_getstring(scan_file_dict, "settings:outputdirectory", "null"));
     return 1;
 }
 
