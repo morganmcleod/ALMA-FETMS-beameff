@@ -10,7 +10,6 @@
 #include "utilities.h"
 #include "fitphase.h"
 #include "fitamplitude.h"
-#include "test.h"
 #include "pointingangles.h"
 #include "getarrays.h"
 #include "efficiency.h"
