@@ -32,9 +32,9 @@ int main(int argc, char *argv[])
   int scanset_array[200];
   char printmsg[200];
 
-  printf("<br>********************************************<br>\n");
-  printf("Beam Efficiency Calculator Version  %s<br>\n",VersionNumber);
-  printf("********************************************<br>\n<br>\n");
+  printf("<br> ********************************************\n");
+  printf("<br> Beam Efficiency Calculator Version  %s\n", VersionNumber);
+  printf("<br> ********************************************\n<br>\n");
 
   //Temporary input file name can be put here for debugging:
   inputfile = "";

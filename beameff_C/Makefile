@@ -1,13 +1,14 @@
 # Project: beameff_64
 # Makefile created by Dev-C++ 4.9.9.2
 # then modified by T. Hunter for linux
+# 1.3.6  MTM using iniparser 3.2 (from ../../iniparser) instead of prior 1.8. 
 
 CPP  = g++
 CC   = gcc -DLINUX
-OBJ  = brent.o f1dim.o mnbrak.o constants.o dictionary.o linmin.o frprmn.o nrutil.o fitamplitude.o nsi.o iniparser.o pointingangles.o plotcircles.o plotting_copol.o plotting_crosspol.o main.o getarrays.o fitphase.o efficiency.o outputfilefunctions.o SCANDATA.o utilities.o z.o $(RES)
-LINKOBJ  = brent.o f1dim.o mnbrak.o constants.o dictionary.o linmin.o frprmn.o nrutil.o fitamplitude.o nsi.o iniparser.o pointingangles.o plotcircles.o plotting_copol.o plotting_crosspol.o main.o getarrays.o fitphase.o efficiency.o outputfilefunctions.o SCANDATA.o utilities.o z.o $(RES)
+OBJ  = dictionary.o iniparser.o brent.o f1dim.o mnbrak.o constants.o linmin.o frprmn.o nrutil.o fitamplitude.o nsi.o pointingangles.o plotcircles.o plotting_copol.o plotting_crosspol.o main.o getarrays.o fitphase.o efficiency.o outputfilefunctions.o SCANDATA.o utilities.o z.o $(RES)
 LIBS = -lm
-CFLAGS =
+INC = -I../../iniparser/src
+CFLAGS = $(INC)
 BIN  = beameff_64
 RM = rm -f
 
@@ -19,7 +20,13 @@ clean: clean-custom
 	${RM} $(OBJ) $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) $(LINKOBJ) -o "beameff_64" $(LIBS)
+	$(CC) $(OBJ) -o "beameff_64" $(LIBS)
+
+dictionary.o: ../../iniparser/src/dictionary.c
+	$(CC) -c ../../iniparser/src/dictionary.c -o dictionary.o $(CFLAGS)
+
+iniparser.o: ../../iniparser/src/iniparser.c
+	$(CC) -c ../../iniparser/src/iniparser.c -o iniparser.o $(CFLAGS)
 
 brent.o: brent.c
 	$(CC) -c brent.c -o brent.o $(CFLAGS)
@@ -32,9 +39,6 @@ mnbrak.o: mnbrak.c
 
 constants.o: constants.c
 	$(CC) -c constants.c -o constants.o $(CFLAGS)
-
-dictionary.o: dictionary.c
-	$(CC) -c dictionary.c -o dictionary.o $(CFLAGS)
 
 linmin.o: linmin.c
 	$(CC) -c linmin.c -o linmin.o $(CFLAGS)
@@ -50,9 +54,6 @@ fitamplitude.o: fitamplitude.c
 
 nsi.o: nsi.c
 	$(CC) -c nsi.c -o nsi.o $(CFLAGS)
-
-iniparser.o: iniparser.c
-	$(CC) -c iniparser.c -o iniparser.o $(CFLAGS)
 
 pointingangles.o: pointingangles.c
 	$(CC) -c pointingangles.c -o pointingangles.o $(CFLAGS)

@@ -92,7 +92,7 @@ int ReadNSIfile(dictionary *scan_file_dict, char *sectionname, char *nf_or_ff){
             // save the row count to the input dictionary as like "ff_startrow":
             strcat(section_keytemp, "_startrow");
             sprintf(writeval, "%ld", listing_startrow);
-            iniparser_setstring(scan_file_dict, section_keytemp, writeval);
+            iniparser_set(scan_file_dict, section_keytemp, writeval);
         }
 
         // Search for marker indicating data and time in NSI text format listings:
@@ -103,7 +103,7 @@ int ReadNSIfile(dictionary *scan_file_dict, char *sectionname, char *nf_or_ff){
             datetime = strtok(NULL, ",");
             // Save to the datetime key in the input dictionary:
             sprintf(section_keydatetime, "%s:datetime", sectionname);
-            iniparser_setstring(scan_file_dict, section_keydatetime, datetime);
+            iniparser_set(scan_file_dict, section_keydatetime, datetime);
         }
         // Loop will break at EOF.
     } while (1);
