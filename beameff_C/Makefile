@@ -1,7 +1,7 @@
 # Project: beameff_64
 # Makefile created by Dev-C++ 4.9.9.2
 # then modified by T. Hunter for linux
-# 1.3.6  MTM using iniparser 3.2 (from ../../iniparser) instead of prior 1.8. 
+# 1.3.6  MTM using iniparser 4.0 (from ../../iniparser) instead of prior 1.8. 
 
 CPP  = g++
 CC   = gcc -DLINUX -g
