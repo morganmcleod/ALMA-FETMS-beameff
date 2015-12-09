@@ -11,7 +11,7 @@ extern char *VersionNumber;
 
 int PlotCopol(SCANDATA *currentscan, dictionary *scan_file_dict){ 
  
-    char *gnuplot, *outputdirectory;
+    const char *gnuplot, *outputdirectory;
     char fnamebuffer[500];
     char commandfilebuffer[500];
     char commandbuffer[500];
@@ -132,7 +132,8 @@ int WriteCopolDataFile(SCANDATA *currentscan, char *outfilename, char *listingty
 int WriteCopolNF_CommandFile(SCANDATA *currentscan, char *outfilename, 
     dictionary *scan_file_dict,char *datafilename,char *datatype){
     FILE *fileptr;
-    char plotfilename[500],*outputdirectory;
+    char plotfilename[500];
+    const char *outputdirectory;
     char linebuffer[500];
     char *title;
     char titlebuffer[500];
@@ -227,7 +228,8 @@ int WriteCopolFF_CommandFile(SCANDATA *currentscan,
                              char *listingtype)
 {
     FILE *fileptr;
-    char plotfilename[500], *outputdirectory;
+    char plotfilename[500];
+    const char *outputdirectory;
     char linebuffer[500];
     char *title;
     char titlebuffer[500];

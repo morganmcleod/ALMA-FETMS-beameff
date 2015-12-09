@@ -8,7 +8,7 @@
 
 int PlotCircles(dictionary *scan_file_dict){
     char commandfile[400];
-    char *outputdirectory;
+    const char *outputdirectory;
     int i;
     
     outputdirectory = iniparser_getstring (scan_file_dict,"settings:outputdirectory", "null");
@@ -26,8 +26,9 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
     FILE *fileptr;
     char commandline[500];
     int i, num_scans;
-    char *gnuplot;
-    char plotfilename[500],*outputdirectory;
+    const char *gnuplot;
+    char plotfilename[500];
+    const char *outputdirectory;
     char linebuffer[500];
     char *title,pointtitle[100];
     char titlebuffer[500];
@@ -39,7 +40,7 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
     int bandfound = 0, scancount=0;
     char plotkey[10];
     char *linestype, *lineswidth;
-    char *tempsec;
+    const char *tempsec;
     char tempseckey[200];
     char centers[10];
     char nomLegend[30];
@@ -52,7 +53,7 @@ int MakeCircleAndPoints(int band, dictionary *scan_file_dict, char *commandfile)
          tempsec = iniparser_getsecname(scan_file_dict,i);
          sprintf(tempseckey,"%s:scanset",tempsec);
              if (iniparser_getint (scan_file_dict, tempseckey, -1) != -1){
-                     GetScanData(scan_file_dict,tempsec, &scan_array[scancount]); 
+                     GetScanData(scan_file_dict, tempsec, &scan_array[scancount]);
                      scancount++;
              }
      }

@@ -30,7 +30,7 @@ enum {
   ERR_OUT_OF_MEMORY
 };
 
-extern void GetScanData(dictionary *scan_file_dict, char *sectionname, SCANDATA *);
+extern void GetScanData(dictionary *scan_file_dict, const char *sectionname, SCANDATA *);
 extern int GetNumberOfScans(dictionary *scan_file_dict);
 extern int GetScanSetNumberArray(dictionary *scan_file_dict, int scansetarray[], int scansetarray_size);
 extern int RemoveKeys(dictionary *scan_file_dict);

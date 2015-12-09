@@ -77,7 +77,7 @@ char *itoa(int n, char s[], int unusedLength)
 } 
 #endif
 
-void GetScanData(dictionary *scan_file_dict, char *sectionname, SCANDATA *ResultScanData) {
+void GetScanData(dictionary *scan_file_dict, const char *sectionname, SCANDATA *ResultScanData) {
        /*
        This function creates a SCANDATA structure. It reads the inputfile,
        looks the sectionname provided to the function, and assigns values
@@ -220,7 +220,7 @@ int GetNumberOfScans(dictionary *scan_file_dict) {
 
 int RemoveKeys(dictionary *scan_file_dict) {
     int i;
-    char *sectionname;
+    const char *sectionname;
     char section_key[50];
     for (i=0;i<GetNumberOfScans(scan_file_dict)+1;i++) {
 

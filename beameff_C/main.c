@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
   char outfilename[400];
   dictionary *scan_file_dict;
   char *inputfile;
-  char *outputdirectory;
+  const char *outputdirectory;
   int scanset_array[200];
   char printmsg[200];
 

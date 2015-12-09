@@ -11,9 +11,9 @@ int GetNSIValues(dictionary *scan_file_dict) {
     // If found, the resulting values are stored in the dictionary.
 
     int num_sections, i;
-    char *sectionname;
-    char *nf2;
-    char *ff2;
+    const char *sectionname;
+    const char *nf2;
+    const char *ff2;
     char sectionname_nf2[30];
     char sectionname_ff2[30];
     
@@ -45,7 +45,7 @@ int GetNSIValues(dictionary *scan_file_dict) {
     return 1;
 }
 
-int ReadNSIfile(dictionary *scan_file_dict, char *sectionname, char *nf_or_ff){
+int ReadNSIfile(dictionary *scan_file_dict, const char *sectionname, const char *nf_or_ff){
     // Read a single nf or ff listing file as given by the keys in the given sectionname.
     
     FILE *fileptr;

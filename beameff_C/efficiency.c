@@ -23,7 +23,7 @@ int GetAdditionalEfficiencies(SCANDATA *copol_pol0, SCANDATA *xpol_pol0,
 int GetEfficiencies(dictionary *scan_file_dict, int scanset, char *outputfilename) {
     SCANDATA scans[5];
     int num_scans_in_file, i, pol;
-    char *sectionName_p;    // section name returned from ini file library
+    const char *sectionName_p;    // section name returned from ini file library
     char sectionname[20];
     char sectiontemp[20];
     char scantype[20];      // 'copol' or 'xpol'

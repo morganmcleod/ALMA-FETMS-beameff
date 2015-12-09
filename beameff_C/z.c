@@ -10,13 +10,13 @@ extern int DEBUGGING;
 
 int GetZ(dictionary *scan_file_dict) {
     int num_sections, i;
-    char *sectionname;
+    const char *sectionname;
     char sectionname_nf[30];
     char sectionname_ff[30];
     char sectionname_nf2[30];
     char sectionname_ff2[30];
     char ZplusOrZminus[6];
-    char *found;
+    const char *found;
     
     // Loop on number of sections in the input dictionary:
     num_sections = iniparser_getnsec(scan_file_dict);
@@ -52,12 +52,12 @@ int GetZ(dictionary *scan_file_dict) {
     return 1;
 }
 
-int GetZplusOrZminus(dictionary *scan_file_dict, char *sectionname, char *nf_or_ff, char result[]) {
+int GetZplusOrZminus(dictionary *scan_file_dict, const char *sectionname, const char *nf_or_ff, char result[]) {
     char sectionname_z1[30];
     char sectionname_z2[30];
     char sectionname_z1startrow[30];
     char sectionname_z2startrow[30];
-    char *z1_filename, *z2_filename;
+    const char *z1_filename, *z2_filename;
     int z1_startrow;
     int z2_startrow;
     int i;
@@ -66,7 +66,8 @@ int GetZplusOrZminus(dictionary *scan_file_dict, char *sectionname, char *nf_or_
     FILE *fileptrZ1, *fileptrZ2;
     char buf[500];
     char scanStr[100];
-    char *delimiter;
+    char delimiter[5];
+    const char *pdelim;
     float az,el,amp,phase;
     int narg;
     char printmsg[200];
@@ -93,7 +94,11 @@ int GetZplusOrZminus(dictionary *scan_file_dict, char *sectionname, char *nf_or_
         return 1;
 
     // Make a scanf string based on delimiter:
-    delimiter = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
+    pdelim = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
+    strcpy(delimiter, pdelim);
+    if (strcmp(delimiter,",")) {
+        strcpy(delimiter,"\t");
+    }
     sprintf(scanStr, "%s%s%s%s%s%s%s", "%f", delimiter, "%f", delimiter, "%f", delimiter, "%f");
 
     // Init vars to accumulate max amplitude and phase:
@@ -188,11 +193,11 @@ int GetZplusOrZminus(dictionary *scan_file_dict, char *sectionname, char *nf_or_
     return 1;
 }
 
-int CreateZlisting(dictionary *scan_file_dict, char *sectionname_z1, char *sectionname_z2, char *ZplusOrZminus){
+int CreateZlisting(dictionary *scan_file_dict, const char *sectionname_z1, const char *sectionname_z2, const char *ZplusOrZminus){
     char sectionname_z1startrow[100];
     char sectionname_z2startrow[100];
     char zcombination_filename[200];
-    char *z1_filename, *z2_filename;
+    const char *z1_filename, *z2_filename;
     char filesuffix[15];
     char tempfilename[200];
     int z1_startrow;
@@ -202,7 +207,8 @@ int CreateZlisting(dictionary *scan_file_dict, char *sectionname_z1, char *secti
     FILE *fileptrZ1, *fileptrZ2, *zfile;
     char buf[500];
     char buf2[500];
-    char *delimiter;
+    const char *pdelim;
+    char delimiter[5];
     float az1,el1,amp1,phase1;
     float az2,el2,amp2,phase2;
     float ampZ,phaseZ;
@@ -238,7 +244,11 @@ int CreateZlisting(dictionary *scan_file_dict, char *sectionname_z1, char *secti
     zfile = fopen(zcombination_filename,"w");
 
     // Make a scanf string based on delimiter:
-    delimiter = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
+    pdelim = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
+    strcpy(delimiter, pdelim);
+    if (strcmp(delimiter,",")) {
+        strcpy(delimiter,"\t");
+    }
     sprintf(scanStr, "%s%s%s%s%s%s%s", "%f", delimiter, "%f", delimiter, "%f", delimiter, "%f");
 
     // Copy z1 header into new Z-listing file:
@@ -306,7 +316,8 @@ int CreateZlisting(dictionary *scan_file_dict, char *sectionname_z1, char *secti
     fclose(zfile);
 
     // Update the input dictionary with the new filename to use:
-    scansection = strtok(sectionname_z1, ":");
+    strcpy(scanStr, sectionname_z1);
+    scansection = strtok(scanStr, ":");
     scankey = strtok(NULL, ":");
     UpdateDictionary(scan_file_dict, scansection, scankey, zcombination_filename);
     return 1;    

@@ -9,7 +9,7 @@ extern char *VersionNumber;
 
 int PlotCrosspol(SCANDATA *xpolscan, dictionary *scan_file_dict){ 
  
-    char *gnuplot, *outputdirectory;
+    const char *gnuplot, *outputdirectory;
     char fnamebuffer[500];
     char commandfilebuffer[500];
     char commandbuffer[500];
@@ -135,7 +135,8 @@ int WriteCrosspolDataFile(SCANDATA *currentscan, char *outfilename, char *listin
 int WriteCrosspolNF_CommandFile(SCANDATA *currentscan, char *outfilename, 
     dictionary *scan_file_dict,char *datafilename,char *datatype){
     FILE *fileptr;
-    char plotfilename[500], *outputdirectory;
+    char plotfilename[500];
+    const char *outputdirectory;
     char linebuffer[500];
     char *title;
     char titlebuffer[500];
@@ -228,7 +229,8 @@ int WriteCrosspolNF_CommandFile(SCANDATA *currentscan, char *outfilename,
 int WriteCrosspolFF_CommandFile(SCANDATA *currentscan, char *outfilename, 
    dictionary *scan_file_dict,char *datafilename, char *listingtype){
     FILE *fileptr;
-    char plotfilename[500], *outputdirectory;
+    char plotfilename[500];
+    const char *outputdirectory;
     char linebuffer[500];
     char *title;
     char titlebuffer[500];
