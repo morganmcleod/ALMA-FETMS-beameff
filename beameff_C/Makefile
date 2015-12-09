@@ -4,10 +4,10 @@
 # 1.3.6  MTM using iniparser 3.2 (from ../../iniparser) instead of prior 1.8. 
 
 CPP  = g++
-CC   = gcc -DLINUX
+CC   = gcc -DLINUX -g
 OBJ  = dictionary.o iniparser.o brent.o f1dim.o mnbrak.o constants.o linmin.o frprmn.o nrutil.o fitamplitude.o nsi.o pointingangles.o plotcircles.o plotting_copol.o plotting_crosspol.o main.o getarrays.o fitphase.o efficiency.o outputfilefunctions.o SCANDATA.o utilities.o z.o $(RES)
 LIBS = -lm
-INC = -I../../iniparser/src
+INC = -I../iniparser/src
 CFLAGS = $(INC)
 BIN  = beameff_64
 RM = rm -f
@@ -22,11 +22,11 @@ clean: clean-custom
 $(BIN): $(OBJ)
 	$(CC) $(OBJ) -o "beameff_64" $(LIBS)
 
-dictionary.o: ../../iniparser/src/dictionary.c
-	$(CC) -c ../../iniparser/src/dictionary.c -o dictionary.o $(CFLAGS)
+dictionary.o: ../iniparser/src/dictionary.c
+	$(CC) -c ../iniparser/src/dictionary.c -o dictionary.o $(CFLAGS)
 
-iniparser.o: ../../iniparser/src/iniparser.c
-	$(CC) -c ../../iniparser/src/iniparser.c -o iniparser.o $(CFLAGS)
+iniparser.o: ../iniparser/src/iniparser.c
+	$(CC) -c ../iniparser/src/iniparser.c -o iniparser.o $(CFLAGS)
 
 brent.o: brent.c
 	$(CC) -c brent.c -o brent.o $(CFLAGS)
