@@ -298,9 +298,8 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
 
     currentscan -> nf_xpts = 0;
     currentscan -> nf_ypts = 0;
- 
-    
-    if (scantype == "xpol") {
+
+    if (!strcmp(scantype, "xpol")) {
        minus_amp_amount = currentscan -> ifatten_difference;
     }
     do {

@@ -163,8 +163,7 @@ int WriteCopolNF_CommandFile(SCANDATA *currentscan, char *outfilename,
     fputs("set ylabel 'Y(m)'\r\n",fileptr);
     fputs("set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n",fileptr);
     
-    if (datatype == "amp"){
-        
+    if (!strcmp(datatype, "amp")) {
         fputs("set cblabel 'Nearfield Amplitude (dB)'\r\n",fileptr);
         fputs(linebuffer,fileptr);
         fputs("set view 0,0\r\n",fileptr);
@@ -191,7 +190,7 @@ int WriteCopolNF_CommandFile(SCANDATA *currentscan, char *outfilename,
         fputs("\r\n",fileptr);
         UpdateDictionary(scan_file_dict,currentscan->sectionname, "plot_copol_nfamp", plotfilename);
     }
-    if (datatype == "phase"){
+    if (!strcmp(datatype, "phase")) {
         //fputs("set palette gray\r\n",fileptr);
         fputs("set cbrange [-180:180]\r\n",fileptr);
         fputs("set cblabel 'Nearfield Phase (deg)'\r\n",fileptr);
@@ -268,7 +267,7 @@ int WriteCopolFF_CommandFile(SCANDATA *currentscan,
     fputs("set ylabel 'EL(deg)'\r\n",fileptr);
     
     fputs("set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n",fileptr);
-    if (listingtype=="amp"){
+    if (!strcmp(listingtype, "amp")) {
         fputs("set cblabel 'Farfield Amplitude (dB)'\r\n",fileptr);
         fputs("set cbrange [-50:0]\r\n",fileptr);
         fputs("set view 0,0\r\n",fileptr);
@@ -302,8 +301,7 @@ int WriteCopolFF_CommandFile(SCANDATA *currentscan,
         UpdateDictionary(scan_file_dict,currentscan->sectionname, "plot_copol_ffamp", plotfilename);
         
     }
-    if (listingtype=="phase"){
-        //fputs("set palette gray\r\n",fileptr);
+    if (!strcmp(listingtype, "phase")) {
         fputs("set cbrange [-180:180]\r\n",fileptr);
         fputs("set cblabel 'Farfield Phase (deg)'\r\n",fileptr);
         fputs("set view 0,0\r\n",fileptr);
