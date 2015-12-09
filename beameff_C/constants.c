@@ -1,7 +1,7 @@
 #include "constants.h"
 
 char *VersionNumber = "1.3.6";
-/* 1.3.6:  Using iniparser 3.2 from https://github.com/ndevilla/iniparser.  Prior was 1.8.
+/* 1.3.6:  Using iniparser 4.0 from https://github.com/ndevilla/iniparser.  Prior was 1.8.
  * 1.3.5:  Added PointingOptionType instead of int ACA7Meter.  Added band 1 test dewar pointing.
  * 1.3.4:  Removed dead code and unused variables throughout.
  * 1.3.3:  Fixed bugs and improved commenting in main.c, nsi.c, z.c
