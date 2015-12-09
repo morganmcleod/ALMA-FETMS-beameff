@@ -20,7 +20,8 @@ int ReadCopolFile(SCANDATA *currentscan, dictionary *scan_file_dict, float subre
     long int i;
     char *ptr;
     char buf[500];
-    char *delimiter;
+    const char *pdelim;
+    char delimiter[5];
     long int arrayindex;
     char printmsg[200];
     
@@ -29,7 +30,8 @@ int ReadCopolFile(SCANDATA *currentscan, dictionary *scan_file_dict, float subre
     }
 
     //If comma isn't specified, delimiter is "\t" regardless of what is in input file:
-    delimiter = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");    
+    pdelim = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
+    strcpy(delimiter, pdelim);
     if (strcmp(delimiter,",")) {
         strcpy(delimiter,"\t");
     }
@@ -136,7 +138,8 @@ int ReadCrosspolFile(SCANDATA *crosspolscan, SCANDATA *copolscan, dictionary *sc
     long int i;
     char *ptr;
     char buf[500];
-    char *delimiter;
+    const char *pdelim;
+    char delimiter[5];
     long int arrayindex;
     float maxamp_xpol;
     
@@ -147,7 +150,8 @@ int ReadCrosspolFile(SCANDATA *crosspolscan, SCANDATA *copolscan, dictionary *sc
     }
 
     //If comma isn't specified, delimiter is "\t" regardless of what is in input file:
-    delimiter = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");    
+    pdelim = iniparser_getstring(scan_file_dict, "settings:delimiter", "\t");
+    strcpy(delimiter, pdelim);
     if (strcmp(delimiter,",")) {
         strcpy(delimiter,"\t");
     }
@@ -298,9 +302,8 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
 
     currentscan -> nf_xpts = 0;
     currentscan -> nf_ypts = 0;
- 
-    
-    if (scantype == "xpol") {
+
+    if (!strcmp(scantype, "xpol")) {
        minus_amp_amount = currentscan -> ifatten_difference;
     }
     do {

@@ -137,7 +137,7 @@ int UpdateDictionary(dictionary *scan_file_dict, char *sectionname, char *keynam
     strcpy(section_key,sectionname);
     strcat(section_key,":");
     strcat(section_key,keyname);
-    iniparser_setstring(scan_file_dict,section_key,writeval);
+    iniparser_set(scan_file_dict,section_key,writeval);
     return 1;
 }
 

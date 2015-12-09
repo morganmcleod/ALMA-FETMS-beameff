@@ -11,9 +11,9 @@ int GetNSIValues(dictionary *scan_file_dict) {
     // If found, the resulting values are stored in the dictionary.
 
     int num_sections, i;
-    char *sectionname;
-    char *nf2;
-    char *ff2;
+    const char *sectionname;
+    const char *nf2;
+    const char *ff2;
     char sectionname_nf2[30];
     char sectionname_ff2[30];
     
@@ -45,7 +45,7 @@ int GetNSIValues(dictionary *scan_file_dict) {
     return 1;
 }
 
-int ReadNSIfile(dictionary *scan_file_dict, char *sectionname, char *nf_or_ff){
+int ReadNSIfile(dictionary *scan_file_dict, const char *sectionname, const char *nf_or_ff){
     // Read a single nf or ff listing file as given by the keys in the given sectionname.
     
     FILE *fileptr;
@@ -55,18 +55,21 @@ int ReadNSIfile(dictionary *scan_file_dict, char *sectionname, char *nf_or_ff){
     char section_keytemp[30];
     char section_keydatetime[30];
     char buf[500];
-    long int listing_startrow;
+    long int listing_startrow = 0;
     char writeval[200];
-    char *datetime;
-    char *datetimeptr;
+    char datetime[50];
     
     // Make the key name for the listing filename:
     sprintf(section_keytemp, "%s:%s", sectionname, nf_or_ff);
     if (DEBUGGING) {
-        printf("ReadNSIfile: looking for section_keytemp = %s\n", section_keytemp);
+        printf("ReadNSIfile: looking for section_keytemp=%s\n", section_keytemp);
     }
     // Load the filename:
     strcpy(filenametemp, iniparser_getstring(scan_file_dict, section_keytemp, "null"));
+
+    if (DEBUGGING) {
+        printf("ReadNSIfile: file is %s=%s\n", nf_or_ff, filenametemp);
+    }
 
     // Attempt to open the file for read:
     fileptr = fopen(filenametemp, "r");
@@ -92,18 +95,18 @@ int ReadNSIfile(dictionary *scan_file_dict, char *sectionname, char *nf_or_ff){
             // save the row count to the input dictionary as like "ff_startrow":
             strcat(section_keytemp, "_startrow");
             sprintf(writeval, "%ld", listing_startrow);
-            iniparser_setstring(scan_file_dict, section_keytemp, writeval);
+            iniparser_set(scan_file_dict, section_keytemp, writeval);
         }
 
         // Search for marker indicating data and time in NSI text format listings:
         if (strstr(ptr, "date/time:")) {
             // Parse the datetime from the listing file:
-            datetimeptr = ptr;
-            datetime = strtok(datetimeptr, ":");
-            datetime = strtok(NULL, ",");
+            ptr = strtok(ptr, ":");
+            ptr = strtok(NULL, ",");
+            strcpy(datetime, ptr);
             // Save to the datetime key in the input dictionary:
             sprintf(section_keydatetime, "%s:datetime", sectionname);
-            iniparser_setstring(scan_file_dict, section_keydatetime, datetime);
+            iniparser_set(scan_file_dict, section_keydatetime, datetime);
         }
         // Loop will break at EOF.
     } while (1);
