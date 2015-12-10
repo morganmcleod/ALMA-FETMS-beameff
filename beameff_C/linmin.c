@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "nrutil.h"
 #define TOL 2.0e-4
-extern int DEBUGGING;
+extern int DEBUGGING_NR;
 int ncom;
 float *pcom,*xicom,(*nrfunc)(float []);
 
@@ -17,19 +17,19 @@ void linmin(float p[], float xi[], int n, float *fret, float (*func)(float []))
 	int j;
 	float xx,xmin,fx,fb,fa,bx,ax;
 	
-	if (DEBUGGING) {
+	if (DEBUGGING_NR) {
 	  fprintf(stderr,"Inside linmin with n=%d\n",n);
 	}
 	ncom=n;
-	if (DEBUGGING) {
+	if (DEBUGGING_NR) {
 	  fprintf(stderr,"Calling vector(1,%d)\n",n);
 	}
 	pcom=vector(1,n);
-	if (DEBUGGING) {
+	if (DEBUGGING_NR) {
 	  fprintf(stderr,"done vector(1,%d)\n",n);
 	}
 	xicom=vector(1,n);
-	if (DEBUGGING && 0) {
+	if (DEBUGGING_NR && 0) {
 	  fprintf(stderr,"done vector(1,%d)\n",n);
 	}
 	nrfunc=func;
@@ -39,16 +39,16 @@ void linmin(float p[], float xi[], int n, float *fret, float (*func)(float []))
 	}
 	ax=0.0;
 	xx=1.0;
-	if (DEBUGGING && 0) {
+	if (DEBUGGING_NR && 0) {
 	  fprintf(stderr,"calling mnbrak\n");
 	}
 	mnbrak(&ax,&xx,&bx,&fa,&fx,&fb,f1dim);
-	if (DEBUGGING && 0) {
+	if (DEBUGGING_NR && 0) {
 	  fprintf(stderr,"returned from mnbrak\n");
 	}
 
 	*fret=brent(ax,xx,bx,f1dim,TOL,&xmin);
-	if (DEBUGGING) {
+	if (DEBUGGING_NR) {
 	  fprintf(stderr,"returned from brent\n");
 	}
 	

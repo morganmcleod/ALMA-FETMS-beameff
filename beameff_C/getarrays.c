@@ -281,7 +281,7 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
 
     fileptrnf = fopen(currentscan -> nf,"r");
     if (fileptrnf == NULL) {
-        sprintf(printmsg,"getarrays(NF): Could not open file = %s\n",currentscan -> nf);
+        sprintf(printmsg,"ReadFile_NF: Could not open file = %s\n",currentscan -> nf);
         PRINT_STDOUT(printmsg);
         exit(ERR_COULD_NOT_OPEN_FILE);
         return(-1);
@@ -366,25 +366,28 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
         }
         if(DEBUGGING) {
             if (once == 1) {
-                printf("first line: %s",buf);
+                printf("ReadFile_NF first line: %s",buf);
                 once=-1;
             }
         }
         if (narg != 4) {
-            sprintf(printmsg,"Error parsing line %ld, %s\n", i, currentscan -> nf);
+            sprintf(printmsg,"ReadFile_NF error parsing line %ld, %s\n", i, currentscan -> nf);
             PRINT_STDOUT(printmsg);
             exit(ERR_LINE_FORMAT_PROBLEM);
         }
             
     } while (1);
     if(DEBUGGING) {
-        printf("getarrays(2): last line: %s",buf);
+        printf("ReadFile_NF last line: %s\n", buf);
     }
 
-    stepsize=fabs(currentscan -> nf_x[1]-currentscan -> nf_x[0]);
+    stepsize=fabs(currentscan -> nf_x[1] - currentscan -> nf_x[0]);
     if (stepsize == 0) {
        //In case listing is in vertical strips rather horizontal
-       stepsize = fabs(currentscan -> nf_x[1] - currentscan -> nf_x[0]);
+       stepsize = fabs(currentscan -> nf_y[1] - currentscan -> nf_y[0]);
+    }
+    if(DEBUGGING) {
+        printf("ReadFile_NF stepsize: %f\n",stepsize);
     }
     
     currentscan -> nf_stepsize = stepsize;
@@ -394,6 +397,9 @@ int ReadFile_NF(SCANDATA *currentscan, dictionary *scan_file_dict, char *scantyp
     sprintf(printmsg,"nf_xpts: %d\n",currentscan -> nf_xpts);
     PRINT_STDOUT(printmsg);
     sprintf(printmsg,"nf_ypts: %d\n",currentscan -> nf_ypts);
-    PRINT_STDOUT(printmsg);  
+    PRINT_STDOUT(printmsg);
+    if(DEBUGGING) {
+        printf("ReadFile_NF exiting.\n");
+    }
     return 1;
 }

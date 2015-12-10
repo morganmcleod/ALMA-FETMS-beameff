@@ -20,7 +20,8 @@
 #include "nsi.h"
 #include "z.h"
 
-int DEBUGGING = 0;
+int DEBUGGING = 1;
+int DEBUGGING_NR = 0;
 
 int main(int argc, char *argv[])
 {

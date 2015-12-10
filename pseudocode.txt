@@ -1,0 +1,87 @@
+Version 1.3.6
+Top-to bottom execution of main()
+Nested functions are shown once after ():
+Crashing on Windows with certain data sets.   Time to refactor.  Bleh.
+
+load inputfile into dictionary
+
+GetScanSetNumberArray():
+  loop on scan_n sections
+  collect values for 'scanset' seen
+  reduce the array to unuque values
+  return count
+
+GetNSIValues():
+  loop on scan_n sections
+  ReadNSIfile(section, "nf")
+  ReadNSIfile(section, "ff")
+  ReadNSIfile(section, "nf2") if defined
+  ReadNSIfile(section, "ff2") if defined
+    read all lines of file
+    record which line is the first with data
+    record the 'date/time' value from NSI text files.
+    save 'startrow' and 'datetime' back to the dictionary
+
+GetZ():
+  loop on scan_n sections
+  if nf2 defined:
+    ZplusOrZminus = GetZplusOrZminus(section, "nf")
+    CreateZlisting(section_nf, section_nf2, Z, ZplusOrZminus)
+  if ff2 defined
+    ZplusOrZminus = GetZplusOrZminus(section, "ff"):
+      read both files finding max amp and phase at max amp.
+      Calculate whether to add or subtract z2
+    CreateZlisting(section_ff, section_ff2, Z, ZplusOrZminus):
+      read both files and replace the ff file with the z+/- combination of the two
+
+loop on scansets
+GetEfficiencies(scanset):
+  loop on scan_n sections matching scanset
+
+  scans[1] = GetScanData(section_copol_pol0)
+  beamCenters(scans[1], "nf")
+  beamCenters(scans[1], "ff")
+  pickNominalAngles(scans[1])
+  CheckSideband(scans[1])
+
+  scans[2] = GetScanData(section_xpol_pol0)
+
+  scans[3] = GetScanData(section_copol_pol1):
+    read ini file settings into scans[3]
+  beamCenters(scans[3], "nf")
+  beamCenters(scans[3], "ff"):
+    read file accumulating center of mass for amp>-10 dB.
+
+  pickNominalAngles(scans[3]):
+    hard-coded lookup table of nominal pointing angles
+  CheckSideband(scans[3]):
+    if sb=1 (USB):
+    invert sign on the calculated beam centers
+    scans[3].sideband_flipped = -1
+  
+  scans[4] = GetScanData(section_xpol_pol1):
+  
+  ReadCopolFile()
+  FitPhase()
+  FitAmplitude()
+  ReadCrossPolFile()
+  GetAdditionalEfficiencies()
+  WriteCopolData()
+  PlotCopol()
+  WriteCrosspolData()
+  PlotCrosspol()
+
+PlotCircles():
+  loop on band
+  MakeCircleAndPoints(band):
+    if band found in data sets
+    make a pointing angles plot.  
+
+RemoveKeys():
+  loop on scan_n sections:
+    Remove certain keys from dictionary depending on whether copol or xpol
+
+SaveOutputFile()  
+  save the SW version num to the dictionary
+  write out the dictionary to the output ini file.   
+      

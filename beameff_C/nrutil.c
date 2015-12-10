@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #define NR_END 1
 #define FREE_ARG char*
-extern int DEBUGGING;
+extern int DEBUGGING_NR;
 
 void nrerror(char error_text[])
 /* Numerical Recipes standard error handler */
@@ -26,19 +26,19 @@ float *vector(long nl, long nh)
 {
 	float *v;
         int size = (nh-nl+1+NR_END)*sizeof(float);
-	if (DEBUGGING) {
+	if (DEBUGGING_NR) {
 	  fprintf(stderr,"vector: v=malloc(%d)\n",size);
 	}
 	v=(float *)malloc((size_t) (size));
 	if (v==NULL) {
 	  fprintf(stderr,"Got a null pointer\n");
 	} else {
-	  if (DEBUGGING) {
+	  if (DEBUGGING_NR) {
 	    fprintf(stderr,"returned pointer = %p\n",v);
 	  }
 	}
 	if (!v) nrerror("allocation failure in vector()");
-	if (DEBUGGING) {
+	if (DEBUGGING_NR) {
 	  fprintf(stderr,"Done malloc\n");
 	}
 	return v-nl+NR_END;

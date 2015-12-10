@@ -11,7 +11,7 @@ OBJ  = dictionary.o iniparser.o brent.o f1dim.o mnbrak.o constants.o linmin.o fr
 LIBS =
 INCS = -I../iniparser/src 
 BIN  = beam_eff.exe
-CFLAGS = -g $(INCS)  
+CFLAGS = -g -O0 -Wall $(INCS)  
 RM = rm -f
 
 .PHONY: all all-before all-after clean clean-custom
