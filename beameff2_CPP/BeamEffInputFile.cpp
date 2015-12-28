@@ -32,23 +32,23 @@ using namespace std;
 
 /// Contains the scanSet ID and sections metadata.
 struct scanSetItem {
-    int id_m;                               ///< the unique scanSet ID
+    int scanSet_m;                          ///< the unique scanSet ID
     std::vector<string> sections_m;         ///< list of [scan_n] section strings in the scanSet
     std::vector<string>::const_iterator sectionIt_m;
                                             ///< iterator for the section strings
 
-    scanSetItem(int id)
-      : id_m(id)
+    scanSetItem(int scanset)
+      : scanSet_m(scanset)
         {}
     ///< construct with a numeric ID.
 
     bool operator == (const scanSetItem &other) const {
-        return (id_m == other.id_m);
+        return (scanSet_m == other.scanSet_m);
     }
     ///< equality operator required for std::find()
 
     bool operator < (const scanSetItem &other) const {
-        return (id_m < other.id_m);
+        return (scanSet_m < other.scanSet_m);
     }
     ///< LT operator required for std::sort()
 };
@@ -69,7 +69,7 @@ public:
             it = begin();
         else
             ++it;
-        return (it != end()) ? (it -> id_m) : (0);
+        return (it != end()) ? (it -> scanSet_m) : (0);
     }
     ///< iterate over scanSet IDs in the list
     ///< @param reset: pass true to start over at the lowest ID.
@@ -139,21 +139,33 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
 {
     dict_m = iniparser_load(inputFile_m.c_str());
     if (dict_m) {
+        const char *pval;
+
+        // Read the output directory and make the output file name:
+        pval = iniparser_getstring(dict_m, "settings:outputdirectory", "");
+        outputDir_m = pval;
+        outputFile_m = pval;
+        outputFile_m += "output.txt";
+
         // Read the file delimiter to use when loading listing files:
-        const char *pdelim = iniparser_getstring(dict_m, "settings:delimiter", "tab");
-        if (!stricmp(pdelim, "tab"))
+        pval = iniparser_getstring(dict_m, "settings:delimiter", "tab");
+        if (!stricmp(pval, "tab"))
             delim_m = "\t";
         else
-            delim_m = pdelim;
+            delim_m = pval;
 
         // Read the pointing option to use:
-        const char *pcenters = iniparser_getstring(dict_m, "settings:centers", "nominal");
-        if (!stricmp(pcenters, "actual"))
+        pval = iniparser_getstring(dict_m, "settings:centers", "nominal");
+        if (!stricmp(pval, "actual"))
             pointingOption_m = ALMAConstants::ACTUAL;
-        else if (!stricmp(pcenters, "7meter"))
+        else if (!stricmp(pval, "7meter"))
             pointingOption_m = ALMAConstants::ACA7METER;
-        else if(!strcmp(pcenters, "band1test"))
+        else if(!strcmp(pval, "band1test"))
             pointingOption_m = ALMAConstants::BAND1TEST;
+
+        // Read the gnuplot path:
+        pval = iniparser_getstring(dict_m, "settings:gnuplot", "");
+        gnuplotPath_m = pval;
 
         // Load all the scanset and section metadata:
         loadScanSetIds();
@@ -207,6 +219,43 @@ int BeamEffInputFile::nextScanSet(bool reset) {
 const std::string &BeamEffInputFile::nextSection(int scanSet, bool reset) {
     return scanSets_m -> nextSection(scanSet, reset);
 }
+
+bool BeamEffInputFile::getDatabaseKeys(std::string &section,
+                                       unsigned &scanSetId,
+                                       unsigned &scanId,
+                                       unsigned &FEConfigId,
+                                       unsigned &TestDataHeaderId)
+{
+    scanSetId = scanId = FEConfigId = TestDataHeaderId = 0;
+
+    if (!dict_m)
+        return false;
+
+    string sectionKey = section + ":scanset_id";
+    int val = iniparser_getint(dict_m, sectionKey.c_str(), -1);
+    if (val > 0)
+        scanSetId = static_cast<unsigned>(val);
+    else
+        return false;
+
+    sectionKey = section + ":scan_id";
+    val = iniparser_getint(dict_m, sectionKey.c_str(), -1);
+    if (val > 0)
+        scanId = static_cast<unsigned>(val);
+
+    sectionKey = section + ":fecfg";
+    val = iniparser_getint(dict_m, sectionKey.c_str(), -1);
+    if (val > 0)
+        FEConfigId = static_cast<unsigned>(val);
+
+    sectionKey = section + ":tdh_id";
+    val = iniparser_getint(dict_m, sectionKey.c_str(), -1);
+    if (val > 0)
+        TestDataHeaderId = static_cast<unsigned>(val);
+
+    return true;
+}
+
 
 void BeamEffInputFile::print() const {
     cout << "Input File: '" << inputFile_m << "'" << endl;

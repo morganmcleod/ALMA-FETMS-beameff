@@ -23,65 +23,33 @@
 
 #include <string>
 #include "ALMAConstants.h"
+#include "EfficiencyData.h"
 
 // Forward declare implementation classes:
 class ScanData;
 struct _dictionary_;
 typedef _dictionary_ dictionary;
 
-/// All the efficiency data which is collected for a single polarization:
-struct EfficiencyData {
-
-    //power differences (copol-xpol):
-    float ifatten_diff;             ///< dB difference in IF attenuation in effect during the measurement
-    float peak_diff_NF;             ///< dB difference between the nearfield scans peak power levels
-    float peak_diff_FF;             ///< dB difference between the farfield scans peak power levels
-
-    //Copol phase fit results:
-    float deltaX, deltaY, deltaZ;   ///< phase center coordinates.
-    float eta_phase;                ///< phase efficiency
-
-    //Copol efficiency values
-    float eta_spillover;            ///< Spillover efficiency value in [0...1]
-    float eta_taper;                ///< Taper efficiency in [0...1]
-    float eta_illumination;         ///< Illumination efficiency in [0...1]
-
-    //TICRA Polarization efficiencies
-    float eta_spill_co_cross;       ///< component of xpol spillover efficiency?
-    float eta_pol_on_secondary;     ///< component of xpol spillover efficiency?
-    float eta_pol_spill;            ///< xpol spillover efficiency in [0...1]?
-
-    //Additional efficiencies
-    float edge_taper_db;            ///< Average power in dB of the pixels falling at the edge of the subreflector.
-    float eta_tot_np;               ///< Efficiency other than polarizaion and defocus in [0..1]
-                                    ///<  (eta_phase * eta_spillover * eta_taper)
-    float eta_pol;                  ///< Polarization efficiency in [0..1]
-    float eta_tot_nd;               ///< Efficiency other than defocus in [0..1] (eta_tot_np * eta_pol)
-    float eta_defocus;              ///< Defocus efficency in [0..1]
-    float total_aperture_eff;       ///< Overall aperture efficiency in [0..1] (eta_tot_nd * eta_defocus)
-    float shift_from_focus_mm;      ///< Difference between delta_z and the nominal probe distance.
-    float subreflector_shift_mm;    ///< Distance subreflector must move in order to get best defocus efficiency.
-    float defocus_efficiency;       ///< Defocus efficency in [0..1] assuming a subreflector shift.
-    float mean_subreflector_shift;  ///< The average of both polarizations subreflector shift.
-
-    void print(int indent = 0);
-    ///< output object state
-};
-
-
-
 /// A collection of up to 5 ScanData objects in the following roles:
 /// Pol0 Copol, Pol0 Xpol, Pol1 Copol, Pol1 Xpol, 180-degree scan (either pol).
 class ScanSet {
 public:
-    ScanSet(int id = 0);
-    ///< default construct with scanSet ID
+    ScanSet(unsigned scanSet = 0);
+    ///< default construct
+    ///< @param scanSet number from ini file.  Not a database key.
 
     ~ScanSet();
     ///< destructor
 
     void clear();
     ///< reset the object to it's just-constructed state.
+
+    void setDatabaseKeys(unsigned scanSetId, unsigned scanId, unsigned FEConfigId, unsigned TestDataHeaderId);
+    ///< store the additional database keys which identify this ScanSet
+    ///< @param scanSetId database key to ScanSetDetails table.
+    ///< @param scanId database key to ScanDetails table.
+    ///< @param FEConfigId database key to FE_Config table.
+    ///< @param TestDataHeaderId database key to TestData_Header table.
 
     bool loadScan(const dictionary *dict, const std::string inputSection, const std::string delim);
     ///< load a scan from the input file into one of the ScanData slots.
@@ -91,35 +59,72 @@ public:
     ///< @param delim: the delimiter to use when loading listing files.
     ///< @return true if no errors loading and parsing the section.
 
-    bool getEfficiencies(ALMAConstants::PointingOptions pointingOption);
+    bool calcEfficiencies(ALMAConstants::PointingOptions pointingOption);
     ///< calculate beam efficiencies, etc. from the loaded data.
+    ///< @return true if no errors during calculation.
+
+    bool writeOutputFile(dictionary *dict, const std::string outputFilename);
+    ///< save the calcualted efficiency results into the given dictionary and then to the specified output file name
+    ///< @return true if no errors writing the results
+
+    bool makePlots(const std::string &outputDirectory, const std::string &gnuplotPath);
 
     void print(int indent = 0);
     ///< output object state
 
 private:
-    int id_m;                   // scanSet ID
+    unsigned scanSet_m;         ///< 'scanset' number from the input file.  Not related to any database table.
+    unsigned scanSetId_m;       ///< keyID from ScanSetDetails table for plot label
+    unsigned scanId_m;          ///< keyID from ScanDetails table for plot label
+    unsigned FEConfigId_m;      ///< keyID from FE_Config table
+    unsigned TestDataHeaderId_m;///< keyID from TestData_Header table
+
     int band_m;                 // ALMA band number (1-10)
+    ALMAConstants::PointingOptions pointingOption_m;
+                                // pointing option passed to calcEfficiencies()
     ScanData *CopolPol0_m;      // Data set for pol0 copol
     ScanData *XpolPol0_m;       // Data set for pol0 xpol
     ScanData *CopolPol1_m;      // Data set for pol1 copol
     ScanData *XpolPol1_m;       // Data set for pol1 xpol
     ScanData *Copol180_m;       // Data set for 180-degree copol scan, can be either pol
 
-    EfficiencyData Pol0Effs_m;  ///< efficiency data for pol0
-    EfficiencyData Pol1Effs_m;  ///< efficiency data for pol0
+    EfficiencyData::OnePol Pol0Eff_m;           ///< efficiency data for pol0
+    EfficiencyData::OnePol Pol1Eff_m;           ///< efficiency data for pol0
+    EfficiencyData::CombinedPols CombinedEff_m; ///< efficiency data for both pols combined
 
-    float nominal_z_offset_m;   ///< average of delta_z for Pol0 and Pol1 copol scans
-    float squint_m;             ///< Beam squint as percentage of FWHM of the Beam.   Not calculated by this program?
-    float squint_arcseconds_m;  ///< Beam squint in arcsecods.   Not calculated by this program?
+    bool calcEfficiencies_impl(ScanData *copol, ScanData *xpol, EfficiencyData::OnePol &eff);
+    ///< Phase 1 calculate efficiencies for a single pol from copol and xpol ScanData.
 
-    bool getEfficiencies_impl(ALMAConstants::PointingOptions pointingOption,
-                              ScanData *copol, ScanData *xpol, EfficiencyData &eff);
-    ///< analyze beams for a single pol from copol and xpol ScanData.
+    bool calcEfficiencies_impl2(const ScanData *copol, const ScanData *xpol, EfficiencyData::OnePol &eff);
+    ///< Phase 2 calculate efficiencies for a single pol from copol and xpol ScanData.
 
-    bool getEfficiencies_impl2(ALMAConstants::PointingOptions pointingOption,
-                               const ScanData *copol, const ScanData *xpol, EfficiencyData &eff);
-    ///< calculate efficiencies for a single pol from copol and xpol ScanData.
+    bool analyzeCopol_impl(ScanData *copol, float &az, float &el);
+    ///< implementation of copol analysis, reused for copol and copol180 data sets.
+
+    bool calcSquint_impl();
+    ///< calculate beam squint for both polarizations plus a third 180-degree scan.
+
+    bool updateCopolSection(dictionary *dict, const std::string &section, const ScanData *copol, const EfficiencyData::OnePol &eff);
+    ///< helper to update the dictionary for a copol scan
+
+    bool updateXpolSection(dictionary *dict, const std::string &section, const ScanData *xpol, const EfficiencyData::OnePol &eff);
+    ///< helper to update the dictionary for a xpol scan
+
+    static void updateDictionary(dictionary *dict, const std::string &section, const std::string &key, const std::string &value);
+    ///< private helper to update the dictionary
+
+    bool writePlotDataFiles(const std::string &outputDirectory, const ScanData *scan,
+                            std::string &fileNameFF, std::string &fileNameNF,
+                            float copolPeakAmpFF, float copolPeakAmpNF);
+    ///< private helper to write output files for plotting
+    ///< filenames are returned in fileNameFF and fileNameNF
+
+    bool makeOnePlot(const std::string &outputDirectory, const std::string &gnuplotPath,
+                     const std::string &dataFilename, const ScanData *scan, bool nf, bool phase,
+                     float azPointing, float elPointing, std::string &fileNamePlot);
+    ///< private helper to write command file for plotting and execute it
+    ///< returns the command filename in fileNameCmd
+    ///< returns the plot filename in fileNamePlot
 };
 
 

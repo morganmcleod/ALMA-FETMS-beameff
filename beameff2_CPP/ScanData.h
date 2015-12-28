@@ -84,6 +84,18 @@ public:
     ///< @param subreflectorRadius: in degrees.
     ///< @param copolPeakAmp: If non-zero, use to normalize the FF beam (to normalize xpol to copol peak.)
 
+    const std::string &getInputSection() const
+      { return inputSection_m; }
+    ///< @return the input file section from which this scan was loaded
+
+    const std::string &getMeasDateTime() const
+      { return measDateTime_m; }
+    ///< @return measurement date/time string
+
+    unsigned getScanId() const
+      { return scanId_m; }
+    ///< @return the scan ID
+
     int getBand() const
       { return band_m; }
     ///< @return the ALMA band number
@@ -92,9 +104,16 @@ public:
       { return scanType_m; }
     ///< @return the type of scan: COPOL, XPOL, etc.
 
+    std::string getScanTypeString() const;
+    ///< @return the type of scan as a string.
+
     int getPol() const
       { return pol_m; }
     ///< @return the polarization (0 or 1)
+
+    int getTilt() const
+      { return tilt_m; }
+    ///< @return the tilt angle of the measurement
 
     float getZDistance() const
       { return zDistance_m; }
@@ -104,12 +123,12 @@ public:
       { return ifAtten_m; }
     ///< @return the IF attenuatom
 
-    float getNFPeak(float *phase = NULL) const;
-    ///< @return the peak power and optionally phase at peak in the nearfield scan
-    ///< @param phase: if not NULL, where to put the phase value.
-
     float getFFPeak(float *phase = NULL) const;
     ///< @return the peak power and optionally phase at peak in the farfield scan
+    ///< @param phase: if not NULL, where to put the phase value.
+
+    float getNFPeak(float *phase = NULL) const;
+    ///< @return the peak power and optionally phase at peak in the nearfield scan
     ///< @param phase: if not NULL, where to put the phase value.
 
     float getRFGhz() const
@@ -123,6 +142,10 @@ public:
     const ScanDataRaster *getFFScan() const
       { return FF_m; }
     ///< @return const pointer to the FF scan data
+
+    const ScanDataRaster *getNFScan() const
+      { return NF_m; }
+    ///< @return const pointer to the NF scan data
 
     void setPhaseFitResults(float deltaX, float deltaY, float deltaZ, float etaPhase);
     ///< Store the phase center and efficiency computed in FitPhase()
@@ -142,7 +165,7 @@ public:
 private:
 
     std::string inputSection_m; ///< section name in input file
-    std::string scanId_m;       ///< keyID from ScanDetails passed in for plot label
+    unsigned scanId_m;          ///< keyID from ScanDetails passed in for plot label
 
     std::string measDateTime_m; ///< date/time string when measured.
     std::string NSIDateTime_m;  ///< date/time string from NSI text file.
@@ -157,6 +180,7 @@ private:
     int band_m;                 ///< ALMA band in 1-10
     int pol_m;                  ///< -1=undefined, 0 or 1
     int sb_m;                   ///< -1=undefined, 1=USB, 2=LSB
+    int tilt_m;                 ///< tilt angle in degrees.
     float zDistance_m;          ///< Z distance of scan probe in mm
     float ifAtten_m;            ///< IF processor attenuation in dB for this single scan.
 
@@ -177,9 +201,6 @@ private:
     ///< private helper to numerically combine dual Z scans.
     ///< @param z1 the first scan.  Will be replaced by combined scan.
     ///< @param z2 the second scan.
-
-    std::string scanTypeString() const;
-    ///< private helper to return the value of scanType_m as a string.
 };
 
 #endif /* SCANDATA_H_ */

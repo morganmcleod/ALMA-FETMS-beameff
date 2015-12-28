@@ -46,7 +46,6 @@ ScanData::~ScanData() {
 void ScanData::clear() {
     freeArrays();
     inputSection_m.clear();
-    scanId_m.clear();
     measDateTime_m.clear();
     NSIDateTime_m.clear();
     filenameNF_m.clear();
@@ -54,9 +53,11 @@ void ScanData::clear() {
     filenameNF2_m.clear();
     filenameFF2_m.clear();
 
+    scanId_m = 0;
     scanType_m = UNDEFINED;
     rfGHz_m = 0.0;
     pol_m = sb_m = -1;
+    tilt_m = 0;
     zDistance_m = 0;
     ifAtten_m = 0;
 
@@ -86,7 +87,7 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
     // scanId_m
     sectionKey = inputSection_m;
     sectionKey += ":scan_id";
-    scanId_m = iniparser_getstring(dict, sectionKey.c_str(), "");
+    scanId_m = iniparser_getint(dict, sectionKey.c_str(), 0);
 
     // measDateTime_m
     sectionKey = inputSection_m;
@@ -137,6 +138,11 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
         sb_m = 2;
         cout << "ScanData::loadFromIni('" << inputSection << "'): sb must be 1 or 2.  Assuming 2=LSB." << endl;
     }
+
+    //tilt_m
+    sectionKey = inputSection_m;
+    sectionKey += ":tilt";
+    tilt_m = iniparser_getint(dict, sectionKey.c_str(), 0);
 
     //probe zDistance_m
     sectionKey = inputSection_m;
@@ -210,7 +216,7 @@ bool ScanData::loadListings(const std::string &delim) {
     // make sure there is not already raster data allocated:
     freeArrays();
     if (sb_m == 1)
-        cout << "Pol " << pol_m << " " << scanTypeString() << ": rotating USB scans." << endl;
+        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating USB scans." << endl;
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
         NF_m = new ScanDataRaster;
@@ -354,12 +360,38 @@ void ScanData::analyzeBeams(float azNominal, float elNominal, float subreflector
     }
 }
 
-float ScanData::getNFPeak(float *phase) const {
-    return NF_m ? NF_m -> getPeak(phase) : 0.0;
+std::string ScanData::getScanTypeString() const {
+    string ret("UNDEFINED");
+    switch (scanType_m) {
+    case ScanData::COPOL:
+        ret = "copol";
+        break;
+
+    case ScanData::XPOL:
+        ret = "xpol";
+        break;
+
+    case ScanData::COPOL180:
+        ret = "copol180";
+        break;
+
+    case ScanData::DUAL:
+        ret = "4545_scan";
+        break;
+
+    case ScanData::UNDEFINED:
+    default:
+        break;
+    }
+    return ret;
 }
 
 float ScanData::getFFPeak(float *phase) const {
     return FF_m ? FF_m -> getPeak(phase) : 0.0;
+}
+
+float ScanData::getNFPeak(float *phase) const {
+    return NF_m ? NF_m -> getPeak(phase) : 0.0;
 }
 
 void ScanData::setPhaseFitResults(float deltaX, float deltaY, float deltaZ, float etaPhase) {
@@ -396,8 +428,8 @@ void ScanData::subtractForAttenuator(float ifAttenDiff) {
 void ScanData::print(int _indent) const {
     string indent(_indent, ' ');
 
-    cout << indent << "inputSection_m = " << inputSection_m << endl;
-    cout << indent << "scanId_m = '" << scanId_m << "'" << endl;
+    cout << indent << "inputSection_m = '" << inputSection_m << "'" << endl;
+    cout << indent << "scanId_m = " << scanId_m << endl;
     cout << indent << "measDateTime_m = '" << measDateTime_m << "'" << endl;
     cout << indent << "NSIDateTime_m = '" << NSIDateTime_m << "'" << endl;
 
@@ -406,7 +438,7 @@ void ScanData::print(int _indent) const {
     cout << indent << "filenameNF2_m = '" << filenameNF2_m << "'" << endl;
     cout << indent << "filenameFF2_m = '" << filenameFF2_m << "'" << endl;
 
-    cout << indent << "scanType_m = " << scanTypeString() << endl;
+    cout << indent << "scanType_m = " << getScanTypeString() << endl;
     cout << indent << "rfGHz_m = " << rfGHz_m << endl;
     cout << indent << "pol_m = " << pol_m << endl;
     cout << indent << "sb_m = " << sb_m << endl;
@@ -435,32 +467,4 @@ void ScanData::print(int _indent) const {
         NF2_m -> print(_indent + 2, 3, 2);
     }
 }
-
-std::string ScanData::scanTypeString() const {
-    string ret("UNDEFINED");
-    switch (scanType_m) {
-    case ScanData::COPOL:
-        ret = "copol";
-        break;
-
-    case ScanData::XPOL:
-        ret = "xpol";
-        break;
-
-    case ScanData::COPOL180:
-        ret = "copol180";
-        break;
-
-    case ScanData::DUAL:
-        ret = "4545_scan";
-        break;
-
-    case ScanData::UNDEFINED:
-    default:
-        break;
-    }
-    return ret;
-}
-
-
 

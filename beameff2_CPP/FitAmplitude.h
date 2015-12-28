@@ -25,11 +25,11 @@ class ScanData;
 
 namespace BeamFitting {
 
-    void FitAmplitude(ScanData *currentScan, float azNominal, float elNominal);
+    void FitAmplitude(ScanData *currentScan, float azActual, float elActual);
     ///< perform phase fit and save results back into currentScan
     ///< @param currentScan: ScanData object containing FF scan for phase fitting
-    ///< @param azNominal: nominal pointing angle in Az
-    ///< @param elNominal: nominal pointing angle in El
+    ///< @param azActual: actual (center of mass) pointing angle in Az
+    ///< @param elActual: actual (center of mass) pointing angle in El
 
 }; // namespace
 

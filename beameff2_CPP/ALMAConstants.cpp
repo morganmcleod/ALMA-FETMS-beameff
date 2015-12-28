@@ -27,14 +27,23 @@ namespace ALMAConstants {
 
 const float c = 2.99792458e8;       // m/s
 const float c_mm_per_ns = 299.79;   // c in mm/ns.
-const float tau = 0.25;
+const float TAU = 0.25;
 
-void getAntennaParameters(PointingOptions pointing, float &M, float &psi_o, float &psi_m) {
+// Note: FOCAL_DEPTH=0.7197 comes from equation 22 of ALMA MEMO 456 using M=20 and phi_0 = 3.58
+// TODO: Is it incorrect for ACA 7m antennas?
+const float FOCAL_DEPTH(0.7197);
+
+void getAntennaParameters(PointingOptions pointing,
+                          float &M, float &psi_o, float &psi_m,
+                          float &plateFactor, float &dishDiameter)
+{
     switch (pointing) {
     case ACA7METER:
         M = 21.775537595;
         psi_o = 68.4694425916;
         psi_m = 3.5798212165;
+        plateFactor = 3.6833;   // arc-s/mm
+        dishDiameter = 7000.0; // mm
         break;
 
     case ACTUAL:
@@ -44,6 +53,8 @@ void getAntennaParameters(PointingOptions pointing, float &M, float &psi_o, floa
         M = 20.0;
         psi_o = 64.0154815383723;
         psi_m = 3.5800849111;
+        plateFactor = 2.148;;   // arc-s/mm
+        dishDiameter = 12000.0; // mm
         break;
     }
 }

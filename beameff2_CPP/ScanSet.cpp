@@ -23,22 +23,26 @@
 #include "ScanData.h"
 #include "ScanDataRaster.h"
 #include "ALMAConstants.h"
+#include "SWVersion.h"
 #include "FitPhase.h"
 #include "FitAmplitude.h"
 #include "iniparser.h"
+#include "stringConvert.h"
 #include <math.h>
 #include <iostream>
+#include <cstdlib>
 using namespace std;
 
-ScanSet::ScanSet(int id)
-  : CopolPol0_m(NULL),
+ScanSet::ScanSet(unsigned scanSet)
+  : pointingOption_m(ALMAConstants::NOMINAL),
+    CopolPol0_m(NULL),
     XpolPol0_m(NULL),
     CopolPol1_m(NULL),
     XpolPol1_m(NULL),
     Copol180_m(NULL)
 {
     clear();
-    id_m = id;
+    scanSet_m = scanSet;
 }
 
 ScanSet::~ScanSet() {
@@ -48,20 +52,25 @@ ScanSet::~ScanSet() {
 #define WHACK(P) { if (P) delete P; P = NULL; }
 
 void ScanSet::clear() {
-    id_m = 0;
+    scanSet_m = 0;
+    scanSetId_m = 0;
+    scanId_m = 0;
+    FEConfigId_m = 0;
+    TestDataHeaderId_m = 0;
     band_m = 0;
+    pointingOption_m = ALMAConstants::NOMINAL;
     WHACK(CopolPol0_m)
     WHACK(XpolPol0_m)
     WHACK(CopolPol1_m)
     WHACK(XpolPol1_m)
     WHACK(Copol180_m)
+}
 
-    memset(&Pol0Effs_m, 0, sizeof(EfficiencyData));
-    memset(&Pol1Effs_m, 0, sizeof(EfficiencyData));
-
-    nominal_z_offset_m = 0.0;
-    squint_m = 0.0;
-    squint_arcseconds_m = 0.0;
+void ScanSet::setDatabaseKeys(unsigned scanSetId, unsigned scanId, unsigned FEConfigId, unsigned TestDataHeaderId) {
+    scanSetId_m = scanSetId;
+    scanId_m = scanId;
+    FEConfigId_m = FEConfigId;
+    TestDataHeaderId_m = TestDataHeaderId;
 }
 
 bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection, const std::string delim) {
@@ -70,12 +79,12 @@ bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection, c
     ScanData *scan = new ScanData;
     // load the contents of the section:
     if (!scan -> loadFromIni(dict, inputSection)) {
-        cout << "ERROR: ScanSet::loadScan(): loadFromIni failed." << cout;
+        cout << "ERROR: ScanSet::loadScan(): loadFromIni failed." << endl;
         error = true;
 
     // load the listing files:
     } else if (!scan -> loadListings(delim)) {
-        cout << "ERROR: ScanSet::loadScan(): loadListings failed." << cout;
+        cout << "ERROR: ScanSet::loadScan(): loadListings failed." << endl;
         error = true;
 
     } else {
@@ -138,14 +147,17 @@ bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection, c
         return true;
 }
 
-bool ScanSet::getEfficiencies(ALMAConstants::PointingOptions pointingOption) {
+bool ScanSet::calcEfficiencies(ALMAConstants::PointingOptions pointingOption) {
     bool ret = true;
 
+    // save the pointing option specified:
+    pointingOption_m = pointingOption;
+
     // calculate for pol0:
-    ret = ret && getEfficiencies_impl(pointingOption, CopolPol0_m, XpolPol0_m, Pol0Effs_m);
+    ret = ret && calcEfficiencies_impl(CopolPol0_m, XpolPol0_m, Pol0Eff_m);
 
     // calculate for pol1:
-    ret = ret && getEfficiencies_impl(pointingOption, CopolPol1_m, XpolPol1_m, Pol1Effs_m);
+    ret = ret && calcEfficiencies_impl(CopolPol1_m, XpolPol1_m, Pol1Eff_m);
 
     // calculate average Z offset of both scans:
     if (CopolPol0_m && CopolPol1_m) {
@@ -154,28 +166,28 @@ bool ScanSet::getEfficiencies(ALMAConstants::PointingOptions pointingOption) {
         if (pol0FF && pol1FF) {
             const AnalyzeResults &pol0 = pol0FF -> getAnalyzeResults();
             const AnalyzeResults &pol1 = pol1FF -> getAnalyzeResults();
-            nominal_z_offset_m = (pol0.deltaZ + pol1.deltaZ) / 2.0;
+            CombinedEff_m.nominal_z_offset = (pol0.deltaZ + pol1.deltaZ) / 2.0;
         }
     }
 
     // calculate phase 2 for pol0:
-    ret = ret && getEfficiencies_impl2(pointingOption, CopolPol0_m, XpolPol0_m, Pol0Effs_m);
+    ret = ret && calcEfficiencies_impl2(CopolPol0_m, XpolPol0_m, Pol0Eff_m);
 
     // calculate phase 2 for pol1:
-    ret = ret && getEfficiencies_impl2(pointingOption, CopolPol1_m, XpolPol1_m, Pol1Effs_m);
+    ret = ret && calcEfficiencies_impl2(CopolPol1_m, XpolPol1_m, Pol1Eff_m);
 
+    // calculate beam squint:
+    ret = ret && calcSquint_impl();
     return ret;
 }
 
-bool ScanSet::getEfficiencies_impl(ALMAConstants::PointingOptions pointingOption,
-                                   ScanData *copolScan, ScanData *xpolScan, EfficiencyData &eff)
-{
+bool ScanSet::calcEfficiencies_impl(ScanData *copolScan, ScanData *xpolScan, EfficiencyData::OnePol &eff) {
     // get the secondary reflector radius for the selected pointing option:
-    float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption);
+    float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
 
     // get the nominal angles for the selected pointing option:
-    float azNominal, elNominal, copolPeakAmp(0);
-    if (!ALMAConstants::getNominalAngles(band_m, pointingOption, azNominal, elNominal))
+    float az, el, copolPeakAmp(0);
+    if (!ALMAConstants::getNominalAngles(band_m, pointingOption_m, az, el))
         return false;
 
     // find peak and atten differences:
@@ -188,30 +200,24 @@ bool ScanSet::getEfficiencies_impl(ALMAConstants::PointingOptions pointingOption
 
     // analyze copol:
     if (copolScan) {
-        // for ACTUAL pointing option use the center of mass for analysis:
-        copolScan -> calcCenterOfMass();
-        if (pointingOption == ALMAConstants::ACTUAL) {
-            copolScan -> getFFCenterOfMass(azNominal, elNominal);
-            cout << "using azActual = " << azNominal << endl;
-            cout << "using elActual = " << elNominal << endl;
+        // this will modify az and el if using ACTUAL pointing:
+        if (analyzeCopol_impl(copolScan, az, el)) {
+            // save the copol peak power to use for normalizing xpol beams below.
+            copolPeakAmp = copolScan -> getFFPeak();
         }
-        copolScan -> analyzeBeams(azNominal, elNominal, subreflectorRadius);
-        copolPeakAmp = copolScan -> getFFPeak();
-        BeamFitting::FitPhase(copolScan, azNominal, elNominal);
-        BeamFitting::FitAmplitude(copolScan, azNominal, elNominal);
     }
-    // analyze xpol, using azNominal, elNominal from copol if pointing is ACTUAL:
+
+    // analyze xpol, normalized by copolPeakAmp:
+    // if using the ACTUAL pointing option, azActual and elActual have already been substituted above.
     if (xpolScan)
-        xpolScan -> analyzeBeams(azNominal, elNominal, subreflectorRadius, copolPeakAmp);
+        xpolScan -> analyzeBeams(az, el, subreflectorRadius, copolPeakAmp);
 
     return true;
 }
 
-bool ScanSet::getEfficiencies_impl2(ALMAConstants::PointingOptions pointingOption,
-                                    const ScanData *copolScan, const ScanData *xpolScan, EfficiencyData &eff)
-{
-    float M, psi_o, psi_m, lambda, delta, beta;
-    ALMAConstants::getAntennaParameters(pointingOption, M, psi_o, psi_m);
+bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *xpolScan, EfficiencyData::OnePol &eff) {
+    float M, psi_o, psi_m, plateFactor, dishDiameter, lambda, delta, beta;
+    ALMAConstants::getAntennaParameters(pointingOption_m, M, psi_o, psi_m, plateFactor, dishDiameter);
 
     if (copolScan && xpolScan) {
         // calculate amplitude peak differences between copol and xpol:
@@ -265,26 +271,24 @@ bool ScanSet::getEfficiencies_impl2(ALMAConstants::PointingOptions pointingOptio
 
             // Defocus efficiency:
             eff.eta_defocus = 1 - 0.3 * pow(
-                    (copolScan -> getKWaveNumber() * (eff.deltaZ - nominal_z_offset_m) / 1000) *
+                    (copolScan -> getKWaveNumber() * (eff.deltaZ - CombinedEff_m.nominal_z_offset) / 1000) *
                     pow(32.0, -2.0), 2.0);
 
             // Total efficiency including defocus:
             eff.total_aperture_eff = eff.eta_tot_nd * eff.eta_defocus;
 
             // Defocus calculation to find subreflector shift:
-            // Note: PLATE=0.7197 comes from equation 22 of ALMA MEMO 456 using M=20 and phi_0 = 3.58
-            const float PLATE(0.7197);
-            float probeZ = copolScan ->getZDistance();
+            float probeZ = 200.0;  //copolScan -> getZDistance();
             lambda = ALMAConstants::c_mm_per_ns / copolScan -> getRFGhz();
-            delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / PLATE;
+            delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
             beta = (2 * M_PI / lambda) * delta * (1 - cos(psi_o / 57.3));
 
             eff.defocus_efficiency =
             100*
             (
-                pow(ALMAConstants::tau, 2.0)
+                pow(ALMAConstants::TAU, 2.0)
                 * pow(sin(beta / 2.0) / (beta / 2.0), 2.0)
-                + (1 - pow(ALMAConstants::tau, 2.0))
+                + (1 - pow(ALMAConstants::TAU, 2.0))
                 * (
                     pow(sin(beta / 2.0) / (beta / 2.0), 4.0)
                     + 4.0 / pow(beta, 2.0)
@@ -292,56 +296,609 @@ bool ScanSet::getEfficiencies_impl2(ALMAConstants::PointingOptions pointingOptio
                   )
             );
             eff.shift_from_focus_mm = eff.deltaZ - probeZ;
-            eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / PLATE;
-            eff.mean_subreflector_shift = nominal_z_offset_m / pow(M, 2.0) / PLATE;
+            eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
             return true;
-
         }
     }
     return false;
 }
 
+bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &az, float &el) {
+    if (!copolScan)
+        return false;
 
-void EfficiencyData::print(int _indent) {
-    string indent(_indent, ' ');
+    // get the secondary reflector radius for the selected pointing option:
+    float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
 
-    cout << indent << "ifatten_diff = " << ifatten_diff << endl;
-    cout << indent << "peak_diff_NF = " << peak_diff_NF << endl;
-    cout << indent << "peak_diff_FF = " << peak_diff_FF << endl;
-    cout << indent << "phase center = " << deltaX << ", " << deltaY << ", " <<  deltaZ << endl;
-    cout << indent << "eta_phase = " << eta_phase << endl;
-    cout << indent << "eta_spillover = " << eta_spillover << endl;
-    cout << indent << "eta_taper = " << eta_taper << endl;
-    cout << indent << "eta_illumination = " << eta_illumination << endl;
-    cout << indent << "eta_spill_co_cross = " << eta_spill_co_cross << endl;
-    cout << indent << "eta_pol_on_secondary = " << eta_pol_on_secondary << endl;
-    cout << indent << "eta_pol_spill = " << eta_pol_spill << endl;
-    cout << indent << "edge_taper_db = " << edge_taper_db << endl;
-    cout << indent << "eta_tot_np = " << eta_tot_np << endl;
-    cout << indent << "eta_pol = " << eta_pol << endl;
-    cout << indent << "eta_tot_nd = " << eta_tot_nd << endl;
-    cout << indent << "eta_defocus = " << eta_defocus << endl;
-    cout << indent << "total_aperture_eff = " << total_aperture_eff << endl;
-    cout << indent << "shift_from_focus_mm = " << shift_from_focus_mm << endl;
-    cout << indent << "subreflector_shift_mm = " << subreflector_shift_mm << endl;
-    cout << indent << "defocus_efficiency_with_subreflector_shift = " << defocus_efficiency << endl;
-    cout << indent << "mean_subreflector_shift = " << mean_subreflector_shift << endl;
+    // find the actual (center of mass) beam pointing:
+    float azActual(0.0), elActual(0.0);
+    copolScan -> calcCenterOfMass();
+    copolScan -> getFFCenterOfMass(azActual, elActual);
+
+    // if using the ACTUAL pointing option, substitute actual pointing for nominal values:
+    if (pointingOption_m == ALMAConstants::ACTUAL) {
+        az = azActual;
+        el = elActual;
+        cout << "using azActual = " << az << endl;
+        cout << "using elActual = " << el << endl;
+    }
+
+    // accumulate values needed for efficiency calculation, using the selected pointing option:
+    copolScan -> analyzeBeams(az, el, subreflectorRadius);
+
+    // perform phase fit using the selected pointing option as a starting guess:
+    BeamFitting::FitPhase(copolScan, az, el);
+
+    // perform amlitude fit always using the ACTUAL beam pointing as a starting guess:
+    BeamFitting::FitAmplitude(copolScan, azActual, elActual);
+    return true;
+}
+
+bool ScanSet::calcSquint_impl() {
+
+    // check that both pol data sets are available:
+    if (!CopolPol0_m && CopolPol1_m)
+        return false;   // error.
+
+    // get the analysis results for both polarizations:
+    const ScanDataRaster *pol0FF = CopolPol0_m -> getFFScan();
+    const ScanDataRaster *pol1FF = CopolPol1_m -> getFFScan();
+    const AnalyzeResults &pol0 = pol0FF -> getAnalyzeResults();
+    const AnalyzeResults &pol1 = pol1FF -> getAnalyzeResults();
+
+    // if the 180-degree scan is present, perform analysis:
+    int pol180 = -1;    // -1=UNDEFINED pol
+    const ScanDataRaster *copol180FF = NULL;
+    if (Copol180_m) {
+        // get the nominal angles for the selected pointing option:
+        float az, el;
+        ALMAConstants::getNominalAngles(band_m, pointingOption_m, az, el);
+        // perform the beam analysis on the 180-degree scan, which may correct az, el to the ACTUAL angles:
+        analyzeCopol_impl(Copol180_m, az, el);
+        // get the polarization of the 180-degree scan:
+        pol180 = Copol180_m -> getPol();
+        // get the FF data set:
+        copol180FF = Copol180_m -> getFFScan();
+    }
+
+    // Get the phase centers of the 0 and 180 deg co-pol patterns for one the first polarization,
+    // and the 90 deg co-pol pattern for the other polarization.
+    // Call the (x,y) values: (x0,y0), (x180,y180), and (x90,y90), respectively.
+
+    float x0(0.0), y0(0.0), x90(0.0), y90(0.0), x180(0.0), y180(0.0);
+
+    switch (pol180) {
+    case 0:
+        x0 = pol0.deltaX;       // the 180 deg scan is pol0
+        y0 = pol0.deltaY;       // so (X0,Y0) are pol0
+        x90 = pol1.deltaX;      // and (X90,Y90) are pol1.
+        y90 = pol1.deltaY;
+        break;
+
+    case 1:
+        x0 = pol1.deltaX;       // the 180 deg scan is pol1
+        y0 = pol1.deltaY;       // so (X0,y0) are pol1
+        x90 = pol0.deltaX;      // and (X90,Y90) are pol0.
+        y90 = pol0.deltaY;
+        break;
+
+    case -1:
+    default:
+        // Default case we will calculate with no 180-degree scan, so no corrections.
+        break;
+    }
+
+    float x_diff(0.0), y_diff(0.0);
+
+    // no 180-deg scan so skip correction:
+    if (!copol180FF) {
+        // uncorrected difference between phase centers:
+        x_diff = pol0.deltaX - pol1.deltaX;
+        y_diff = pol0.deltaY - pol1.deltaY;
+        CombinedEff_m.dist_between_centers_mm = fabs((sqrt(pow(x_diff, 2.0) + pow(y_diff, 2.0))));
+        // No corrections:
+        CombinedEff_m.x_corr = 0.0;
+        CombinedEff_m.y_corr = 0.0;
+        // Assign with no corrections applied:
+        Pol0Eff_m.correctedX = pol0.deltaX;
+        Pol0Eff_m.correctedY = pol0.deltaY;
+        Pol1Eff_m.correctedX = pol1.deltaX;
+        Pol1Eff_m.correctedY = pol1.deltaY;
+        CombinedEff_m.corrected_pol = -1;
+        // Return bogus values for squint to avoid accidentally reporting uncorrected values:
+        CombinedEff_m.squint_arcseconds = -1.0;
+        CombinedEff_m.squint_percent = -1.0;
+
+    // only perform correction if there is a 180 deg scan:
+    } else {
+        // Algorithm to correct phase centers described here:
+        // https://safe.nrao.edu/wiki/bin/view/ALMA/BeamSquintFromSingleScan#correctionProcedure
+
+        const AnalyzeResults &copol180 = copol180FF -> getAnalyzeResults();
+        x180 = copol180.deltaX;    // Get (x180, y180)
+        y180 = copol180.deltaY;
+
+        // uncorrected difference between phase centers:
+        x_diff = x0 - x90;
+        y_diff = y0 - y90;
+
+        float dX = x180 - x0;
+        float dY = y180 - y0;
+        float abs_diff = fabs(dX) - fabs(dY);
+
+        // "There are only two possible corrections:
+        //  depending on whether the relative scan angle of the second polarization was +90 or -90.
+        //  To determine whether it was +90 or -90, compare the signs of x_diff, y_diff, and abs_diff.
+        //  If all three of them are negative or exactly two of them are positive, then it was +90.
+        //  Otherwise it was -90."
+
+        bool positive90 = false;
+        if ((x_diff * y_diff * abs_diff) < 0)
+            positive90 = true;
+
+        //compute x_corr and y_corr:
+        if (positive90) {
+            CombinedEff_m.x_corr = ((-1.0 * dX) - dY) / 2.0;
+            CombinedEff_m.y_corr = (dX - dY) / 2.0;
+
+        } else {
+            CombinedEff_m.x_corr = ((-1.0 * dX) + dY) / 2.0;
+            CombinedEff_m.y_corr = ((-1.0 * dX) - dY) / 2.0;
+        }
+
+        // apply corrections to x90 and y90 for distance and squint calculations:
+        x90 += CombinedEff_m.x_corr;
+        y90 += CombinedEff_m.y_corr;
+
+        // calc corrected distance between beam centers:
+        CombinedEff_m.dist_between_centers_mm = fabs((sqrt(pow(x0 - x90, 2.0) + pow(y0 - y90, 2.0))));
+
+        // save the corrected phase centers:
+        switch (pol180) {
+        case 0:
+            Pol0Eff_m.correctedX = x0;
+            Pol0Eff_m.correctedY = y0;
+            Pol1Eff_m.correctedX = x90;
+            Pol1Eff_m.correctedY = y90;
+            CombinedEff_m.corrected_pol = 1;
+            break;
+        case 1:
+            Pol0Eff_m.correctedX = x90;
+            Pol0Eff_m.correctedY = y90;
+            Pol1Eff_m.correctedX = x0;
+            Pol1Eff_m.correctedY = y0;
+            CombinedEff_m.corrected_pol = 0;
+            break;
+        default:
+            // impossible case
+            break;
+        }
+
+        // Calculate squint using the corrected phase centers:
+        float M, psi_o, psi_m, plateFactor, dishDiameter;
+        ALMAConstants::getAntennaParameters(pointingOption_m, M, psi_o, psi_m, plateFactor, dishDiameter);
+
+        // Compute squint:
+        CombinedEff_m.squint_arcseconds = CombinedEff_m.dist_between_centers_mm * plateFactor;
+
+        // Calculate squint in percentage of units of FWHM of the beam:
+        // 1.15 is the coefficent to mutply by lambda/D to get FWHM where D=diameter of primary mirror in mm.
+        // 60.0 * 60.0 converts to arcseconds.
+
+        float lambda = ALMAConstants::c_mm_per_ns / CopolPol0_m ->getRFGhz();
+        float deg_per_rad = 180.0 / M_PI;
+        CombinedEff_m.squint_percent = (100.0 * CombinedEff_m.squint_arcseconds) / (1.15 * lambda * deg_per_rad * 60.0 * 60.0 / dishDiameter);
+    }
+    return true;
+}
+
+bool ScanSet::writeOutputFile(dictionary *dict, const std::string outputFilename) {
+    string section;
+
+    bool ret = true;
+
+    updateDictionary(dict, "settings", "software_version", BEAMEFF_SW_VERSION_STRING.c_str());
+
+    if (CopolPol0_m) {
+        section = CopolPol0_m -> getInputSection();
+        ret = ret && updateCopolSection(dict, section, CopolPol0_m, Pol0Eff_m);
+        updateDictionary(dict, section, "nominal_z_offset",     to_string(CombinedEff_m.nominal_z_offset, std::fixed, 6));
+        updateDictionary(dict, section, "squint",               to_string(CombinedEff_m.squint_percent, std::fixed, 2));
+        updateDictionary(dict, section, "squint_arcseconds",    to_string(CombinedEff_m.squint_arcseconds, std::fixed, 6));
+    }
+    if (XpolPol0_m) {
+        section = XpolPol0_m -> getInputSection();
+        ret = ret && updateXpolSection(dict, section, XpolPol0_m, Pol0Eff_m);
+    }
+    if (CopolPol1_m) {
+        section = CopolPol1_m -> getInputSection();
+        ret = ret && updateCopolSection(dict, section, CopolPol1_m, Pol1Eff_m);
+    }
+    if (XpolPol1_m) {
+        section = XpolPol1_m -> getInputSection();
+        ret = ret && updateXpolSection(dict, section, XpolPol1_m, Pol1Eff_m);
+    }
+
+    FILE *f = fopen(outputFilename.c_str(), "w");
+    if (!f)
+        ret = false;
+    else {
+        iniparser_dump_ini(dict, f);
+        fclose(f);
+    }
+
+    return ret;
+}
+
+bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, const ScanData *copol, const EfficiencyData::OnePol &eff) {
+    if (!copol)
+        return false;
+
+    // get the nominal angles for the selected pointing option:
+    float azNominal, elNominal;
+    ALMAConstants::getNominalAngles(band_m, pointingOption_m, azNominal, elNominal);
+
+    // get the analysis results
+    const ScanDataRaster *pFF = copol -> getFFScan();
+    const ScanDataRaster *pNF = copol -> getNFScan();
+    if (!pFF || !pNF)
+        return false;
+
+    const AnalyzeResults &FF = pFF -> getAnalyzeResults();
+    const AnalyzeResults &NF = pNF -> getAnalyzeResults();
+
+    updateDictionary(dict, section, "zdistance",            to_string(copol -> getZDistance(), std::fixed, 2));
+
+    updateDictionary(dict, section, "ifatten_diff",         to_string(eff.ifatten_diff, std::fixed, 3));
+    updateDictionary(dict, section, "eta_spillover",        to_string(eff.eta_spillover, std::fixed, 6));
+    updateDictionary(dict, section, "eta_taper",            to_string(eff.eta_taper, std::fixed, 6));
+    updateDictionary(dict, section, "eta_illumination",     to_string(eff.eta_illumination, std::fixed, 6));
+    updateDictionary(dict, section, "delta_x",              to_string(eff.deltaX, std::fixed, 6));
+    updateDictionary(dict, section, "delta_y",              to_string(eff.deltaY, std::fixed, 6));
+    updateDictionary(dict, section, "delta_z",              to_string(eff.deltaZ, std::fixed, 6));
+    updateDictionary(dict, section, "edge_dB",              to_string(eff.edge_taper_db, std::fixed, 3));
+    updateDictionary(dict, section, "eta_phase",            to_string(eff.eta_phase, std::fixed, 6));
+    updateDictionary(dict, section, "eta_tot_np",           to_string(eff.eta_tot_np, std::fixed, 6));
+    updateDictionary(dict, section, "eta_pol",              to_string(eff.eta_pol, std::fixed, 6));
+    updateDictionary(dict, section, "eta_tot_nd",           to_string(eff.eta_tot_nd, std::fixed, 6));
+    updateDictionary(dict, section, "defocus_efficiency",   to_string(eff.eta_defocus, std::fixed, 6));
+    updateDictionary(dict, section, "total_aperture_eff",   to_string(eff.total_aperture_eff, std::fixed, 6));
+    updateDictionary(dict, section, "shift_from_focus_mm",  to_string(eff.shift_from_focus_mm, std::fixed, 6));
+    updateDictionary(dict, section, "subreflector_shift_mm",to_string(eff.subreflector_shift_mm, std::fixed, 6));
+    updateDictionary(dict, section, "defocus_efficiency_due_to_moving_the_subreflector",
+                                                            to_string(eff.defocus_efficiency, std::fixed, 6));
+
+    updateDictionary(dict, section, "ff_xcenter",           to_string(FF.xCenterOfMass, std::fixed, 6));
+    updateDictionary(dict, section, "ff_ycenter",           to_string(FF.yCenterOfMass, std::fixed, 6));
+    updateDictionary(dict, section, "nf_xcenter",           to_string(NF.xCenterOfMass, std::fixed, 6));
+    updateDictionary(dict, section, "nf_ycenter",           to_string(NF.yCenterOfMass, std::fixed, 6));
+    updateDictionary(dict, section, "az_nominal",           to_string(azNominal, std::fixed, 6));
+    updateDictionary(dict, section, "el_nominal",           to_string(elNominal, std::fixed, 6));
+
+    updateDictionary(dict, section, "max_ff_amp_db",        to_string(FF.maxAmp, std::fixed, 3));
+    updateDictionary(dict, section, "max_nf_amp_db",        to_string(NF.maxAmp, std::fixed, 3));
+    updateDictionary(dict, section, "ampfit_amp",           to_string(FF.ampFitAmp, std::fixed, 6));
+    updateDictionary(dict, section, "ampfit_width_deg",     to_string(FF.ampFitWidthDeg, std::fixed, 6));
+    updateDictionary(dict, section, "ampfit_u_off_deg",     to_string(FF.ampFitUOffDeg, std::fixed, 6));
+    updateDictionary(dict, section, "ampfit_v_off_deg",     to_string(FF.ampFitVOffDeg, std::fixed, 6));
+    updateDictionary(dict, section, "ampfit_d_0_90",        to_string(FF.ampFitD_0_90, std::fixed, 6));
+    updateDictionary(dict, section, "ampfit_d_45_135",      to_string(FF.ampFitD_45_135, std::fixed, 6));
+
+    updateDictionary(dict, section, "ampfit_d_45_135",      to_string(FF.ampFitD_45_135, std::fixed, 6));
+
+    updateDictionary(dict, section, "plot_copol_ffamp",     eff.FFCopolAmpPlot);
+    updateDictionary(dict, section, "plot_copol_ffphase",   eff.FFCopolPhasePlot);
+    updateDictionary(dict, section, "plot_copol_nfamp",     eff.NFCopolAmpPlot);
+    updateDictionary(dict, section, "plot_copol_nfphase",   eff.NFCopolPhasePlot);
+    return true;
+}
+
+bool ScanSet::updateXpolSection(dictionary *dict, const std::string &section, const ScanData *xpol, const EfficiencyData::OnePol &eff) {
+    if (!xpol)
+        return false;
+
+    const ScanDataRaster *pFF = xpol -> getFFScan();
+    if (!pFF)
+        return false;
+
+    const AnalyzeResults &FF = pFF -> getAnalyzeResults();
+
+    updateDictionary(dict, section, "zdistance",            to_string(xpol -> getZDistance(), std::fixed, 2));
+    updateDictionary(dict, section, "eta_spill_co_cross",   to_string(eff.eta_spill_co_cross, std::fixed, 6));
+    updateDictionary(dict, section, "eta_pol_on_secondary", to_string(eff.eta_pol_on_secondary, std::fixed, 6));
+    updateDictionary(dict, section, "eta_pol_spill",        to_string(eff.eta_pol_spill, std::fixed, 6));
+    updateDictionary(dict, section, "max_dbdifference",     to_string(eff.peak_diff_FF, std::fixed, 3));
+    updateDictionary(dict, section, "max_ff_amp_db",        to_string(FF.maxAmp, std::fixed, 3));
+
+    updateDictionary(dict, section, "plot_xpol_ffamp",      eff.FFXpolAmpPlot);
+    updateDictionary(dict, section, "plot_xpol_ffphase",    eff.FFXpolPhasePlot);
+    updateDictionary(dict, section, "plot_xpol_nfamp",      eff.NFXpolAmpPlot);
+    updateDictionary(dict, section, "plot_xpol_nfphase",    eff.NFXpolPhasePlot);
+    return true;
+}
+
+void ScanSet::updateDictionary(dictionary *dict, const std::string &section, const std::string &key, const std::string &value) {
+    string sectionKey(section);
+    sectionKey += ":";
+    sectionKey += key;
+    iniparser_set(dict, sectionKey.c_str(), value.c_str());
+}
+
+
+bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &gnuplotPath) {
+    string fileNameFF, fileNameNF, gnuplotCommand;
+    bool ret = true;
+
+    float azPointing(0), elPointing(0);
+    ALMAConstants::getNominalAngles(band_m, pointingOption_m, azPointing, elPointing);
+
+    float copolPeakAmpFF(0), copolPeakAmpNF(0);
+
+    // Make the pol0 copol plots:
+    if (CopolPol0_m) {
+
+        // get the actual pointing angles for copol pol0:
+        if (pointingOption_m == ALMAConstants::ACTUAL)
+            CopolPol0_m -> getFFCenterOfMass(azPointing, elPointing);
+
+        // get the peak amplitude for normalization:
+        copolPeakAmpFF = CopolPol0_m -> getFFPeak();
+        copolPeakAmpNF = CopolPol0_m -> getNFPeak();
+
+        // write out the NF and FF data files for gnuplot to use:
+        if (writePlotDataFiles(outputDirectory, CopolPol0_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
+            // make the Farfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
+                                     false, false, azPointing, elPointing, Pol0Eff_m.FFCopolAmpPlot);
+            // make the Farfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
+                                     false, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
+            // make the Nearfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol0_m,
+                                     true, false, azPointing, elPointing, Pol0Eff_m.NFCopolAmpPlot);
+            // make the Nearfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol0_m,
+                                     true, true, azPointing, elPointing, Pol0Eff_m.NFCopolPhasePlot);
+        }
+    }
+    // Make the pol0 xpol plots:
+    if (XpolPol0_m) {
+
+        // Assume we are using the copol pointing angles and peak amplitude from above.
+
+        // write out the NF and FF data files for gnuplot to use:
+        if (writePlotDataFiles(outputDirectory, XpolPol0_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
+            // make the Farfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol0_m,
+                                     false, false, azPointing, elPointing, Pol0Eff_m.FFXpolAmpPlot);
+            // make the Farfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol0_m,
+                                     false, true, azPointing, elPointing, Pol0Eff_m.FFXpolPhasePlot);
+            // make the Nearfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol0_m,
+                                     true, false, azPointing, elPointing, Pol0Eff_m.NFXpolAmpPlot);
+            // make the Nearfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol0_m,
+                                     true, true, azPointing, elPointing, Pol0Eff_m.NFXpolPhasePlot);
+        }
+    }
+    // reset the pointing assumption to nominal:
+    ALMAConstants::getNominalAngles(band_m, pointingOption_m, azPointing, elPointing);
+
+    // reset the amplitude peak registers to 0:
+    copolPeakAmpFF = copolPeakAmpNF = 0.0;
+
+    // Make the pol1 copol plots:
+    if (CopolPol1_m) {
+
+        // get the actual pointing angles for copol pol1:
+        if (pointingOption_m == ALMAConstants::ACTUAL)
+            CopolPol1_m -> getFFCenterOfMass(azPointing, elPointing);
+
+        // get the peak amplitude for normalization:
+        copolPeakAmpFF = CopolPol1_m -> getFFPeak();
+        copolPeakAmpNF = CopolPol1_m -> getNFPeak();
+
+        // write out the NF and FF data files for gnuplot to use:
+        if (writePlotDataFiles(outputDirectory, CopolPol1_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
+            // make the Farfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
+                                     false, false, azPointing, elPointing, Pol1Eff_m.FFCopolAmpPlot);
+            // make the Farfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
+                                     false, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhasePlot);
+            // make the Nearfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol1_m,
+                                     true, false, azPointing, elPointing, Pol1Eff_m.NFCopolAmpPlot);
+            // make the Nearfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol1_m,
+                                     true, true, azPointing, elPointing, Pol1Eff_m.NFCopolPhasePlot);
+        }
+    }
+    // Make the pol1 xpol plots:
+    if (XpolPol1_m) {
+
+        // Assume we are using the copol pointing angles and peak amplitude from above.
+
+        // write out the NF and FF data files for gnuplot to use:
+        if (writePlotDataFiles(outputDirectory, XpolPol1_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
+            // make the Farfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol1_m,
+                                     false, false, azPointing, elPointing, Pol1Eff_m.FFXpolAmpPlot);
+            // make the Farfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol1_m,
+                                     false, true, azPointing, elPointing, Pol1Eff_m.FFXpolPhasePlot);
+            // make the Nearfield Amplitude plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol1_m,
+                                     true, false, azPointing, elPointing, Pol1Eff_m.NFXpolAmpPlot);
+            // make the Nearfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol1_m,
+                                     true, true, azPointing, elPointing, Pol1Eff_m.NFXpolPhasePlot);
+        }
+    }
+    return ret;
+}
+
+bool ScanSet::writePlotDataFiles(const std::string &outputDirectory, const ScanData *scan,
+                                 std::string &fileNameFF, std::string &fileNameNF,
+                                 float copolPeakAmpFF, float copolPeakAmpNF)
+{
+    fileNameFF.clear();
+    fileNameNF.clear();
+
+    if (!scan)
+        return false;
+
+    bool ret = true;
+
+    // get the scan raster objects:
+    const ScanDataRaster *pFF = scan -> getFFScan();
+    const ScanDataRaster *pNF = scan -> getNFScan();
+
+    if (pFF) {
+        fileNameFF = outputDirectory;
+        fileNameFF += "ffdata_temp.txt";
+        ret = ret && pFF -> saveFile(fileNameFF, copolPeakAmpFF);
+    }
+    if (pNF) {
+        fileNameNF = outputDirectory;
+        fileNameNF += "nfdata_temp.txt";
+        ret = ret && pNF -> saveFile(fileNameNF, copolPeakAmpNF);
+    }
+    return ret;
+}
+
+bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string &gnuplotPath,
+                          const std::string &dataFilename, const ScanData *scan, bool nf, bool phase,
+                          float azPointing, float elPointing, std::string &fileNamePlot)
+{
+    fileNamePlot.clear();
+    if (!scan)
+        return false;
+
+    fileNamePlot = outputDirectory;
+    fileNamePlot += "band";
+    fileNamePlot += to_string(scan -> getBand());
+    fileNamePlot += "_pol";
+    fileNamePlot += to_string(scan -> getPol());
+    fileNamePlot += "_";
+    fileNamePlot += to_string(scan -> getScanTypeString());
+    fileNamePlot += "_";
+    fileNamePlot += to_string(scan -> getRFGhz());
+    fileNamePlot += "GHz";
+    fileNamePlot += (nf) ? "_nf" : "_ff";
+    fileNamePlot += (phase) ? "phase" : "amp";
+    fileNamePlot += "_tilt";
+    fileNamePlot += to_string(scan -> getTilt());
+    fileNamePlot += "_scanset";
+    fileNamePlot += to_string(scanSetId_m);
+    fileNamePlot += ".png";
+    remove(fileNamePlot.c_str());
+
+    string fileNameCmd = outputDirectory;
+    fileNameCmd += "gnuplot_cmd.txt";
+    remove(fileNameCmd.c_str());
+
+    FILE *f = fopen(fileNameCmd.c_str(), "w");
+    if (!f)
+        return false;
+
+    string title = "Band ";
+    title += to_string(scan -> getBand());
+    title += ", pol ";
+    title += to_string(scan -> getPol());
+    title += " ";
+    title += scan ->getScanTypeString();
+    title += ", ";
+    title += to_string(scan -> getRFGhz());
+    title += " GHz, tilt ";
+    title += to_string(scan -> getTilt());
+
+    // 500x500 pixel .png files.  crop=no blank space around plot:
+    fprintf(f, "set terminal png size 500, 500 crop\r\n");
+    fprintf(f, "set output '%s'\r\n", fileNamePlot.c_str());
+    fprintf(f, "set title '%s'\r\n", title.c_str());
+    // X and Y axis labels:
+    fprintf(f, "set xlabel '%s'\r\n", (nf) ? "X(m)" : "Az(deg)");
+    fprintf(f, "set ylabel '%s'\r\n", (nf) ? "Y(m)" : "El(deg)");
+    // Palette limited to -50 to 0:
+    fprintf(f, "set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n");
+    // Label for legend:
+    fprintf(f, "set cblabel '%s %s'\r\n", (nf) ? "Nearfield" : "Farfield", (phase) ? "Phase (deg)" : "Amplitude (dB)");
+    // Top-down view:
+    fprintf(f, "set view 0,0\r\n");
+    // Palette mapped 3d style for splot:
+    fprintf(f, "set pm3d map\r\n");
+    // Force a square plot within the canvas:
+    fprintf(f, "set size square\r\n");
+    // Set the range of values which are colored using the current palette:
+    fprintf(f, "set cbrange [%s]\r\n", (phase) ? "-180:180" : "-50:0");
+    // For FF plots use parametric mode in degrees to draw the subreflector circle:
+    if (!nf) {
+        fprintf(f, "set parametric\r\n");
+        fprintf(f, "set angles degrees \r\n");
+        fprintf(f, "set urange [0:360]\r\n");
+    }
+    // Set X and Y major tics...?
+    fprintf(f, "set xtics %s\r\n", (nf) ? "0.02" : "2");
+    fprintf(f, "set ytics %s\r\n", (nf) ? "0.02" : "2");
+
+    // for FF plots, set the resolution of the subreflector circle:
+    if (!nf)
+        fprintf(f, "set isosamples 13,11\r\n");
+
+    // measurement date and software version:
+    fprintf(f, "set label 'MeasDate: %s, BeamEff v%s' at screen 0.01, 0.04\r\n",
+            scan -> getMeasDateTime().c_str(),
+            BEAMEFF_SW_VERSION_STRING.c_str());
+
+    // footer line with database keys:
+    string dbKeys("");
+    if (scanId_m)
+        dbKeys += "ScanId=" + to_string(scanId_m);
+    if (FEConfigId_m) {
+        if (!dbKeys.empty())
+            dbKeys += ", ";
+        dbKeys += "FEConfig=" + to_string(FEConfigId_m);
+    }
+    if (TestDataHeaderId_m) {
+        if (!dbKeys.empty())
+            dbKeys += ", ";
+        dbKeys += "TDH=" + to_string(TestDataHeaderId_m);
+    }
+    if (!dbKeys.empty())
+        fprintf(f, "set label '%s' at screen 0.01, 0.07\r\n", dbKeys.c_str());
+
+    // plot fromt the data file.  Column 3 is amplitude, 4 is phase:
+    fprintf(f, "splot '%s' using 1:2:%s title ''", dataFilename.c_str(), (phase) ? "4" : "3");
+
+
+    // for FF plots, draw a circle for the subreflector position:
+    if (!nf) {
+        float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
+
+        fprintf(f, ",%f + %.2f*cos(u),%f + %.2f*sin(u),1 notitle linetype 0 ",
+                   azPointing, subreflectorRadius, elPointing, subreflectorRadius);
+    }
+    fprintf(f, "\r\n");
+
+    fclose(f);
+
+    // call gnuplot:
+    string gnuplotCommand = gnuplotPath;
+    gnuplotCommand += " ";
+    gnuplotCommand += fileNameCmd;
+    std::system(gnuplotCommand.c_str());
+    return true;
 }
 
 void ScanSet::print(int _indent) {
     string indent(_indent, ' ');
-
-    cout << indent << "ScanSet(" << id_m << "):" << endl;
+    cout << indent << "ScanSet(" << scanSet_m << "):" << endl;
     cout << indent << "band_m = " << band_m << endl;
-    cout << indent << "nominal_z_offset_m = " << nominal_z_offset_m << endl;
-    cout << indent << "squint_m = " << squint_m << endl;
-    cout << indent << "squint_arcseconds_m = " << squint_arcseconds_m << endl;
 
     cout << indent << "EfficiencyData(pol0):" << endl;
-    Pol0Effs_m.print(_indent + 2);
-
-    cout << indent << "EfficiencyData(pol1):" << endl;
-    Pol1Effs_m.print(_indent + 2);
+    Pol0Eff_m.print(_indent + 2);
 
     cout << indent << "ScanData(pol0 copol): ";
     if (!CopolPol0_m)
@@ -357,6 +914,10 @@ void ScanSet::print(int _indent) {
         cout << indent << endl;
         XpolPol0_m -> print(_indent + 2);
     }
+
+    cout << indent << "EfficiencyData(pol1):" << endl;
+    Pol1Eff_m.print(_indent + 2);
+
     cout << indent << "ScanData(pol1 copol): ";
     if (!CopolPol1_m)
         cout << indent << "NULL" << endl;
@@ -378,6 +939,9 @@ void ScanSet::print(int _indent) {
         cout << indent << endl;
         Copol180_m -> print(_indent + 2);
     }
+
+    cout << indent << "EfficiencyData(combined pols): " << endl;
+    CombinedEff_m.print(_indent + 2);
 }
 
 

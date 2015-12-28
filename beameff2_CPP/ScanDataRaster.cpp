@@ -64,7 +64,7 @@ bool ScanDataRaster::loadFile(const std::string filename, const std::string deli
     // File is open.  Start reading rows:
     const int LINESIZE = 1024;
     char buf[LINESIZE + 1];
-    unsigned long rowIndex = 0;
+    unsigned rowIndex = 0;
     int scanRet = 0;
 
     // Loop to read all lines:
@@ -104,6 +104,68 @@ bool ScanDataRaster::loadFile(const std::string filename, const std::string deli
             }
         }
     }
+    return true;
+}
+
+bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
+                              const std::string &delim, const std::string &lineterm) const
+{
+    // delete the file if it already exists:
+    remove(filename.c_str());
+
+    // open the output file:
+    FILE *f = fopen(filename.c_str(), "w");
+    if (!f) {
+        cout << "ERROR: ScanDataRaster::saveFile(): Could not open '" << filename << "'" << endl;
+        return false;
+    }
+
+    float x, y, amp, phase, lastX;
+    char textline[500];
+
+    // iterators for main loop:
+    vector<float>::const_iterator itX = xArray_m.begin();
+    vector<float>::const_iterator itY = yArray_m.begin();
+    vector<float>::const_iterator itAmp = ampArray_m.begin();
+    vector<float>::const_iterator itPhi = phiArray_m.begin();
+
+    // to detect first time in loop:
+    bool first = true;
+
+    while (itX != xArray_m.end()) {
+        x = *itX;
+        y = *itY;
+        amp = *itAmp - copolPeakAmp;    // normalize to the copol peak
+        phase = *itPhi;
+
+        // if first iteration, save the last value of x:
+        // TODO: BIG ASSUMPTION here that the data is ordered first by X then by Y.
+        if (first) {
+            lastX = x;
+            first = false;
+        } else {
+            // If x has incremented, put an extra newline in the file:
+            if(x != lastX) {
+                lastX = x;
+                fputs(lineterm.c_str(), f);
+            }
+        }
+
+        // write a line:
+        sprintf(textline, "%f%s%f%s%f%s%f%s",
+                          x, delim.c_str(),
+                          y, delim.c_str(),
+                          amp, delim.c_str(),
+                          phase, lineterm.c_str());
+        fputs(textline, f);
+
+        // increment iterators:
+        itX++;
+        itY++;
+        itAmp++;
+        itPhi++;
+    }
+    fclose(f);
     return true;
 }
 
@@ -298,7 +360,7 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
     float phi_fit, phi_err, eta_phase;                              // calculated values
     double costerm(0.0), sinterm(0.0), normalizationFactor(0.0);    // accumulate fit errors in the loop
 
-    unsigned long i;
+    unsigned i;
     for (i = 0; i < size_m; i++) {
         x = xArray_m[i] - azNominal;
         y = yArray_m[i] - elNominal;
@@ -317,32 +379,43 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
     return eta_phase;
 }
 
-float ScanDataRaster::calcAmplitudeEfficiency(float p[], float azNominal, float elNominal) const {
+float ScanDataRaster::calcAmplitudeEfficiency(float p[], float azActual, float elActual) const {
     float amp_mod_term, amp_diff_term;
     float x, y, E, mask;
-    unsigned long i;
+    double amp_fit = 0.0;
 
-    float amp_fit = 0.0;
+    unsigned i;
     for (i = 0; i < size_m; i++) {
-        x = xArray_m[i] - azNominal;
-        y = xArray_m[i] - elNominal;
+        x = xArray_m[i] - azActual;
+        y = yArray_m[i] - elActual;
         E = EArray_m[i];
         mask = MaskArray_m[i];
 
         if (mask > 0.0) {
-            amp_mod_term = p[1] * (1 - pow((1 - exp(-(1 / pow(p[2], 2.0)) * (pow((x - p[3]), 2.0)
-                                     + pow((y - p[4]), 2.0) - p[5] * (pow((x - p[3]), 2.0)
-                                     - pow((y - p[4]), 2.0)) - 2.0 * p[6] * (x - p[3]) * (y - p[4])))), 2.0));
+            amp_mod_term = p[1] * (
+                1 - pow(
+                    (
+                        1 - exp(
+                            -(1 / pow(p[2], 2.0)) * (
+                                pow((x - p[3]), 2.0) +
+                                pow((y - p[4]), 2.0) -
+                                p[5] * (pow((x - p[3]), 2.0) -
+                                pow((y - p[4]), 2.0)) -
+                                2.0 * p[6] * (x - p[3]) * (y - p[4])
+                            )
+                        )
+                    ), 2.0
+                )
+            );
 
             amp_diff_term = mask * (E - amp_mod_term);
             amp_fit += pow(amp_diff_term, 2.0);
-
         }
     }
-    return amp_fit;
+    return static_cast<float>(amp_fit);
 }
 
-void ScanDataRaster::print(int _indent, unsigned long headRows, unsigned long tailRows) const {
+void ScanDataRaster::print(int _indent, unsigned headRows, unsigned tailRows) const {
     string indent(_indent, ' ');
 
     cout << indent << "size_m = " << size_m << endl;
@@ -353,7 +426,7 @@ void ScanDataRaster::print(int _indent, unsigned long headRows, unsigned long ta
 
     if (size_m) {
         cout << indent << "  x, y, amp, phi:" << endl;
-        unsigned long index;
+        unsigned index;
         for (index = 0; index < headRows; index++) {
             cout << indent << "  ";
             printRow(index);
@@ -366,7 +439,7 @@ void ScanDataRaster::print(int _indent, unsigned long headRows, unsigned long ta
     }
 }
 
-void ScanDataRaster::printRow(unsigned long index) const {
+void ScanDataRaster::printRow(unsigned index) const {
     cout << xArray_m[index] << ", " << yArray_m[index] << ", "
          << ampArray_m[index] << ", " << phiArray_m[index] << endl;
 }

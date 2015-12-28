@@ -45,34 +45,66 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    cout << "input file: " << inputFile << "<br>" << endl;
+
     // load the input file:
     BeamEffInputFile inFile(inputFile);
-    inFile.print();
-    cout << "----" << endl;
+    //inFile.print();
+    //cout << "----" << endl;
+
+    string outputFile = inFile.getOutputFileName();
+    cout << "output file: " << outputFile << "<br>" << endl;
 
     // loop on scanset IDs in the file:
     string section;
-    int scanSetId = inFile.nextScanSet(true);
-    while (scanSetId) {
+
+    unsigned scanSet = inFile.nextScanSet(true);
+    while (scanSet) {
+        cout << "scanset: " << scanSet << "<br>" << endl;
+
         // create a ScanSet object to hold the scans:
-        ScanSet SS(scanSetId);
+        ScanSet SS(scanSet);
+
+        // initialize database keys to zero for each scanset:
+        unsigned scanSetId(0);
+        unsigned scanId(0);
+        unsigned FEConfigId(0);
+        unsigned TestDataHeaderId(0);
 
         // loop on sections belonging to the scanset ID.
-        section = inFile.nextSection(scanSetId, true);
+        section = inFile.nextSection(scanSet, true);
         while (!section.empty()) {
+            cout << "section: " << section << "<br>" << endl;
+
+            // If we haven't assigned the database keys yet,
+            if (scanSetId == 0) {
+                // Load them from the current section and store into the ScanSet:
+                if (inFile.getDatabaseKeys(section, scanSetId, scanId, FEConfigId, TestDataHeaderId))
+                    SS.setDatabaseKeys(scanSetId, scanId, FEConfigId, TestDataHeaderId);
+            }
+
             // load the section into a ScanData object in the ScanSet:
             SS.loadScan(inFile.getDict(), section, inFile.getDelim());
             // go to next section for the scanSet:
-            section = inFile.nextSection(scanSetId);
+            section = inFile.nextSection(scanSet);
         }
-        SS.getEfficiencies(inFile.getPointingOption());
+        // calculate beam efficiencies:
+        SS.calcEfficiencies(inFile.getPointingOption());
 
-        SS.print();
-        cout << "----" << endl;
+        //SS.print();
+        //cout << "----" << endl;
 
-        scanSetId = inFile.nextScanSet();
+        // Generate all the plots:
+        SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath());
+
+        // Write the summary output file containing efficiencies and computed results:
+        SS.writeOutputFile(inFile.useDict(), outputFile);
+
+        // Go to the next scanset in the input file:
+        scanSet = inFile.nextScanSet();
     }
 
+    cout << "done.<br>" << endl;
     return 0;
 }
 

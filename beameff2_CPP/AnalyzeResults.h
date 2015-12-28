@@ -37,7 +37,7 @@ struct AnalyzeResults {
     double sumPowerOnSec;       ///< sum of power on the secondary
     double sumSqPowerOnSec;     ///< sum of squares of power on the secondary
     double sumEOnEdge;          ///< sum of voltage in the secondary reflector edge region.
-    unsigned long edgeNumPts;   ///< number of points falling in the secondary reflector edge region.
+    unsigned edgeNumPts;        ///< number of points falling in the secondary reflector edge region.
 
     // FitPhase results:
     float deltaX, deltaY, deltaZ;

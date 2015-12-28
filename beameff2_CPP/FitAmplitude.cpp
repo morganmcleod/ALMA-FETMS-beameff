@@ -36,13 +36,13 @@ namespace BeamFitting {
 
     const int nTerms_m(6);         ///< terms of amplitude fit model
     ScanData *fitAmpScan(NULL);    ///< Scan we are currently fitting against
-    static float azNominal;               ///< nominal pointing in Az
-    static float elNominal;               ///< nominal pointing in El
+    static float azActual;         ///< actual (center of mass) pointing in Az
+    static float elActual;         ///< actual (center of mass) pointing in El
 
-    void FitAmplitude(ScanData *currentScan, float _azNominal, float _elNominal) {
+    void FitAmplitude(ScanData *currentScan, float _azActual, float _elActual) {
         fitAmpScan = currentScan;
-        azNominal = _azNominal;
-        elNominal = _elNominal;
+        azActual = _azActual;
+        elActual = _elActual;
 
         float ftol = pow(10, -1.0 * fitAmpScan -> getBand());
         int iter_amp;
@@ -61,12 +61,13 @@ namespace BeamFitting {
         //p4=v_offset (deg)
         //p5=D_0-90
         //p6=D_45-135
-        p[1] =  1.0;
-        p[2] =  3.0;
-        p[3] =  0.01 * azNominal;
-        p[4] =  0.01 * elNominal;
-        p[5] =  0.0;
-        p[6] =  0.0;
+        p[0] = 0.0;
+        p[1] = 1.0;
+        p[2] = 3.0;
+        p[3] = 0.01 * azActual;
+        p[4] = 0.01 * elActual;
+        p[5] = 0.0;
+        p[6] = 0.0;
 
         frprmn(p, nTerms_m, ftol, &iter_amp, &fret_amp, functionamp, dfunctionamp);
 
@@ -81,28 +82,28 @@ namespace BeamFitting {
      *
      */
         int i,j;
-        float par[nTerms_m+1];
+        float par[nTerms_m + 1];
         float delta = 0.01, del;
 
         const ScanDataRaster *pscan = fitAmpScan -> getFFScan();
         if (!pscan)
             return;
 
-        for (j=1; j<=nTerms_m; j++) {
+        for (j = 1; j <= nTerms_m; j++) {
             /* set all the parameters back to the current values */
-            for (i=1; i<=nTerms_m; i++) {
+            for (i = 1; i <= nTerms_m; i++) {
                 par[i] = p[i];
             }
             /* apply a small offset to the parameter being adjusted this time through the loop */
-            if (fabs(par[j]) > (delta/100000)) {
-                del = delta*par[j];
+            if (fabs(par[j]) > (delta / 100000)) {
+                del = delta * par[j];
             } else {
                 /* this takes care of the unique case where the initial guess is zero */
                 del = delta;
             }
             par[j] += del;
-            df[j] = ((pscan -> calcAmplitudeEfficiency(par, azNominal, elNominal))
-                  -  (pscan -> calcAmplitudeEfficiency(p, azNominal, elNominal))) / del;
+            df[j] = ((pscan -> calcAmplitudeEfficiency(par, azActual, elActual))
+                  -  (pscan -> calcAmplitudeEfficiency(p, azActual, elActual))) / del;
         }
     }
 
@@ -116,7 +117,7 @@ namespace BeamFitting {
         if (!pscan)
             return 0.0;
 
-        return (pscan -> calcAmplitudeEfficiency(p, azNominal, elNominal));
+        return (pscan -> calcAmplitudeEfficiency(p, azActual, elActual));
     }
 
 }; //namespace

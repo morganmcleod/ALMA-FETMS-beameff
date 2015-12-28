@@ -25,7 +25,8 @@ namespace ALMAConstants {
 
     extern const float c;
     extern const float c_mm_per_ns;
-    extern const float tau;
+    extern const float TAU;
+    extern const float FOCAL_DEPTH;
 
     /// Different pointing options can be used for efficiency calculation:
     enum PointingOptions {
@@ -35,12 +36,16 @@ namespace ALMAConstants {
         BAND1TEST   // the band 1 test dewar
     };
 
-    extern void getAntennaParameters(PointingOptions pointing, float &M, float &psi_o, float &psi_m);
+    void getAntennaParameters(PointingOptions pointing,
+                              float &M, float &psi_o, float &psi_m,
+                              float &plateFactor, float &dishDiameter);
     ///< get the parameters for the selected antenna type.
     ///< @param pointing: from enum PointingOptions
     ///< @param M out
     ///< @param psi_o out
     ///< @param psi_m out
+    ///< @param plateFactor out
+    ///< @param dishDiameter out
 
     extern float getSubreflectorRadius(PointingOptions pointing);
     ///< @return the subreflector radius in degrees

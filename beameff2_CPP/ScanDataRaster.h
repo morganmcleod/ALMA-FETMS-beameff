@@ -46,7 +46,16 @@ public:
     ///< @param rotate: if true, beam coordinates are rotated 180 degrees (for USB scans.)
     ///< @return true if no errors loading and parsing the file
 
-    unsigned long getStartRow() const
+    bool saveFile(const std::string filename, float copolPeakAmp = 0.0,
+                  const std::string &delim = "\t", const std::string &lineterm = "\r\n") const;
+    ///< save a file to disk
+    ///< @param filename to create or over-write
+    ///< @param copolPeakAmp: If non-zero, use to normalize power levels before saving
+    ///< @param delim: delimiter to use between columns in the file.
+    ///< @param lineterm: newline string to put at the end of each row.
+    ///< @return true if no errors saving the file.
+
+    unsigned getStartRow() const
       { return startRow_m; }
     ///< @return the first row containing raster data in the file.
 
@@ -117,10 +126,12 @@ public:
     ///< @param p: array giving phase center model in ??? units
     ///< @return phase efficiency in 0-1.
 
-    float calcAmplitudeEfficiency(float p[], float azNominal, float elNominal) const;
+    float calcAmplitudeEfficiency(float p[], float azActual, float elActual) const;
     ///< calculate amplitude efficiency at the given amplitude fit model p[].
     ///< called from within FitAmplitude()
     ///< @param p: array giving amplitude fit model
+    ///< @param azActual: actual (center of mass) pointing in Az
+    ///< @param elActual: actual (center of mass) pointing in El
     ///< @return amplitude efficiency in 0-1.
 
     const AnalyzeResults &getAnalyzeResults() const
@@ -131,7 +142,7 @@ public:
       { return results_m; }
     ///< @return non-const analysis results
 
-    void print(int indent = 0, unsigned long headRows = 0, unsigned long tailRows = 0) const;
+    void print(int indent = 0, unsigned headRows = 0, unsigned tailRows = 0) const;
     ///< output object state
     ///< @param indent number of spaces
     ///< @param headRows number of rows from head to show.
@@ -139,8 +150,8 @@ public:
 
 private:
     // metadata about the file and loaded data:
-    unsigned long size_m;               ///< size of our arrays
-    unsigned long startRow_m;           ///< row on which actual raster data starts
+    unsigned size_m;               ///< size of our arrays
+    unsigned startRow_m;           ///< row on which actual raster data starts
     std::string NSIDateTime_m;          ///< timestamp from NSI format text file.
 
     // raw raster data arrays:
@@ -154,7 +165,7 @@ private:
 
     AnalyzeResults results_m;           ///< results from calcPeakAndPhase(), calcCenterOfMass(), and analyzeBeam()
 
-    void printRow(unsigned long index) const;
+    void printRow(unsigned index) const;
     ///< print a single row.
 };
 
