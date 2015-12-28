@@ -294,15 +294,14 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
 }
 
 float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNominal) const {
-    double costerm, sinterm, normalizationFactor;
-    float eta_phase, phi_fit, phi_err, x, y, radiusSq, E, mask, phaseRad;
+    float x, y, radiusSq, E, mask, phaseRad;                        // values from data arrays
+    float phi_fit, phi_err, eta_phase;                              // calculated values
+    double costerm(0.0), sinterm(0.0), normalizationFactor(0.0);    // accumulate fit errors in the loop
+
     unsigned long i;
-
-    costerm = sinterm = normalizationFactor = 0.0;
-
     for (i = 0; i < size_m; i++) {
         x = xArray_m[i] - azNominal;
-        y = xArray_m[i] - elNominal;
+        y = yArray_m[i] - elNominal;
         radiusSq = pow(RadiusArray_m[i], 2.0);
         E = EArray_m[i];
         mask = MaskArray_m[i];

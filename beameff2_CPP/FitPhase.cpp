@@ -61,6 +61,7 @@ namespace BeamFitting {
         //  change mask to full subreflector ~3.8 deg.
         //  fimd phase center again using P from first iteration.
 
+        p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
         p[3] = fitPhaseScan -> getZDistance();
@@ -76,7 +77,7 @@ namespace BeamFitting {
         // convert back to mm:
         float deltaX = 1000.0 * p[1] * (360.0 / (2.0 * M_PI)) / k;
         float deltaY = 1000.0 * p[2] * (360.0 / (2.0 * M_PI)) / k;
-        float deltaZ = -1000.0 * p[3] * pow(360.0 / (2.0 * M_PI) , 2.0) / k;
+        float deltaZ = -1000.0 * p[3] * pow(360.0 / (2.0 * M_PI), 2.0) / k;
 
         // save results into the scan object:
         fitPhaseScan -> setPhaseFitResults(deltaX, deltaY, deltaZ, 1.0 - fret_phase);
@@ -103,7 +104,7 @@ namespace BeamFitting {
                 par[i] = p[i];
             }
             /* apply a small offset to the parameter being adjusted this time through the loop */
-            if (fabs(par[j]) > (delta/100000)) {
+            if (fabs(par[j]) > (delta / 100000)) {
                 del = delta * par[j];
             } else {
                 /* this takes care of the unique case where the initial guess is zero */

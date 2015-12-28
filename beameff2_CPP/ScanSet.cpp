@@ -178,9 +178,6 @@ bool ScanSet::getEfficiencies_impl(ALMAConstants::PointingOptions pointingOption
     if (!ALMAConstants::getNominalAngles(band_m, pointingOption, azNominal, elNominal))
         return false;
 
-    cout << "azNominal = " << azNominal << endl;
-    cout << "elNominal = " << elNominal << endl;
-
     // find peak and atten differences:
     if (copolScan && xpolScan) {
         // Find the difference in copol and xpol IF attenuation:
@@ -200,7 +197,6 @@ bool ScanSet::getEfficiencies_impl(ALMAConstants::PointingOptions pointingOption
         }
         copolScan -> analyzeBeams(azNominal, elNominal, subreflectorRadius);
         copolPeakAmp = copolScan -> getFFPeak();
-        cout << "copolPeakAmp = " << copolPeakAmp << endl;
         BeamFitting::FitPhase(copolScan, azNominal, elNominal);
         BeamFitting::FitAmplitude(copolScan, azNominal, elNominal);
     }
@@ -268,15 +264,19 @@ bool ScanSet::getEfficiencies_impl2(ALMAConstants::PointingOptions pointingOptio
             eff.eta_tot_nd = eff.eta_tot_np * eff.eta_pol;
 
             // Defocus efficiency:
-            eff.eta_defocus = 1 - 0.3 * pow((copolScan -> getKWaveNumber() * (eff.deltaZ - nominal_z_offset_m) / 1000) * pow(32.0, -2.0), 2.0);
+            eff.eta_defocus = 1 - 0.3 * pow(
+                    (copolScan -> getKWaveNumber() * (eff.deltaZ - nominal_z_offset_m) / 1000) *
+                    pow(32.0, -2.0), 2.0);
 
             // Total efficiency including defocus:
             eff.total_aperture_eff = eff.eta_tot_nd * eff.eta_defocus;
 
             // Defocus calculation to find subreflector shift:
-            // Note: 0.7197 comes from equation 22 of ALMA MEMO 456 using M=20 and phi_0 = 3.58
+            // Note: PLATE=0.7197 comes from equation 22 of ALMA MEMO 456 using M=20 and phi_0 = 3.58
+            const float PLATE(0.7197);
+            float probeZ = copolScan ->getZDistance();
             lambda = ALMAConstants::c_mm_per_ns / copolScan -> getRFGhz();
-            delta = (eff.deltaZ - copolScan -> getZDistance() + 0.0000000000001) / pow(M, 2.0) / 0.7197;
+            delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / PLATE;
             beta = (2 * M_PI / lambda) * delta * (1 - cos(psi_o / 57.3));
 
             eff.defocus_efficiency =
@@ -291,9 +291,9 @@ bool ScanSet::getEfficiencies_impl2(ALMAConstants::PointingOptions pointingOptio
                     * pow((sin(beta) / beta) - 1.0, 2.0)
                   )
             );
-            eff.shift_from_focus_mm = eff.deltaZ - copolScan -> getZDistance();
-            eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / 0.7197;
-            eff.mean_subreflector_shift = nominal_z_offset_m / pow(M, 2.0) / 0.7197;
+            eff.shift_from_focus_mm = eff.deltaZ - probeZ;
+            eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / PLATE;
+            eff.mean_subreflector_shift = nominal_z_offset_m / pow(M, 2.0) / PLATE;
             return true;
 
         }
@@ -324,7 +324,7 @@ void EfficiencyData::print(int _indent) {
     cout << indent << "total_aperture_eff = " << total_aperture_eff << endl;
     cout << indent << "shift_from_focus_mm = " << shift_from_focus_mm << endl;
     cout << indent << "subreflector_shift_mm = " << subreflector_shift_mm << endl;
-    cout << indent << "defocus_efficiency = " << defocus_efficiency << endl;
+    cout << indent << "defocus_efficiency_with_subreflector_shift = " << defocus_efficiency << endl;
     cout << indent << "mean_subreflector_shift = " << mean_subreflector_shift << endl;
 }
 
