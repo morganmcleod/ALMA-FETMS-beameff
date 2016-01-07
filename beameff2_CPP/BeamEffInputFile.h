@@ -82,13 +82,11 @@ public:
 
     bool getDatabaseKeys(std::string &section,
                          unsigned &scanSetId,
-                         unsigned &scanId,
                          unsigned &FEConfigId,
                          unsigned &TestDataHeaderId);
     ///< get the database keys from a specified section
     ///< @param section: the section to read from
     ///< @param scanSetId: the value of 'scanset_id' goes here
-    ///< @param scanId: the value of 'scan_id' goes here
     ///< @param FEConfigId: the value of 'fecfg' goes here
     ///< @param TestDataHeaderId: the value of 'tdh_id' goes here
     ///< @return true if the section is found and read successfully

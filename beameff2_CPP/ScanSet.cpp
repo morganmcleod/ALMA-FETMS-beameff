@@ -54,7 +54,6 @@ ScanSet::~ScanSet() {
 void ScanSet::clear() {
     scanSet_m = 0;
     scanSetId_m = 0;
-    scanId_m = 0;
     FEConfigId_m = 0;
     TestDataHeaderId_m = 0;
     band_m = 0;
@@ -66,9 +65,8 @@ void ScanSet::clear() {
     WHACK(Copol180_m)
 }
 
-void ScanSet::setDatabaseKeys(unsigned scanSetId, unsigned scanId, unsigned FEConfigId, unsigned TestDataHeaderId) {
+void ScanSet::setDatabaseKeys(unsigned scanSetId, unsigned FEConfigId, unsigned TestDataHeaderId) {
     scanSetId_m = scanSetId;
-    scanId_m = scanId;
     FEConfigId_m = FEConfigId;
     TestDataHeaderId_m = TestDataHeaderId;
 }
@@ -497,28 +495,46 @@ bool ScanSet::writeOutputFile(dictionary *dict, const std::string outputFilename
 
     bool ret = true;
 
+    // Save the software version to the settings section:
     updateDictionary(dict, "settings", "software_version", BEAMEFF_SW_VERSION_STRING.c_str());
 
+    // make a scanset-specific results section for results which apply to both polarizations:
+    section = "results_ssid";
+    section += to_string(scanSetId_m);
+    iniparser_set(dict, section.c_str(), NULL);
+
+    // Pointing angles plot:
+    updateDictionary(dict, section, "pointingangles", CombinedEff_m.FFPointingPlot);
+    // Also put the pointing angles plot in "settings" for legacy LV app:
+    updateDictionary(dict, "settings", "pointingangles", CombinedEff_m.FFPointingPlot);
+
+    // Z offset and squint:
+    updateDictionary(dict, section, "nominal_z_offset",     to_string(CombinedEff_m.nominal_z_offset, std::fixed, 6));
+    updateDictionary(dict, section, "squint_percent",       to_string(CombinedEff_m.squint_percent, std::fixed, 2));
+    updateDictionary(dict, section, "squint_arcseconds",    to_string(CombinedEff_m.squint_arcseconds, std::fixed, 6));
+
+    // output the results for pol0 copol:
     if (CopolPol0_m) {
         section = CopolPol0_m -> getInputSection();
         ret = ret && updateCopolSection(dict, section, CopolPol0_m, Pol0Eff_m);
-        updateDictionary(dict, section, "nominal_z_offset",     to_string(CombinedEff_m.nominal_z_offset, std::fixed, 6));
-        updateDictionary(dict, section, "squint",               to_string(CombinedEff_m.squint_percent, std::fixed, 2));
-        updateDictionary(dict, section, "squint_arcseconds",    to_string(CombinedEff_m.squint_arcseconds, std::fixed, 6));
     }
+    // output the results for pol0 xpol:
     if (XpolPol0_m) {
         section = XpolPol0_m -> getInputSection();
         ret = ret && updateXpolSection(dict, section, XpolPol0_m, Pol0Eff_m);
     }
+    // output the results for pol1 copol:
     if (CopolPol1_m) {
         section = CopolPol1_m -> getInputSection();
         ret = ret && updateCopolSection(dict, section, CopolPol1_m, Pol1Eff_m);
     }
+    // output the results for pol1 xpol:
     if (XpolPol1_m) {
         section = XpolPol1_m -> getInputSection();
         ret = ret && updateXpolSection(dict, section, XpolPol1_m, Pol1Eff_m);
     }
 
+    // write out the whole dictionary to the output file:
     FILE *f = fopen(outputFilename.c_str(), "w");
     if (!f)
         ret = false;
@@ -526,7 +542,6 @@ bool ScanSet::writeOutputFile(dictionary *dict, const std::string outputFilename
         iniparser_dump_ini(dict, f);
         fclose(f);
     }
-
     return ret;
 }
 
@@ -626,7 +641,7 @@ void ScanSet::updateDictionary(dictionary *dict, const std::string &section, con
 
 
 bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &gnuplotPath) {
-    string fileNameFF, fileNameNF, gnuplotCommand;
+    string fileNameFF, fileNameNF;
     bool ret = true;
 
     float azPointing(0), elPointing(0);
@@ -659,6 +674,9 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol0_m,
                                      true, true, azPointing, elPointing, Pol0Eff_m.NFCopolPhasePlot);
+            // delete the tempory data files:
+            remove(fileNameFF.c_str());
+            remove(fileNameNF.c_str());
         }
     }
     // Make the pol0 xpol plots:
@@ -680,6 +698,9 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol0_m,
                                      true, true, azPointing, elPointing, Pol0Eff_m.NFXpolPhasePlot);
+            // delete the tempory data files:
+            remove(fileNameFF.c_str());
+            remove(fileNameNF.c_str());
         }
     }
     // reset the pointing assumption to nominal:
@@ -713,6 +734,9 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol1_m,
                                      true, true, azPointing, elPointing, Pol1Eff_m.NFCopolPhasePlot);
+            // delete the tempory data files:
+            remove(fileNameFF.c_str());
+            remove(fileNameNF.c_str());
         }
     }
     // Make the pol1 xpol plots:
@@ -734,8 +758,14 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol1_m,
                                      true, true, azPointing, elPointing, Pol1Eff_m.NFXpolPhasePlot);
+            // delete the tempory data files:
+            remove(fileNameFF.c_str());
+            remove(fileNameNF.c_str());
         }
     }
+    // Make the pointing angles plot:
+    ret = ret && makePointingAnglesPlot(outputDirectory, gnuplotPath, CombinedEff_m.FFPointingPlot);
+
     return ret;
 }
 
@@ -809,10 +839,11 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     title += to_string(scan -> getPol());
     title += " ";
     title += scan ->getScanTypeString();
-    title += ", ";
+    title += ", RF ";
     title += to_string(scan -> getRFGhz());
     title += " GHz, tilt ";
     title += to_string(scan -> getTilt());
+    title += " deg";
 
     // 500x500 pixel .png files.  crop=no blank space around plot:
     fprintf(f, "set terminal png size 500, 500 crop\r\n");
@@ -847,36 +878,22 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     if (!nf)
         fprintf(f, "set isosamples 13,11\r\n");
 
-    // measurement date and software version:
-    fprintf(f, "set label 'MeasDate: %s, BeamEff v%s' at screen 0.01, 0.04\r\n",
-            scan -> getMeasDateTime().c_str(),
-            BEAMEFF_SW_VERSION_STRING.c_str());
+    // Add the database keys label:
+    string label;
+    getDatabaseKeysLabel(label, scan -> getScanId());
+    if (!label.empty())
+        fprintf(f, "set label '%s' at screen 0.01, 0.05\r\n", label.c_str());
 
-    // footer line with database keys:
-    string dbKeys("");
-    if (scanId_m)
-        dbKeys += "ScanId=" + to_string(scanId_m);
-    if (FEConfigId_m) {
-        if (!dbKeys.empty())
-            dbKeys += ", ";
-        dbKeys += "FEConfig=" + to_string(FEConfigId_m);
-    }
-    if (TestDataHeaderId_m) {
-        if (!dbKeys.empty())
-            dbKeys += ", ";
-        dbKeys += "TDH=" + to_string(TestDataHeaderId_m);
-    }
-    if (!dbKeys.empty())
-        fprintf(f, "set label '%s' at screen 0.01, 0.07\r\n", dbKeys.c_str());
+    // Add the measurmement info label:
+    getMeasInfoLabel(label, *scan);
+    fprintf(f, "set label '%s' at screen 0.01, 0.02\r\n", label.c_str());
 
-    // plot fromt the data file.  Column 3 is amplitude, 4 is phase:
+    // plot from the data file.  Column 3 is amplitude, 4 is phase:
     fprintf(f, "splot '%s' using 1:2:%s title ''", dataFilename.c_str(), (phase) ? "4" : "3");
-
 
     // for FF plots, draw a circle for the subreflector position:
     if (!nf) {
         float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
-
         fprintf(f, ",%f + %.2f*cos(u),%f + %.2f*sin(u),1 notitle linetype 0 ",
                    azPointing, subreflectorRadius, elPointing, subreflectorRadius);
     }
@@ -889,7 +906,139 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     gnuplotCommand += " ";
     gnuplotCommand += fileNameCmd;
     std::system(gnuplotCommand.c_str());
+    // delete the temporary command file:
+    remove(fileNameCmd.c_str());
     return true;
+}
+
+bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
+                                     std::string &fileNamePlot)
+{
+    fileNamePlot.clear();
+    if (!CopolPol0_m || !CopolPol1_m)
+        return false;
+
+    fileNamePlot = outputDirectory;
+    fileNamePlot += "band";
+    fileNamePlot += to_string(CopolPol0_m -> getBand());
+    fileNamePlot += "_scanset";
+    fileNamePlot += to_string(scanSetId_m);
+    fileNamePlot += "_pointingangles";
+    fileNamePlot += ".png";
+    remove(fileNamePlot.c_str());
+
+    string fileNameCmd = outputDirectory;
+    fileNameCmd += "gnuplot_cmd.txt";
+    remove(fileNameCmd.c_str());
+
+    FILE *f = fopen(fileNameCmd.c_str(), "w");
+    if (!f)
+        return false;
+
+    string title = "Band ";
+    title += to_string(CopolPol0_m -> getBand());
+    title += " Pointing Angles, RF ";
+    title += to_string(CopolPol0_m -> getRFGhz(), std::fixed, 2);
+    title += " GHz, tilt ";
+    title += to_string(CopolPol0_m -> getTilt());
+    title += " deg";
+
+    // always show nominal pointing in this plot, even if efficiencies are using ACTUAL:
+    float azNominal(0), elNominal(0), az, el;
+    ALMAConstants::getNominalAngles(band_m, pointingOption_m, azNominal, elNominal);
+
+    float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
+
+    // 800x800 pixel .png files.  crop=no blank space around plot:
+    fprintf(f, "set terminal png size 800, 800 crop\r\n");
+    fprintf(f, "set output '%s'\r\n", fileNamePlot.c_str());
+    fprintf(f, "set title '%s'\r\n", title.c_str());
+
+    // X and Y axis labels:
+    fprintf(f, "set xlabel 'Az(deg)'\r\n");
+    fprintf(f, "set ylabel 'El(deg)'\r\n");
+
+    // use parametric mode in degrees to draw the subreflector circle:
+    fprintf(f, "set parametric\r\n");
+
+    // border is moved inward to make room for the key:
+    fprintf(f, "set key outside\r\n");
+
+    // x and y range large enough for the subreflector circle:
+    fprintf(f, "set xrange [%.2f:%.2f]\r\n", azNominal - (0.5 * subreflectorRadius) - 2, azNominal + (0.5 * subreflectorRadius) + 2);
+    fprintf(f, "set yrange [%.2f:%.2f]\r\n", elNominal - (0.5 * subreflectorRadius) - 2, elNominal + (0.5 * subreflectorRadius) + 2);
+
+    // Force a square plot within the canvas:
+    fprintf(f, "set size square\r\n");
+
+    // Add the database keys label:
+    string label;
+    getDatabaseKeysLabel(label);
+    if (!label.empty())
+        fprintf(f, "set label '%s' at screen 0.01, 0.15\r\n", label.c_str());
+
+    // Add the measurmement info label:
+    getMeasInfoLabel(label, *CopolPol0_m);
+    fprintf(f, "set label '%s' at screen 0.01, 0.13\r\n", label.c_str());
+
+    // plot the subreflector circle:
+    fprintf(f, "plot [0:2*pi] %f+%.2f*sin(t),%f+%.2f*cos(t) title 'subreflector'",
+                azNominal, subreflectorRadius, elNominal, subreflectorRadius);
+
+    // plot the nominal pointing angle:
+    fprintf(f, ", %f,%f with points lw 1 pt 1 ", azNominal, elNominal);
+
+    if (pointingOption_m == ALMAConstants::ACA7METER)
+        fprintf(f, "title 'ACA 7m nominal pointing'");
+    else
+        fprintf(f, "title 'nominal pointing angle'");
+
+    CopolPol0_m -> getFFCenterOfMass(az, el);
+    fprintf(f, ", %f,%f with points lw 1 pt 4 title 'pol 0'", az, el);
+
+    CopolPol1_m -> getFFCenterOfMass(az, el);
+    fprintf(f, ", %f,%f with points lw 1 pt 3 title 'pol 1'", az, el);
+    fprintf(f, "\r\n");
+
+    fclose(f);
+
+    // call gnuplot:
+    string gnuplotCommand = gnuplotPath;
+    gnuplotCommand += " ";
+    gnuplotCommand += fileNameCmd;
+    std::system(gnuplotCommand.c_str());
+    // delete the temporary command file:
+    remove(fileNameCmd.c_str());
+    return true;
+}
+
+const std::string &ScanSet::getMeasInfoLabel(std::string &toFill, const ScanData &scan) const {
+    // measurement date and software version:
+    toFill = "";
+    toFill += "MeasDate: ";
+    toFill += scan.getMeasDateTime();
+    toFill += ", BeamEff v";
+    toFill += BEAMEFF_SW_VERSION_STRING;
+    return toFill;
+}
+
+const std::string &ScanSet::getDatabaseKeysLabel(std::string &toFill, unsigned scanId) const {
+    // database keys string:
+    toFill = "";
+    if (scanId) {
+        toFill += "ScanDetails=" + to_string(scanId);
+    }
+    if (FEConfigId_m) {
+        if (!toFill.empty())
+            toFill += ", ";
+        toFill += "FEConfig=" + to_string(FEConfigId_m);
+    }
+    if (TestDataHeaderId_m) {
+        if (!toFill.empty())
+            toFill += ", ";
+        toFill += "TDH=" + to_string(TestDataHeaderId_m);
+    }
+    return toFill;
 }
 
 void ScanSet::print(int _indent) {

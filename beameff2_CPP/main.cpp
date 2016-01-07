@@ -67,7 +67,6 @@ int main(int argc, char *argv[]) {
 
         // initialize database keys to zero for each scanset:
         unsigned scanSetId(0);
-        unsigned scanId(0);
         unsigned FEConfigId(0);
         unsigned TestDataHeaderId(0);
 
@@ -79,8 +78,8 @@ int main(int argc, char *argv[]) {
             // If we haven't assigned the database keys yet,
             if (scanSetId == 0) {
                 // Load them from the current section and store into the ScanSet:
-                if (inFile.getDatabaseKeys(section, scanSetId, scanId, FEConfigId, TestDataHeaderId))
-                    SS.setDatabaseKeys(scanSetId, scanId, FEConfigId, TestDataHeaderId);
+                if (inFile.getDatabaseKeys(section, scanSetId, FEConfigId, TestDataHeaderId))
+                    SS.setDatabaseKeys(scanSetId, FEConfigId, TestDataHeaderId);
             }
 
             // load the section into a ScanData object in the ScanSet:

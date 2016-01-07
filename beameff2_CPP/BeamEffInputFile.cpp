@@ -222,11 +222,10 @@ const std::string &BeamEffInputFile::nextSection(int scanSet, bool reset) {
 
 bool BeamEffInputFile::getDatabaseKeys(std::string &section,
                                        unsigned &scanSetId,
-                                       unsigned &scanId,
                                        unsigned &FEConfigId,
                                        unsigned &TestDataHeaderId)
 {
-    scanSetId = scanId = FEConfigId = TestDataHeaderId = 0;
+    scanSetId = FEConfigId = TestDataHeaderId = 0;
 
     if (!dict_m)
         return false;
@@ -237,11 +236,6 @@ bool BeamEffInputFile::getDatabaseKeys(std::string &section,
         scanSetId = static_cast<unsigned>(val);
     else
         return false;
-
-    sectionKey = section + ":scan_id";
-    val = iniparser_getint(dict_m, sectionKey.c_str(), -1);
-    if (val > 0)
-        scanId = static_cast<unsigned>(val);
 
     sectionKey = section + ":fecfg";
     val = iniparser_getint(dict_m, sectionKey.c_str(), -1);

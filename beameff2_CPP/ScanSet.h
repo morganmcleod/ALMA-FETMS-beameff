@@ -44,10 +44,9 @@ public:
     void clear();
     ///< reset the object to it's just-constructed state.
 
-    void setDatabaseKeys(unsigned scanSetId, unsigned scanId, unsigned FEConfigId, unsigned TestDataHeaderId);
+    void setDatabaseKeys(unsigned scanSetId, unsigned FEConfigId, unsigned TestDataHeaderId);
     ///< store the additional database keys which identify this ScanSet
     ///< @param scanSetId database key to ScanSetDetails table.
-    ///< @param scanId database key to ScanDetails table.
     ///< @param FEConfigId database key to FE_Config table.
     ///< @param TestDataHeaderId database key to TestData_Header table.
 
@@ -68,6 +67,10 @@ public:
     ///< @return true if no errors writing the results
 
     bool makePlots(const std::string &outputDirectory, const std::string &gnuplotPath);
+    ///< produce the output amplitude, phase, and pointing angle plots
+    ///< @param outputDirectory: where to create the plots and temporary data files
+    ///< @param gnuplotPath: full path to the system gnuplot command, from the input file.
+    ///< @return true if no errors occurred producing the plot.  TODO: doesn't trap gnuplot errors.
 
     void print(int indent = 0);
     ///< output object state
@@ -75,7 +78,6 @@ public:
 private:
     unsigned scanSet_m;         ///< 'scanset' number from the input file.  Not related to any database table.
     unsigned scanSetId_m;       ///< keyID from ScanSetDetails table for plot label
-    unsigned scanId_m;          ///< keyID from ScanDetails table for plot label
     unsigned FEConfigId_m;      ///< keyID from FE_Config table
     unsigned TestDataHeaderId_m;///< keyID from TestData_Header table
 
@@ -125,6 +127,16 @@ private:
     ///< private helper to write command file for plotting and execute it
     ///< returns the command filename in fileNameCmd
     ///< returns the plot filename in fileNamePlot
+
+    bool makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
+                                std::string &fileNamePlot);
+    ///< private helper to make the pointing angles plot
+
+    const std::string &ScanSet::getMeasInfoLabel(std::string &toFill, const ScanData &scan) const;
+    ///< private helper to make the measurement info label
+
+    const std::string &ScanSet::getDatabaseKeysLabel(std::string &toFill, unsigned scanId = 0) const;
+    ///< private helper to make the database keys label
 };
 
 
