@@ -1,6 +1,7 @@
 # ALMA-FETMS-beameff
 Beam efficiency calculator for the ALMA Front End Test and Measurement System
 
+* beameff2_CPP contains C++ source code for the 2.x version
 * beameff_C contains the C source code and make files for the beam efficiency calculator.
 * LabVIEW contains the wrapper GUI source code and a LabVIEW 2013 executable.
 * WinExe contains the latest Windows executable.
@@ -9,6 +10,8 @@ Beam efficiency calculator for the ALMA Front End Test and Measurement System
 
 http://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules 
 
-/* 1.3.6:  Using iniparser 4.0 from https://github.com/ndevilla/iniparser.  Prior was 1.8.
+Recent version history:
+ * 2.0.0:  Newly ported to C++ code in beameff2_CPP directory.
+ * 1.3.6:  Using iniparser 4.0 from https://github.com/ndevilla/iniparser.  Prior was 1.8.
  * 1.3.5:  Added PointingOptionType instead of int ACA7Meter.  Added band 1 test dewar pointing.
  * 1.3.4:  Removed dead code and unused variables throughout.
