@@ -87,6 +87,7 @@ bool ScanDataRaster::loadFile(const std::string filename, const std::string deli
             if (rotate) {
                 x = -x;
                 y = -y;
+                phi = -phi;
             }
 
             // Only store rows with exactly four values succefully parsed:
@@ -120,7 +121,8 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
         return false;
     }
 
-    float x, y, amp, phase, lastX;
+    float x, y, amp, phase; // individual pixels in file
+    float lastX(0), lastY(0);     // use these to determine if the file is X-major or Y-major.
     char textline[500];
 
     // iterators for main loop:
@@ -129,8 +131,10 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
     vector<float>::const_iterator itAmp = ampArray_m.begin();
     vector<float>::const_iterator itPhi = phiArray_m.begin();
 
-    // to detect first time in loop:
+    // to detect first and second time in loop:
     bool first = true;
+    bool second = false;
+    bool Xmajor = true;
 
     while (itX != xArray_m.end()) {
         x = *itX;
@@ -138,17 +142,26 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
         amp = *itAmp - copolPeakAmp;    // normalize to the copol peak
         phase = *itPhi;
 
-        // if first iteration, save the last value of x:
-        // TODO: BIG ASSUMPTION here that the data is ordered first by X then by Y.
+        // if first iteration, save the last value of x and y
         if (first) {
             lastX = x;
+            lastY = y;
             first = false;
-        } else {
-            // If x has incremented, put an extra newline in the file:
-            if(x != lastX) {
-                lastX = x;
-                fputs(lineterm.c_str(), f);
-            }
+            second = true;
+
+        // if second iteration: figure out if X-major or Y-major:
+        } else if (second) {
+            if (x != lastX)
+                Xmajor = false;
+            else if (y != lastY)
+                Xmajor = true;
+            second = false;
+
+        // if the major axis has incremented, put an extra newline in the file:
+        } else if ((Xmajor && (x != lastX)) || (!Xmajor && (y != lastY))) {
+            lastX = x;
+            lastY = y;
+            fputs(lineterm.c_str(), f);
         }
 
         // write a line:
@@ -171,27 +184,27 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
 
 void ScanDataRaster::calcStepSize() {
     // try just looking at the first two elements:
-    results_m.xStepSize = xArray_m[1] - xArray_m[0];
+    results_m.xStepSize = fabs(xArray_m[1] - xArray_m[0]);
 
     // if that didn't work, loop to find the first jump, if any:
     if (results_m.xStepSize == 0.0) {
         vector<float>::const_iterator it = xArray_m.begin();
         float x0 = xArray_m[0];
         while (results_m.xStepSize == 0.0 && it != xArray_m.end()) {
-            results_m.xStepSize = *it - x0;
+            results_m.xStepSize = fabs(*it - x0);
             it++;
         }
     }
 
     // try just looking at the first two elements:
-    results_m.yStepSize = yArray_m[1] - yArray_m[0];
+    results_m.yStepSize = fabs(yArray_m[1] - yArray_m[0]);
 
     // if that didn't work, loop to find the first jump, if any:
     if (results_m.yStepSize == 0.0) {
         vector<float>::const_iterator it = yArray_m.begin();
         float y0 = yArray_m[0];
         while (results_m.yStepSize == 0.0 && it != yArray_m.end()) {
-            results_m.yStepSize = *it - y0;
+            results_m.yStepSize = fabs(*it - y0);
             it++;
         }
     }

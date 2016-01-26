@@ -35,9 +35,12 @@ int main(int argc, char *argv[]) {
     cout << "<br> ********************************************\n<br>" << endl;
 
     // temporary input file name can be put here for debugging:
-    string inputFile = "T:\\fecfg866\\ssid1647\\input_file.txt";
-                     //"T:\\20151210\\output2\\12_10_2015__9_16 AM_INPUT.txt";
-                     //"T:\\ssid1647\\MMoutput\\12_9_2015__5_33 PM_INPUT.txt";
+    string inputFile =
+                     //"T:\\validation2.0\\fecfg1076\\ssid2091\\output2\\1_13_2016__4_41 PM_INPUT.txt";
+                     //"T:\\validation2.0\\fecfg1076\\ssid1749\\output2\\1_13_2016__2_50 PM_INPUT.txt";
+                     "T:\\validation2.0\\fecfg866\\ssid1647\\output2\\1_13_2016__4_52 PM_INPUT.txt";
+                     //"T:\\validation2.0\\RF50\\output2\\1_12_2016__3_59 PM_INPUT.txt";
+
     if (argc > 1)
         inputFile = argv[1];
     if (inputFile.empty()) {
@@ -49,8 +52,8 @@ int main(int argc, char *argv[]) {
 
     // load the input file:
     BeamEffInputFile inFile(inputFile);
-    //inFile.print();
-    //cout << "----" << endl;
+//    inFile.print();
+//    cout << "----" << endl;
 
     string outputFile = inFile.getOutputFileName();
     cout << "output file: " << outputFile << "<br>" << endl;
@@ -90,11 +93,11 @@ int main(int argc, char *argv[]) {
         // calculate beam efficiencies:
         SS.calcEfficiencies(inFile.getPointingOption());
 
-        //SS.print();
-        //cout << "----" << endl;
-
         // Generate all the plots:
         SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath());
+
+//        SS.print();
+//        cout << "----" << endl;
 
         // Write the summary output file containing efficiencies and computed results:
         SS.writeOutputFile(inFile.useDict(), outputFile);

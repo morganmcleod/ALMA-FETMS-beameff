@@ -180,35 +180,29 @@ bool ScanSet::calcEfficiencies(ALMAConstants::PointingOptions pointingOption) {
 }
 
 bool ScanSet::calcEfficiencies_impl(ScanData *copolScan, ScanData *xpolScan, EfficiencyData::OnePol &eff) {
-    // get the secondary reflector radius for the selected pointing option:
-    float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
-
-    // get the nominal angles for the selected pointing option:
-    float az, el, copolPeakAmp(0);
-    if (!ALMAConstants::getNominalAngles(band_m, pointingOption_m, az, el))
+    if (!copolScan)
         return false;
 
     // find peak and atten differences:
-    if (copolScan && xpolScan) {
+    if (xpolScan) {
         // Find the difference in copol and xpol IF attenuation:
         eff.ifatten_diff = copolScan -> getIfAtten() - xpolScan -> getIfAtten();
         // Adjust the xpol data to account for the difference:
         xpolScan -> subtractForAttenuator(eff.ifatten_diff);
     }
 
-    // analyze copol:
-    if (copolScan) {
-        // this will modify az and el if using ACTUAL pointing:
-        if (analyzeCopol_impl(copolScan, az, el)) {
-            // save the copol peak power to use for normalizing xpol beams below.
-            copolPeakAmp = copolScan -> getFFPeak();
-        }
+    float azPointing(0), elPointing(0), copolPeakAmp(0);
+
+    // analyze copol, returns azPointing, elPointing for the selected pointingOption:
+    if (analyzeCopol_impl(copolScan, azPointing, elPointing)) {
+        // save the copol peak power to use for normalizing xpol beams below.
+        copolPeakAmp = copolScan -> getFFPeak();
     }
 
     // analyze xpol, normalized by copolPeakAmp:
     // if using the ACTUAL pointing option, azActual and elActual have already been substituted above.
     if (xpolScan)
-        xpolScan -> analyzeBeams(az, el, subreflectorRadius, copolPeakAmp);
+        xpolScan -> analyzeBeams(pointingOption_m, azPointing, elPointing, copolPeakAmp);
 
     return true;
 }
@@ -276,23 +270,19 @@ bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *
             eff.total_aperture_eff = eff.eta_tot_nd * eff.eta_defocus;
 
             // Defocus calculation to find subreflector shift:
-            float probeZ = 200.0;  //copolScan -> getZDistance();
+            float probeZ = copolScan -> getZDistance();
             lambda = ALMAConstants::c_mm_per_ns / copolScan -> getRFGhz();
             delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
             beta = (2 * M_PI / lambda) * delta * (1 - cos(psi_o / 57.3));
 
-            eff.defocus_efficiency =
-            100*
-            (
-                pow(ALMAConstants::TAU, 2.0)
-                * pow(sin(beta / 2.0) / (beta / 2.0), 2.0)
-                + (1 - pow(ALMAConstants::TAU, 2.0))
-                * (
-                    pow(sin(beta / 2.0) / (beta / 2.0), 4.0)
-                    + 4.0 / pow(beta, 2.0)
-                    * pow((sin(beta) / beta) - 1.0, 2.0)
-                  )
-            );
+            eff.defocus_efficiency = pow(ALMAConstants::TAU, 2.0)
+                                   * pow(sin(beta / 2.0) / (beta / 2.0), 2.0)
+                                   + (1 - pow(ALMAConstants::TAU, 2.0))
+                                   * (
+                                       pow(sin(beta / 2.0) / (beta / 2.0), 4.0)
+                                       + 4.0 / pow(beta, 2.0)
+                                       * pow((sin(beta) / beta) - 1.0, 2.0)
+                                     );
             eff.shift_from_focus_mm = eff.deltaZ - probeZ;
             eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
             return true;
@@ -301,33 +291,31 @@ bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *
     return false;
 }
 
-bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &az, float &el) {
+bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &azPointing, float &elPointing) {
     if (!copolScan)
         return false;
 
-    // get the secondary reflector radius for the selected pointing option:
-    float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
+    // accumulate values needed for efficiency calculation, using the selected pointing option:
+    copolScan -> analyzeBeams(pointingOption_m);
 
-    // find the actual (center of mass) beam pointing:
-    float azActual(0.0), elActual(0.0);
-    copolScan -> calcCenterOfMass();
+    // get the actual pointing angles:
+    float azActual(0), elActual(0);
     copolScan -> getFFCenterOfMass(azActual, elActual);
 
-    // if using the ACTUAL pointing option, substitute actual pointing for nominal values:
+    // If the pointing option is ACTUAL then return that as azPointing, elPointing
     if (pointingOption_m == ALMAConstants::ACTUAL) {
-        az = azActual;
-        el = elActual;
-        cout << "using azActual = " << az << endl;
-        cout << "using elActual = " << el << endl;
-    }
-
-    // accumulate values needed for efficiency calculation, using the selected pointing option:
-    copolScan -> analyzeBeams(az, el, subreflectorRadius);
+        azPointing = azActual;
+        elPointing = elActual;
+        cout << "using azActual = " << azPointing << endl;
+        cout << "using elActual = " << elPointing << endl;
+    // otherwise use the nominal pointing for the specified band and pointint option:
+    } else
+        ALMAConstants::getNominalAngles(band_m, pointingOption_m, azPointing, elPointing);
 
     // perform phase fit using the selected pointing option as a starting guess:
-    BeamFitting::FitPhase(copolScan, az, el);
+    BeamFitting::FitPhase(copolScan, azPointing, elPointing);
 
-    // perform amlitude fit always using the ACTUAL beam pointing as a starting guess:
+    // perform amplitude fit always using the ACTUAL beam pointing as a starting guess:
     BeamFitting::FitAmplitude(copolScan, azActual, elActual);
     return true;
 }
@@ -348,11 +336,9 @@ bool ScanSet::calcSquint_impl() {
     int pol180 = -1;    // -1=UNDEFINED pol
     const ScanDataRaster *copol180FF = NULL;
     if (Copol180_m) {
-        // get the nominal angles for the selected pointing option:
-        float az, el;
-        ALMAConstants::getNominalAngles(band_m, pointingOption_m, az, el);
-        // perform the beam analysis on the 180-degree scan, which may correct az, el to the ACTUAL angles:
-        analyzeCopol_impl(Copol180_m, az, el);
+        // perform the beam analysis on the 180-degree scan:
+        float azPointing, elPointing;
+        analyzeCopol_impl(Copol180_m, azPointing, elPointing);
         // get the polarization of the 180-degree scan:
         pol180 = Copol180_m -> getPol();
         // get the FF data set:
@@ -513,6 +499,12 @@ bool ScanSet::writeOutputFile(dictionary *dict, const std::string outputFilename
     updateDictionary(dict, section, "squint_percent",       to_string(CombinedEff_m.squint_percent, std::fixed, 2));
     updateDictionary(dict, section, "squint_arcseconds",    to_string(CombinedEff_m.squint_arcseconds, std::fixed, 6));
 
+    // Phase center correction:
+    updateDictionary(dict, section, "x_corr",    to_string(CombinedEff_m.x_corr, std::fixed, 3));
+    updateDictionary(dict, section, "y_corr",    to_string(CombinedEff_m.y_corr, std::fixed, 3));
+    updateDictionary(dict, section, "corrected_pol",    to_string(CombinedEff_m.corrected_pol));
+    updateDictionary(dict, section, "dist_between_centers_mm",    to_string(CombinedEff_m.dist_between_centers_mm, std::fixed, 3));
+
     // output the results for pol0 copol:
     if (CopolPol0_m) {
         section = CopolPol0_m -> getInputSection();
@@ -549,9 +541,13 @@ bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, c
     if (!copol)
         return false;
 
-    // get the nominal angles for the selected pointing option:
+    // get the nominal angles, just for the output file:
+    // Override ACTUAL with NOMINAL but otherwise use the requested option.
     float azNominal, elNominal;
-    ALMAConstants::getNominalAngles(band_m, pointingOption_m, azNominal, elNominal);
+    ALMAConstants::PointingOptions option = (pointingOption_m == ALMAConstants::ACTUAL)
+                                          ? ALMAConstants::NOMINAL
+                                          : pointingOption_m;
+    ALMAConstants::getNominalAngles(band_m, option, azNominal, elNominal);
 
     // get the analysis results
     const ScanDataRaster *pFF = copol -> getFFScan();
@@ -571,17 +567,19 @@ bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, c
     updateDictionary(dict, section, "delta_x",              to_string(eff.deltaX, std::fixed, 6));
     updateDictionary(dict, section, "delta_y",              to_string(eff.deltaY, std::fixed, 6));
     updateDictionary(dict, section, "delta_z",              to_string(eff.deltaZ, std::fixed, 6));
-    updateDictionary(dict, section, "edge_dB",              to_string(eff.edge_taper_db, std::fixed, 3));
+    updateDictionary(dict, section, "corrected_x",          to_string(eff.correctedX, std::fixed, 6));
+    updateDictionary(dict, section, "corrected_y",          to_string(eff.correctedY, std::fixed, 6));
     updateDictionary(dict, section, "eta_phase",            to_string(eff.eta_phase, std::fixed, 6));
+    updateDictionary(dict, section, "edge_dB",              to_string(eff.edge_taper_db, std::fixed, 3));
     updateDictionary(dict, section, "eta_tot_np",           to_string(eff.eta_tot_np, std::fixed, 6));
     updateDictionary(dict, section, "eta_pol",              to_string(eff.eta_pol, std::fixed, 6));
     updateDictionary(dict, section, "eta_tot_nd",           to_string(eff.eta_tot_nd, std::fixed, 6));
     updateDictionary(dict, section, "defocus_efficiency",   to_string(eff.eta_defocus, std::fixed, 6));
-    updateDictionary(dict, section, "total_aperture_eff",   to_string(eff.total_aperture_eff, std::fixed, 6));
     updateDictionary(dict, section, "shift_from_focus_mm",  to_string(eff.shift_from_focus_mm, std::fixed, 6));
     updateDictionary(dict, section, "subreflector_shift_mm",to_string(eff.subreflector_shift_mm, std::fixed, 6));
     updateDictionary(dict, section, "defocus_efficiency_due_to_moving_the_subreflector",
                                                             to_string(eff.defocus_efficiency, std::fixed, 6));
+    updateDictionary(dict, section, "total_aperture_eff",   to_string(eff.total_aperture_eff, std::fixed, 6));
 
     updateDictionary(dict, section, "ff_xcenter",           to_string(FF.xCenterOfMass, std::fixed, 6));
     updateDictionary(dict, section, "ff_ycenter",           to_string(FF.yCenterOfMass, std::fixed, 6));
@@ -823,10 +821,12 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     fileNamePlot += "_scanset";
     fileNamePlot += to_string(scanSetId_m);
     fileNamePlot += ".png";
+    // delete the plot file if it already exists:
     remove(fileNamePlot.c_str());
 
     string fileNameCmd = outputDirectory;
     fileNameCmd += "gnuplot_cmd.txt";
+    // delete the command file if it already exists:
     remove(fileNameCmd.c_str());
 
     FILE *f = fopen(fileNameCmd.c_str(), "w");
@@ -925,10 +925,12 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     fileNamePlot += to_string(scanSetId_m);
     fileNamePlot += "_pointingangles";
     fileNamePlot += ".png";
+    // delete the plot file if it already exists:
     remove(fileNamePlot.c_str());
 
     string fileNameCmd = outputDirectory;
     fileNameCmd += "gnuplot_cmd.txt";
+    // delete the command file if it already exists:
     remove(fileNameCmd.c_str());
 
     FILE *f = fopen(fileNameCmd.c_str(), "w");
@@ -944,8 +946,11 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     title += " deg";
 
     // always show nominal pointing in this plot, even if efficiencies are using ACTUAL:
-    float azNominal(0), elNominal(0), az, el;
-    ALMAConstants::getNominalAngles(band_m, pointingOption_m, azNominal, elNominal);
+    float azNominal, elNominal, az, el;
+    ALMAConstants::PointingOptions option = (pointingOption_m == ALMAConstants::ACTUAL)
+                                          ? ALMAConstants::NOMINAL
+                                          : pointingOption_m;
+    ALMAConstants::getNominalAngles(band_m, option, azNominal, elNominal);
 
     float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
 
@@ -1023,20 +1028,25 @@ const std::string &ScanSet::getMeasInfoLabel(std::string &toFill, const ScanData
 }
 
 const std::string &ScanSet::getDatabaseKeysLabel(std::string &toFill, unsigned scanId) const {
-    // database keys string:
+    // database keys string...
     toFill = "";
+    // Add either the test data header or the ScanSet id:
+    if (TestDataHeaderId_m) {
+        toFill += "TDH=" + to_string(TestDataHeaderId_m);
+    } else if (scanSetId_m) {
+        toFill += "ScanSet=" + to_string(scanSetId_m);
+    }
+    // Add the ScanDetails id if defined:
     if (scanId) {
+        if (!toFill.empty())
+            toFill += ", ";
         toFill += "ScanDetails=" + to_string(scanId);
     }
+    // Add the FE config id if defined:
     if (FEConfigId_m) {
         if (!toFill.empty())
             toFill += ", ";
         toFill += "FEConfig=" + to_string(FEConfigId_m);
-    }
-    if (TestDataHeaderId_m) {
-        if (!toFill.empty())
-            toFill += ", ";
-        toFill += "TDH=" + to_string(TestDataHeaderId_m);
     }
     return toFill;
 }
@@ -1046,9 +1056,10 @@ void ScanSet::print(int _indent) {
     cout << indent << "ScanSet(" << scanSet_m << "):" << endl;
     cout << indent << "band_m = " << band_m << endl;
 
-    cout << indent << "EfficiencyData(pol0):" << endl;
-    Pol0Eff_m.print(_indent + 2);
-
+    if (CopolPol0_m || XpolPol0_m) {
+        cout << indent << "EfficiencyData(pol0):" << endl;
+        Pol0Eff_m.print(_indent + 2);
+    }
     cout << indent << "ScanData(pol0 copol): ";
     if (!CopolPol0_m)
         cout << indent << "NULL" << endl;
@@ -1064,9 +1075,10 @@ void ScanSet::print(int _indent) {
         XpolPol0_m -> print(_indent + 2);
     }
 
-    cout << indent << "EfficiencyData(pol1):" << endl;
-    Pol1Eff_m.print(_indent + 2);
-
+    if (CopolPol1_m || XpolPol1_m) {
+        cout << indent << "EfficiencyData(pol1):" << endl;
+        Pol1Eff_m.print(_indent + 2);
+    }
     cout << indent << "ScanData(pol1 copol): ";
     if (!CopolPol1_m)
         cout << indent << "NULL" << endl;

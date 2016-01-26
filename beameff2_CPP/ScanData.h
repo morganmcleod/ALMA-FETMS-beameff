@@ -77,19 +77,23 @@ public:
     ///< @param xCenter will contain the x center of mass
     ///< @param yCenter will contain the y center of mass
 
-    void analyzeBeams(float azNominal, float elNominal, float subreflectorRadius, float copolPeakAmp = 0.0);
+    void analyzeBeams(ALMAConstants::PointingOptions pointingOption,
+                      float azPointing = 0.0, float elPointing = 0.0, float copolPeakAmp = 0.0);
     ///< Compute peak amplitude and phase, NF and FF beam centers of mass, etc.
-    ///< @param azNominal: the nominal azimuth pointing to use for the subreflector mask.
-    ///< @param elNominal: the nominal elevation pointing to use for the subreflector mask.
-    ///< @param subreflectorRadius: in degrees.
-    ///< @param copolPeakAmp: If non-zero, use to normalize the FF beam (to normalize xpol to copol peak.)
+    ///< @param pointingOption: to use for calculating efficiencies
+    ///< @param azPointing, elPointing: if noth non-zero use for calculating efficiencies;
+    ///<                                else use nominal or actual from this beam.
+    ///< @param copolPeakAmp: If non-zero, use to normalize the FF beam xpol to copol peak.
 
     const std::string &getInputSection() const
       { return inputSection_m; }
     ///< @return the input file section from which this scan was loaded
 
     const std::string &getMeasDateTime() const
-      { return measDateTime_m; }
+      { if (!measDateTime_m.empty())
+          return measDateTime_m;
+        else
+          return NSIDateTime_m; }
     ///< @return measurement date/time string
 
     unsigned getScanId() const

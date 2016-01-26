@@ -215,36 +215,37 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
 bool ScanData::loadListings(const std::string &delim) {
     // make sure there is not already raster data allocated:
     freeArrays();
-    if (sb_m == 1)
+    bool rotate = false;
+    if (sb_m == 1) {
+        rotate = true;
         cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating USB scans." << endl;
+    }
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
         NF_m = new ScanDataRaster;
-        NF_m -> loadFile(filenameNF_m, delim, (sb_m == 1));
+        NF_m -> loadFile(filenameNF_m, delim, rotate);
         startrowNF_m = NF_m -> getStartRow();
         NSIDateTime_m = NF_m -> getNSIDateTime();
     }
     if (!filenameFF_m.empty()) {
         FF_m = new ScanDataRaster;
-        FF_m -> loadFile(filenameFF_m, delim, (sb_m == 1));
+        FF_m -> loadFile(filenameFF_m, delim, rotate);
         startrowFF_m = FF_m -> getStartRow();
     }
     if (!filenameNF2_m.empty()) {
         NF2_m = new ScanDataRaster;
-        NF2_m -> loadFile(filenameNF2_m, delim, (sb_m == 1));
+        NF2_m -> loadFile(filenameNF2_m, delim, rotate);
         startrowNF2_m = NF2_m -> getStartRow();
     }
     if (!filenameFF2_m.empty()) {
         FF2_m = new ScanDataRaster;
-        FF2_m -> loadFile(filenameFF2_m, delim, (sb_m == 1));
+        FF2_m -> loadFile(filenameFF2_m, delim, rotate);
         startrowFF2_m = FF2_m -> getStartRow();
     }
     return true;
 }
 
 void ScanData::calcCenterOfMass() {
-    if (NF_m)
-        NF_m -> calcCenterOfMass();
     if (FF_m)
         FF_m -> calcCenterOfMass();
 }
@@ -346,17 +347,36 @@ void ScanData::combineDualZScans_impl(ScanDataRaster &z1, ScanDataRaster &z2) {
     z1.replaceAmpAndPhase(newAmps, newPhis);
 }
 
-void ScanData::analyzeBeams(float azNominal, float elNominal, float subreflectorRadius, float copolPeakAmp) {
+void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption, float azPointing, float elPointing, float copolPeakAmp) {
     if (NF_m) {
         NF_m -> calcStepSize();
         NF_m -> calcPeakAndPhase();
+        NF_m -> calcCenterOfMass();
     }
     if (FF_m) {
         FF_m -> calcStepSize();
         FF_m -> calcPeakAndPhase();
+        // find the actual (center of mass) beam pointing:
         FF_m -> calcCenterOfMass();
-        float peak = (copolPeakAmp != 0) ? copolPeakAmp : FF_m -> getPeak();
-        FF_m -> analyzeBeam(azNominal, elNominal, subreflectorRadius, peak);
+
+        // if the pointing to use for calculation is not already specified from another beam,
+        if (azPointing == 0.0 && elPointing == 0.0) {
+            // use the ACTUAL pointing of this beam:
+            if (pointingOption == ALMAConstants::ACTUAL)
+                FF_m -> getCenterOfMass(azPointing, elPointing);
+            // or use the nominal pointing for the requested pointingOption:
+            else
+                ALMAConstants::getNominalAngles(band_m, pointingOption, azPointing, elPointing);
+        }
+
+        // get the secondary reflector radius for the selected pointing option:
+        float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption);
+
+        // Use the copolPeakAmp for normalizing if specified. Otherwise normalize using this beam's peak:
+        float peak = (copolPeakAmp != 0.0) ? copolPeakAmp : FF_m -> getPeak();
+
+        // Calculate sums to compute efficiencies using the pointing and radius determined abiove:
+        FF_m -> analyzeBeam(azPointing, elPointing, subreflectorRadius, peak);
     }
 }
 

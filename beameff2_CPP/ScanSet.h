@@ -100,7 +100,7 @@ private:
     bool calcEfficiencies_impl2(const ScanData *copol, const ScanData *xpol, EfficiencyData::OnePol &eff);
     ///< Phase 2 calculate efficiencies for a single pol from copol and xpol ScanData.
 
-    bool analyzeCopol_impl(ScanData *copol, float &az, float &el);
+    bool analyzeCopol_impl(ScanData *copol, float &azPointing, float &elPointing);
     ///< implementation of copol analysis, reused for copol and copol180 data sets.
 
     bool calcSquint_impl();
