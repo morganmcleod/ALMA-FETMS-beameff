@@ -35,10 +35,10 @@ int main(int argc, char *argv[]) {
     cout << "<br> ********************************************\n<br>" << endl;
 
     // temporary input file name can be put here for debugging:
-    string inputFile =
+    string inputFile = "";
                      //"T:\\validation2.0\\fecfg1076\\ssid2091\\output2\\1_13_2016__4_41 PM_INPUT.txt";
                      //"T:\\validation2.0\\fecfg1076\\ssid1749\\output2\\1_13_2016__2_50 PM_INPUT.txt";
-                     "T:\\validation2.0\\fecfg866\\ssid1647\\output2\\1_13_2016__4_52 PM_INPUT.txt";
+                     //"T:\\validation2.0\\fecfg866\\ssid1647\\output2\\1_13_2016__4_52 PM_INPUT.txt";
                      //"T:\\validation2.0\\RF50\\output2\\1_12_2016__3_59 PM_INPUT.txt";
 
     if (argc > 1)
