@@ -1,8 +1,8 @@
 # ALMA-FETMS-beameff
 Beam efficiency calculator for the ALMA Front End Test and Measurement System
 
-* beameff2_CPP contains C++ source code for the 2.x version
-* beameff_C contains the C source code and make files for the beam efficiency calculator.
+* beameff2_CPP contains C++ source code for the 2.x versions.
+* beameff_C contains the C source code and make files for the 1.x versions.
 * LabVIEW contains the wrapper GUI source code and a LabVIEW 2013 executable.
 * WinExe contains the latest Windows executable.
 * doc contains user and reference documentation.
