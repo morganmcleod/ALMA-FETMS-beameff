@@ -49,7 +49,7 @@ typedef struct SCANDATA_T {
     float ff_xcenter, ff_ycenter;   ///< center of mass of the farfield beam ampltude data
     float nf_xcenter, nf_ycenter;   ///< center of mass of the nearfield beam ampltude data
     float k;                        ///< wavenumber = 2 * pi * frequency / c
-    float sideband_flipped;         ///< 1.0 if USB, -1.0 if LSB   TODO: confirm.
+    float sideband_flipped;         ///< -1.0 if USB, 1.0 if LSB
     float az_nominal, el_nominal;   ///< nominal ff pointing angle for the band under test
 
 //nearfield scan info:
