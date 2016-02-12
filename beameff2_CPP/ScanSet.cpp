@@ -484,9 +484,15 @@ bool ScanSet::writeOutputFile(dictionary *dict, const std::string outputFilename
     // Save the software version to the settings section:
     updateDictionary(dict, "settings", "software_version", BEAMEFF_SW_VERSION_STRING.c_str());
 
-    // make a scanset-specific results section for results which apply to both polarizations:
-    section = "results_ssid";
-    section += to_string(scanSetId_m);
+    // make a scanset_id or RF specific results section for results which apply to both polarizations:
+    section = "results_";
+    if (scanSetId_m) {
+        section += "ssid";
+        section += to_string(scanSetId_m);
+    } else {
+        section += "rf";
+        section += to_string(CopolPol0_m -> getRFGhz());
+    }
     iniparser_set(dict, section.c_str(), NULL);
 
     // Pointing angles plot:
@@ -921,8 +927,14 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     fileNamePlot = outputDirectory;
     fileNamePlot += "band";
     fileNamePlot += to_string(CopolPol0_m -> getBand());
-    fileNamePlot += "_scanset";
-    fileNamePlot += to_string(scanSetId_m);
+    if (scanSetId_m) {
+        fileNamePlot += "_scanset";
+        fileNamePlot += to_string(scanSetId_m);
+    } else {
+        fileNamePlot += "_rf";
+        fileNamePlot += to_string(CopolPol0_m -> getRFGhz());
+    }
+
     fileNamePlot += "_pointingangles";
     fileNamePlot += ".png";
     // delete the plot file if it already exists:
@@ -940,7 +952,7 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     string title = "Band ";
     title += to_string(CopolPol0_m -> getBand());
     title += " Pointing Angles, RF ";
-    title += to_string(CopolPol0_m -> getRFGhz(), std::fixed, 2);
+    title += to_string(CopolPol0_m -> getRFGhz());
     title += " GHz, tilt ";
     title += to_string(CopolPol0_m -> getTilt());
     title += " deg";

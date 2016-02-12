@@ -122,7 +122,7 @@ bool getNominalAngles(int band, PointingOptions pointing, float &az, float &el) 
     case BAND1TEST:
         switch (band) {
         case 1:
-            az = 0; el = +2.48;
+            az = 0; el = -2.48;
             break;
 
         default:
