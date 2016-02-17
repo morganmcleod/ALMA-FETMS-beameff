@@ -27,6 +27,8 @@ const std::string BEAMEFF_SW_VERSION_STRING("2.0.1");
 // 2.0.1:  Name pointing angle plots for RF if scanset_id not provided
 //         Name [results_xx] section for RF if scanset_id not provided
 //         Use el = -2.48 for band1test dewar
+//         Calculate squint even when 180-degree scan for correcting probe asymmetry is not provided.
+//         For backwards compatibility with LabVIEW wrapper, squint results in output section for pol1, copol.
 // 2.0.0:  First release of BeamEff2 C++
 
 

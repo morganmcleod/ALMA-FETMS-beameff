@@ -389,9 +389,6 @@ bool ScanSet::calcSquint_impl() {
         Pol1Eff_m.correctedX = pol1.deltaX;
         Pol1Eff_m.correctedY = pol1.deltaY;
         CombinedEff_m.corrected_pol = -1;
-        // Return bogus values for squint to avoid accidentally reporting uncorrected values:
-        CombinedEff_m.squint_arcseconds = -1.0;
-        CombinedEff_m.squint_percent = -1.0;
 
     // only perform correction if there is a 180 deg scan:
     } else {
@@ -457,22 +454,23 @@ bool ScanSet::calcSquint_impl() {
             // impossible case
             break;
         }
-
-        // Calculate squint using the corrected phase centers:
-        float M, psi_o, psi_m, plateFactor, dishDiameter;
-        ALMAConstants::getAntennaParameters(pointingOption_m, M, psi_o, psi_m, plateFactor, dishDiameter);
-
-        // Compute squint:
-        CombinedEff_m.squint_arcseconds = CombinedEff_m.dist_between_centers_mm * plateFactor;
-
-        // Calculate squint in percentage of units of FWHM of the beam:
-        // 1.15 is the coefficent to mutply by lambda/D to get FWHM where D=diameter of primary mirror in mm.
-        // 60.0 * 60.0 converts to arcseconds.
-
-        float lambda = ALMAConstants::c_mm_per_ns / CopolPol0_m ->getRFGhz();
-        float deg_per_rad = 180.0 / M_PI;
-        CombinedEff_m.squint_percent = (100.0 * CombinedEff_m.squint_arcseconds) / (1.15 * lambda * deg_per_rad * 60.0 * 60.0 / dishDiameter);
     }
+
+    // Calculate squint using the phase centers:
+    float M, psi_o, psi_m, plateFactor, dishDiameter;
+    ALMAConstants::getAntennaParameters(pointingOption_m, M, psi_o, psi_m, plateFactor, dishDiameter);
+
+    // Compute squint:
+    CombinedEff_m.squint_arcseconds = CombinedEff_m.dist_between_centers_mm * plateFactor;
+
+    // Calculate squint in percentage of units of FWHM of the beam:
+    // 1.15 is the coefficient to multiply by lambda/D to get FWHM where D=diameter of primary mirror in mm.
+    // 60.0 * 60.0 converts to arcseconds.
+
+    float lambda = ALMAConstants::c_mm_per_ns / CopolPol0_m -> getRFGhz();
+    float deg_per_rad = 180.0 / M_PI;
+    CombinedEff_m.squint_percent = (100.0 * CombinedEff_m.squint_arcseconds) / (1.15 * lambda * deg_per_rad * 60.0 * 60.0 / dishDiameter);
+
     return true;
 }
 
@@ -609,6 +607,12 @@ bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, c
     updateDictionary(dict, section, "plot_copol_ffphase",   eff.FFCopolPhasePlot);
     updateDictionary(dict, section, "plot_copol_nfamp",     eff.NFCopolAmpPlot);
     updateDictionary(dict, section, "plot_copol_nfphase",   eff.NFCopolPhasePlot);
+
+    // for backwards compatibility with LabVIEW wrapper, put squint results in the pol1, copol section:
+    if (copol -> getPol() == 1) {
+        updateDictionary(dict, section, "squint_percent",       to_string(CombinedEff_m.squint_percent, std::fixed, 2));
+        updateDictionary(dict, section, "squint_arcseconds",    to_string(CombinedEff_m.squint_arcseconds, std::fixed, 6));
+    }
     return true;
 }
 
