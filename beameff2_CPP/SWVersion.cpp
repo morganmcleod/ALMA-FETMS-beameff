@@ -21,9 +21,10 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.1");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.2");
 
 // Version history
+// 2.0.2:  Added makefile and minor fixes for compilation on Linux
 // 2.0.1:  Name pointing angle plots for RF if scanset_id not provided
 //         Name [results_xx] section for RF if scanset_id not provided
 //         Use el = -2.48 for band1test dewar

@@ -20,6 +20,7 @@
 */
 
 #include "ScanDataRaster.h"
+#include <cstring>
 #include <iostream>
 #include <stdio.h>
 #include <math.h>

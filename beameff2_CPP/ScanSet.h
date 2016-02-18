@@ -132,10 +132,10 @@ private:
                                 std::string &fileNamePlot);
     ///< private helper to make the pointing angles plot
 
-    const std::string &ScanSet::getMeasInfoLabel(std::string &toFill, const ScanData &scan) const;
+    const std::string &getMeasInfoLabel(std::string &toFill, const ScanData &scan) const;
     ///< private helper to make the measurement info label
 
-    const std::string &ScanSet::getDatabaseKeysLabel(std::string &toFill, unsigned scanId = 0) const;
+    const std::string &getDatabaseKeysLabel(std::string &toFill, unsigned scanId = 0) const;
     ///< private helper to make the database keys label
 };
 

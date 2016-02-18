@@ -21,10 +21,16 @@
 
 #include "BeamEffInputFile.h"
 #include "iniparser.h"
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
+
+#ifdef LINUX
+#define stricmp strcasecmp
+#define strnicmp strncasecmp
+#endif
 
 //----------------------------------------------------------------------------
 // struct scanSetItem
