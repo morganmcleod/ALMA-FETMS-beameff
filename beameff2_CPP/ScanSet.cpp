@@ -996,11 +996,11 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     string label;
     getDatabaseKeysLabel(label);
     if (!label.empty())
-        fprintf(f, "set label '%s' at screen 0.01, 0.15\r\n", label.c_str());
+        fprintf(f, "set label '%s' at screen 0.01, 0.11\r\n", label.c_str());
 
     // Add the measurmement info label:
     getMeasInfoLabel(label, *CopolPol0_m);
-    fprintf(f, "set label '%s' at screen 0.01, 0.13\r\n", label.c_str());
+    fprintf(f, "set label '%s' at screen 0.01, 0.09\r\n", label.c_str());
 
     // plot the subreflector circle:
     fprintf(f, "plot [0:2*pi] %f+%.2f*sin(t),%f+%.2f*cos(t) title 'subreflector'",

@@ -21,9 +21,10 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.2");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.3");
 
 // Version history
+// 2.0.3:  Adjust labels on pointing angles plot
 // 2.0.2:  Added makefile and minor fixes for compilation on Linux
 // 2.0.1:  Name pointing angle plots for RF if scanset_id not provided
 //         Name [results_xx] section for RF if scanset_id not provided
