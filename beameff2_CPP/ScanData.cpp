@@ -218,7 +218,7 @@ bool ScanData::loadListings(const std::string &delim) {
     bool rotate = false;
     if (sb_m == 1) {
         rotate = true;
-        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating USB scans." << endl;
+        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating USB scans.<br>" << endl;
     }
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
