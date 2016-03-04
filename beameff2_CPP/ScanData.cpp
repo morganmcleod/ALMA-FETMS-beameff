@@ -215,31 +215,34 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
 bool ScanData::loadListings(const std::string &delim) {
     // make sure there is not already raster data allocated:
     freeArrays();
-    bool rotate = false;
+    const bool rotateNF = false;    // never rotate NF scans
+    bool rotateFF = false;          // rotate FF scans if USB
+    bool invertPhase = false;       // invert phase if USB
     if (sb_m == 1) {
-        rotate = true;
+        rotateFF = true;
+        invertPhase = true;
         cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating USB scans.<br>" << endl;
     }
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
         NF_m = new ScanDataRaster;
-        NF_m -> loadFile(filenameNF_m, delim, rotate);
+        NF_m -> loadFile(filenameNF_m, delim, rotateNF, invertPhase);
         startrowNF_m = NF_m -> getStartRow();
         NSIDateTime_m = NF_m -> getNSIDateTime();
     }
     if (!filenameFF_m.empty()) {
         FF_m = new ScanDataRaster;
-        FF_m -> loadFile(filenameFF_m, delim, rotate);
+        FF_m -> loadFile(filenameFF_m, delim, rotateFF, invertPhase);
         startrowFF_m = FF_m -> getStartRow();
     }
     if (!filenameNF2_m.empty()) {
         NF2_m = new ScanDataRaster;
-        NF2_m -> loadFile(filenameNF2_m, delim, rotate);
+        NF2_m -> loadFile(filenameNF2_m, delim, rotateNF, invertPhase);
         startrowNF2_m = NF2_m -> getStartRow();
     }
     if (!filenameFF2_m.empty()) {
         FF2_m = new ScanDataRaster;
-        FF2_m -> loadFile(filenameFF2_m, delim, rotate);
+        FF2_m -> loadFile(filenameFF2_m, delim, rotateFF, invertPhase);
         startrowFF2_m = FF2_m -> getStartRow();
     }
     return true;

@@ -39,11 +39,12 @@ public:
     void clear();
     ///< reset the object to its just-constructed state.
 
-    bool loadFile(const std::string filename, const std::string delim, bool rotate);
+    bool loadFile(const std::string filename, const std::string delim, bool rotate, bool invertPhase);
     ///< load a file from disk, including parsing for special NSI text file markers.
     ///< @param filename to load
     ///< @param delim: delimiter to use when parsing the file
-    ///< @param rotate: if true, beam coordinates are rotated 180 degrees (for USB scans.)
+    ///< @param rotate: if true, beam XY coordinates are rotated 180 degrees.
+    ///< @param invertPhase: if true, beam sign is inverted on phase data.
     ///< @return true if no errors loading and parsing the file
 
     bool saveFile(const std::string filename, float copolPeakAmp = 0.0,

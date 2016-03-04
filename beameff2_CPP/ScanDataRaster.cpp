@@ -43,7 +43,7 @@ void ScanDataRaster::clear() {
     results_m.maxAmp = -999;
 }
 
-bool ScanDataRaster::loadFile(const std::string filename, const std::string delim, bool rotate) {
+bool ScanDataRaster::loadFile(const std::string filename, const std::string delim, bool rotate, bool invertPhase) {
     // Start with empty arrays:
     clear();
 
@@ -88,6 +88,8 @@ bool ScanDataRaster::loadFile(const std::string filename, const std::string deli
             if (rotate) {
                 x = -x;
                 y = -y;
+            }
+            if (invertPhase) {
                 phi = -phi;
             }
 

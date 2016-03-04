@@ -21,9 +21,11 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.3");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.4");
 
 // Version history
+// 2.0.4:  Don't rotate nearfield scans but do invert phase.
+//         Back to el = +2.48 for band1test dewar
 // 2.0.3:  Adjust labels on pointing angles plot
 // 2.0.2:  Added makefile and minor fixes for compilation on Linux
 // 2.0.1:  Name pointing angle plots for RF if scanset_id not provided

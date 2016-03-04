@@ -230,14 +230,14 @@ bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *
             // TICRA method ratio of copol beam to copol+xpol on secondary:
             eff.eta_pol_on_secondary = (copol.sumPowerOnSec) / (copol.sumPowerOnSec + xpol.sumPowerOnSec);
 
-            // Total polariazaiton*spillover efficiency:
+            // Total polarization*spillover efficiency:
             eff.eta_pol_spill = eff.eta_spill_co_cross * eff.eta_pol_on_secondary;
 
             // Spillover efficiency, using the 'alternative' definition from R.Hills paper,
             // is the ratio of copol power on the secondary to total copol power:
             eff.eta_spillover = copol.sumPowerOnSec / copol.sumSqE;
 
-            // Polarization efficiency on the secondary using the 'alternative' definition from R.Hills paper,
+            // Polarization efficiency using the 'alternative' definition from R.Hills paper,
             // is the ratio of total copol power to total copol+xpol power, NOT masked for the secondary:
             eff.eta_pol = copol.sumSqE / (copol.sumSqE + xpol.sumSqE);
 
@@ -306,8 +306,8 @@ bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &azPointing, float &e
     if (pointingOption_m == ALMAConstants::ACTUAL) {
         azPointing = azActual;
         elPointing = elActual;
-        cout << "using azActual = " << azPointing << endl;
-        cout << "using elActual = " << elPointing << endl;
+        cout << "using azActual = " << azPointing << "<br>" << endl;
+        cout << "using elActual = " << elPointing << "<br>" << endl;
     // otherwise use the nominal pointing for the specified band and pointint option:
     } else
         ALMAConstants::getNominalAngles(band_m, pointingOption_m, azPointing, elPointing);
