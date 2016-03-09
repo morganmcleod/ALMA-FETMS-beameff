@@ -392,8 +392,8 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
         // phaseRad is the measured phase:
         phaseRad = phiArray_m[i] * M_PI / 180.0;
 
-        // Notes from Alvaro Gonzalez "TN9 Analysis of the NRAO Efficiency Calculator Formulas."
-        //   Alvaro Gonzalez, 11 Jan 2011.  Restated in email 2016-03-07.
+        // Notes from Alvaro Gonzalez "TN9 Analysis of the NRAO Efficiency Calculator Formulas" 11 Jan 2011.
+        //   Restated in email 2016-03-07.
         //
         // The phase -kr is exactly:
         //   -kr= -k(delta_x*sinAz*cosEl +delta_y*sinEl +delta_z*cosAz*cosEl)
