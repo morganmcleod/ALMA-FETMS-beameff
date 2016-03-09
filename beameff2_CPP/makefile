@@ -1,4 +1,6 @@
 # Project: beameff2_CPP
+# Makefile for Linux only
+# Build windows executable with Eclipse internal builder for MinGW/GCC 3.4.5
 
 CPP  = g++ -DLINUX -g
 CC   = gcc -DLINUX -g
