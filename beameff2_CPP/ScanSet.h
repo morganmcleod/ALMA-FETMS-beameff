@@ -124,13 +124,28 @@ private:
     bool makeOnePlot(const std::string &outputDirectory, const std::string &gnuplotPath,
                      const std::string &dataFilename, const ScanData *scan, bool nf, bool phase,
                      float azPointing, float elPointing, std::string &fileNamePlot);
-    ///< private helper to write command file for plotting and execute it
-    ///< returns the command filename in fileNameCmd
-    ///< returns the plot filename in fileNamePlot
+    ///< private helper to produce an amplitude or phase plot, FF or NF
+    ///< prites a Gnuplot command file then executes it
+    ///< @param outputDirectory where the plot should be created
+    ///< @param gnuplotPath path to the Gnuplot excutable
+    ///< @param dataFilename text file containing the raster data to plot
+    ///< @param scan ScanData object holding all the metadata to include in the plot
+    ///< @param nf true if this is a nearfield plot, false if farfield
+    ///< @param phase true is this is a phase plot, false if amplitude
+    ///< @param azPointing, elPointing where to center the subreflector circle on the FF plot
+    ///< @param fileNamePlot out: the filename of the plot produced
+    ///< @return true if no errors setting up the plot.  Won't catch Gnuplot errors.
+
+    bool makePhaseFitPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
+                          const ScanData *scan,
+                          float azPointing, float elPointing, std::string &fileNamePlot);
+    ///< private helper to produce a plot of the FF theoretical phase found by FitPhase
+    ///< writes a Gnuplot command file then executes it
+    ///< Parameters are a subset of those to makeOnePlot()
 
     bool makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
                                 std::string &fileNamePlot);
-    ///< private helper to make the pointing angles plot
+    ///< private helper to make the pointing angles plot showing both FF copol scans in this ScanSet.
 
     const std::string &getMeasInfoLabel(std::string &toFill, const ScanData &scan) const;
     ///< private helper to make the measurement info label
