@@ -21,9 +21,17 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.4");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.5-beta2");
 
 // Version history
+// 2.0.5-beta2:
+//         Using exact expression for fitted phase including corrections from Alvaro Gonzalez
+//         makePhaseFitPlot offsets for nominal Az, El
+//         Invert phase and rotate for LSB now!
+//         Invert signs of nominal pointing angles.  Matches scanner coord system now.
+// 2.0.5-beta1:
+//         Added makePhaseFitPlot for visualizing the fitted phase surface.
+//         Improved documentation of FitPhase and ScanDataRaster::calcPhaseEfficiency
 // 2.0.4:  Don't rotate nearfield scans but do invert phase when appropriate.
 //         Back to el = +2.48 for band1test dewar
 // 2.0.3:  Adjust labels on pointing angles plot

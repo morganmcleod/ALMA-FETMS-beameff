@@ -66,18 +66,18 @@ namespace BeamFitting {
         p[2] = 0.0;
         p[3] = fitPhaseScan -> getZDistance();
 
-        // convert initial guess to rad/deg, rad/deg^2 for z:
-        float k = fitPhaseScan -> getKWaveNumber();
-        p[1] *=  0.001 * k * (2 * M_PI / 360.0);           /* aka  slope_u */
-        p[2] *=  0.001 * k * (2 * M_PI / 360.0);           /* aka  slope_v */
-        p[3] *= -0.001 * k * pow(2 * M_PI / 360.0, 2.0);
+        // convert initial guess to radians:
+        float k = fitPhaseScan -> getKWaveNumber();  // rad/m
+        p[1] *= 0.001 * k;                           // rad
+        p[2] *= 0.001 * k;
+        p[3] *= 0.001 * k;
 
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
 
         // convert back to mm:
-        float deltaX = 1000.0 * p[1] * (360.0 / (2.0 * M_PI)) / k;
-        float deltaY = 1000.0 * p[2] * (360.0 / (2.0 * M_PI)) / k;
-        float deltaZ = -1000.0 * p[3] * pow(360.0 / (2.0 * M_PI), 2.0) / k;
+        float deltaX = p[1] / k * 1000;
+        float deltaY = p[2] / k * 1000;
+        float deltaZ = p[3] / k * 1000;
 
         // save results into the scan object:
         fitPhaseScan -> setPhaseFitResults(deltaX, deltaY, deltaZ, 1.0 - fret_phase);

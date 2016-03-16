@@ -530,6 +530,8 @@ bool ScanSet::writeOutputFile(dictionary *dict, const std::string outputFilename
         ret = ret && updateXpolSection(dict, section, XpolPol1_m, Pol1Eff_m);
     }
 
+    // TODO: also write out what we calculated for the copol180 section.
+
     // write out the whole dictionary to the output file:
     FILE *f = fopen(outputFilename.c_str(), "w");
     if (!f)
@@ -956,9 +958,11 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     fileNamePlot += "_pol";
     fileNamePlot += to_string(scan -> getPol());
     fileNamePlot += "_";
+    fileNamePlot += to_string(scan -> getScanTypeString());
+    fileNamePlot += "_";
     fileNamePlot += to_string(scan -> getRFGhz());
     fileNamePlot += "GHz";
-    fileNamePlot += "_ffPhaseFit";
+    fileNamePlot += "_phasefit";
     fileNamePlot += "_tilt";
     fileNamePlot += to_string(scan -> getTilt());
     fileNamePlot += "_scanset";
@@ -968,7 +972,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     remove(fileNamePlot.c_str());
 
     string fileNameCmd = outputDirectory;
-    fileNameCmd += "gnuplot_cmd2.txt";
+    fileNameCmd += "gnuplot_cmd.txt";
     // delete the command file if it already exists:
     remove(fileNameCmd.c_str());
 
@@ -998,7 +1002,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     // Palette limited to -50 to 0:
     fprintf(f, "set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n");
     // Label for legend:
-    fprintf(f, "set cblabel 'fitted FF phase (deg)'\r\n");
+    fprintf(f, "set cblabel 'Fitted FF Phase (deg)'\r\n");
     // Top-down view:
     fprintf(f, "set view 0,0\r\n");
     // Palette mapped 3d style for splot:
@@ -1007,8 +1011,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     fprintf(f, "set size square\r\n");
     // Set the range of values which are colored using the current palette:
     fprintf(f, "set cbrange [%s]\r\n", (phase) ? "-180:180" : "-50:0");
-
-
+    // Set the X and Y resolution of the plot:
     fprintf(f, "set isosamples 201,201\r\n");
 
     // Add the database keys label:
@@ -1021,40 +1024,38 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     getMeasInfoLabel(label, *scan);
     fprintf(f, "set label '%s' at screen 0.01, 0.02\r\n", label.c_str());
 
-    fprintf(f, "set angles degrees\r\n");
+    // We want Gnuplot to calculate in radians mode:
+    fprintf(f, "set angles radians\r\n");
     fprintf(f, "set xtics 2\r\n");
     fprintf(f, "set ytics 2\r\n");
     fprintf(f, "set xrange [-16:16]\r\n");
     fprintf(f, "set yrange [-16:16]\r\n");
 
-    // convert mm to rad/deg, rad/deg^2 for z:
-    float k = scan -> getKWaveNumber();
-    float deltaX = res.deltaX * 0.001 * k * (2 * M_PI / 360.0);
-    float deltaY = res.deltaY * 0.001 * k * (2 * M_PI / 360.0);
-    float deltaZ = res.deltaZ * -0.001 * k * pow(2 * M_PI / 360.0, 2.0);
+    // convert mm to radians:
+    float k = scan -> getKWaveNumber();     // rad/m
+    float deltaX = res.deltaX * 0.001 * k;  // rad
+    float deltaY = res.deltaY * 0.001 * k;
+    float deltaZ = res.deltaZ * 0.001 * k;
 
-    //phaseFit = p[1] * Az + p[2] * El - p[3] * radiusSq / 2.0;
+    // our plot axes are degrees so define function to convert to radians:
+    fprintf(f, "torad(a) = a * pi / 180\r\n");
+    // define functions to offset the phase center by the nominal pointing:
+    fprintf(f, "azoffset(az) = az - %f\r\n", azPointing);
+    fprintf(f, "eloffset(el) = el - %f\r\n", elPointing);
 
+//  phaseFit = phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*cos(Az)*cos(El);
     string func = "phase(x, y) = ";
     func += to_string(deltaX);
-    func += " * x + ";
+    func += " * sin(torad(azoffset(x)))*cos(torad(eloffset(y))) + ";
     func += to_string(deltaY);
-    func += " * y + ";
+    func += " * sin(torad(eloffset(y))) + ";
     func += to_string(deltaZ);
-    func += " * ((x ** 2 + y ** 2) / 2)";
+    func += " * cos(torad(azoffset(x)))*cos(torad(eloffset(y)))";
 
-//    phaseFit = p[1] * sin(Az)*cos(El) + p[2]*sin(El) + p[3]*cos(Az)*cos(El);
-//    string func = "phase(x, y) = ";
-//    func += to_string(deltaX);
-//    func += " * sin(x)*cos(y) + ";
-//    func += to_string(deltaY);
-//    func += " * sin(y) + ";
-//    func += to_string(deltaZ);
-//    func += " * cos(x)*cos(y)";
-
-    fprintf(f, "todeg(z) = z * 180 / pi\r\n");
+    // convert back to degrees for plotting:
+    fprintf(f, "todeg(a) = a * 180 / pi\r\n");
     fprintf(f, "%s\r\n", func.c_str());
-    // x mod 5:  x-(floor(x/5)*5)
+    // x mod 360: x-(floor(x/360)*360)
     fprintf(f, "splot todeg(phase(x, y)) - (floor(todeg(phase(x, y)) / 360) * 360) - 180 title ''\r\n");
 
     fclose(f);
@@ -1065,7 +1066,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     gnuplotCommand += fileNameCmd;
     std::system(gnuplotCommand.c_str());
     // delete the temporary command file:
-    //remove(fileNameCmd.c_str());
+    remove(fileNameCmd.c_str());
     return true;
 }
 

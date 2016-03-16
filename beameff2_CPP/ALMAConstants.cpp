@@ -85,16 +85,16 @@ bool getNominalAngles(int band, PointingOptions pointing, float &az, float &el) 
 
     case NOMINAL:
         switch (band) {
-        case 1:  az = -1.7553; el = -1.7553; break;
-        case 2:  az = -1.7553; el = +1.7553; break;
-        case 3:  az = +0.3109; el = +1.7345; break;
-        case 4:  az = +0.3109; el = -1.7345; break;
-        case 5:  az = +1.6867; el = +1.6867; break;
-        case 6:  az = +1.6867; el = -1.6867; break;
-        case 7:  az = +0.9740; el = +0.0000; break;
-        case 8:  az = +0.0000; el = +0.9740; break;
-        case 9:  az = +0.0000; el = -0.9740; break;
-        case 10: az = -0.9740; el = +0.0000; break;
+        case 1:  az = +1.7553; el = +1.7553; break;
+        case 2:  az = +1.7553; el = -1.7553; break;
+        case 3:  az = -0.3109; el = -1.7345; break;
+        case 4:  az = -0.3109; el = +1.7345; break;
+        case 5:  az = -1.6867; el = -1.6867; break;
+        case 6:  az = -1.6867; el = +1.6867; break;
+        case 7:  az = -0.9740; el =  0.0000; break;
+        case 8:  az =  0.0000; el = -0.9740; break;
+        case 9:  az =  0.0000; el = +0.9740; break;
+        case 10: az = +0.9740; el =  0.0000; break;
         default:
             cout << "ERROR: getNominalAngles() Illegal band number = " << band << endl;
             return false;
@@ -103,16 +103,16 @@ bool getNominalAngles(int band, PointingOptions pointing, float &az, float &el) 
 
     case ACA7METER:
         switch (band) {
-        case 1:  az = -2.943499; el = -2.943499; break;
-        case 2:  az = -2.898850; el = +2.898850; break;
-        case 3:  az = +0.521949; el = +2.918507; break;
-        case 4:  az = +0.549947; el = -3.120381; break;
-        case 5:  az = +1.874227; el = +1.874227; break;
-        case 6:  az = +1.990572; el = -1.990572; break;
-        case 7:  az = +0.764417; el = +0.000000; break;
-        case 8:  az = +0.000000; el = +0.757841; break;
-        case 9:  az = +0.000000; el = -0.735064; break;
-        case 10: az = -0.735064; el = +0.000000; break;
+        case 1:  az = +2.943499; el = +2.943499; break;
+        case 2:  az = +2.898850; el = -2.898850; break;
+        case 3:  az = -0.521949; el = -2.918507; break;
+        case 4:  az = -0.549947; el = +3.120381; break;
+        case 5:  az = -1.874227; el = -1.874227; break;
+        case 6:  az = -1.990572; el = +1.990572; break;
+        case 7:  az = -0.764417; el =  0.000000; break;
+        case 8:  az =  0.000000; el = -0.757841; break;
+        case 9:  az =  0.000000; el = +0.735064; break;
+        case 10: az = +0.735064; el =  0.000000; break;
         default:
             cout << "ERROR: getNominalAngles() Illegal band number = " << band << endl;
             return false;
@@ -122,7 +122,7 @@ bool getNominalAngles(int band, PointingOptions pointing, float &az, float &el) 
     case BAND1TEST:
         switch (band) {
         case 1:
-            az = 0; el = +2.48;
+            az = 0; el = -2.48;
             break;
 
         default:
