@@ -216,12 +216,12 @@ bool ScanData::loadListings(const std::string &delim) {
     // make sure there is not already raster data allocated:
     freeArrays();
     const bool rotateNF = false;    // never rotate NF scans
-    bool rotateFF = false;          // rotate FF scans if USB
-    bool invertPhase = false;       // invert phase if USB
-    if (sb_m == 1) {
+    bool rotateFF = false;          // rotate FF scans if LSB
+    bool invertPhase = false;       // invert phase if LSB
+    if (sb_m == 2) {
         rotateFF = true;
         invertPhase = true;
-        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating USB scans.<br>" << endl;
+        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating LSB scans.<br>" << endl;
     }
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {

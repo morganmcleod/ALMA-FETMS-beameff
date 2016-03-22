@@ -372,19 +372,15 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
 }
 
 float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNominal) const {
-    float Az, El, radiusSq, maskE, phaseRad;                        // values from data arrays
+    float Az, El, maskE, phaseRad;                                  // values from data arrays
     float phaseFit, phaseErr, eta_phase;                            // calculated values
     double costerm(0.0), sinterm(0.0), normalizationFactor(0.0);    // accumulate fit errors in the loop
 
     unsigned i;
     for (i = 0; i < size_m; i++) {
-        // Az and El relative to subreflector center:
-        Az = xArray_m[i] - azNominal;
-        El = yArray_m[i] - elNominal;
-
-        // radius is sqrt(pow(azOnSub, 2.0) + pow(elOnSub, 2.0));
-        //   so radiusSq = Az^2 + El^2:
-        radiusSq = pow(RadiusArray_m[i], 2.0);
+        // Az and El relative to subreflector center, in radians:
+        Az = (xArray_m[i] - azNominal) * M_PI / 180.0;
+        El = (yArray_m[i] - elNominal) * M_PI / 180.0;
 
         // maskE is electric field voltage on the subreflector:
         maskE = MaskArray_m[i] * EArray_m[i];
@@ -398,35 +394,18 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
         // The phase -kr is exactly:
         //   -kr= -k(delta_x*sinAz*cosEl +delta_y*sinEl +delta_z*cosAz*cosEl)
         //
-        // In the calculator,
-        //   sinAz, sinEl are approximated by Az, El, respectively, and cosAz, cosEl by 1-Az^2/2 or 1-El^2/2.
-        //   In the case of sinAz*cosEl, the quadratic dependence on El is further dropped.
-        //   In the case of cosAz*cosEl, it is approximated by 1-(Az^2+El^2)/2 and higher powers of Az, El are dropped.
-        //   The 1 term is also dropped because it is constant.
-        //      MM: p[3] is negative so giving (-delta_z * radiusSq/2)
-        //
-        // Therefore,
-        //   Phase=-k(delta_x Az + delta_y El - delta_z (Az^2 + El^2)/2 + delta_z)
-        //
-        // According to R. Hills, in the Efficiency Calculator instructions, the delta_z constant terms can be dropped
-        //   if the cos and sin of the phase error are considered.
-        //      MM: costerm, sinterm, normalizationFactor below.
-        //
-        // Finally, the ideal phase is expressed as:
-        //   -kr= -k(delta_x*Az + delta_y*El - delta_z*(Az^2+El^2)/2)
-
         // p[1], p[2], p[3] are delta_x, delta_y, and delta_z:
-        phaseFit = p[1] * Az + p[2] * El + p[3] * radiusSq / 2.0;
+        phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*cos(Az)*cos(El);
 
         // error between measured phase and fit phase:
-        phaseErr = phaseRad - phaseFit;
+        phaseErr = phaseRad + phaseFit;
 
         // accumulate the cos, sin, and total E field sums:
         costerm += maskE * cos(phaseErr);
         sinterm += maskE * sin(phaseErr);
         normalizationFactor += maskE;
     }
-    // calculate eta_phase from the squared cos and sin term sums, normalized to the total power on the subreflector:
+    // calculate eta_phase from the cos and sin term sums, normalized to the total power on the subreflector:
     eta_phase = (pow(costerm, 2.0) + pow(sinterm, 2.0)) / pow(normalizationFactor, 2.0);
     return eta_phase;
 }

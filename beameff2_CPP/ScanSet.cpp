@@ -530,6 +530,8 @@ bool ScanSet::writeOutputFile(dictionary *dict, const std::string outputFilename
         ret = ret && updateXpolSection(dict, section, XpolPol1_m, Pol1Eff_m);
     }
 
+    // TODO: also write out what we calculated for the copol180 section.
+
     // write out the whole dictionary to the output file:
     FILE *f = fopen(outputFilename.c_str(), "w");
     if (!f)
@@ -676,6 +678,12 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             // make the Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
                                      false, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
+
+            // make the Farfield PhaseFit plot:
+            string tmp;
+            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol0_m,
+                                          azPointing, elPointing, tmp);
+
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol0_m,
                                      true, false, azPointing, elPointing, Pol0Eff_m.NFCopolAmpPlot);
@@ -736,6 +744,12 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             // make the Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
                                      false, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhasePlot);
+
+            // make the Farfield PhaseFit plot:
+            string tmp;
+            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol1_m,
+                                          azPointing, elPointing, tmp);
+
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol1_m,
                                      true, false, azPointing, elPointing, Pol1Eff_m.NFCopolAmpPlot);
@@ -848,7 +862,7 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     title += ", pol ";
     title += to_string(scan -> getPol());
     title += " ";
-    title += scan ->getScanTypeString();
+    title += scan -> getScanTypeString();
     title += ", RF ";
     title += to_string(scan -> getRFGhz());
     title += " GHz, tilt ";
@@ -920,6 +934,143 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     remove(fileNameCmd.c_str());
     return true;
 }
+
+bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
+                               const ScanData *scan,
+                               float azPointing, float elPointing, std::string &fileNamePlot)
+{
+    fileNamePlot.clear();
+    if (!scan)
+        return false;
+
+    const ScanDataRaster *pFF = scan -> getFFScan();
+    if (!pFF)
+        return false;
+
+    const AnalyzeResults &res = pFF -> getAnalyzeResults();
+
+    bool nf(false);
+    bool phase(true);
+
+    fileNamePlot = outputDirectory;
+    fileNamePlot += "band";
+    fileNamePlot += to_string(scan -> getBand());
+    fileNamePlot += "_pol";
+    fileNamePlot += to_string(scan -> getPol());
+    fileNamePlot += "_";
+    fileNamePlot += to_string(scan -> getScanTypeString());
+    fileNamePlot += "_";
+    fileNamePlot += to_string(scan -> getRFGhz());
+    fileNamePlot += "GHz";
+    fileNamePlot += "_phasefit";
+    fileNamePlot += "_tilt";
+    fileNamePlot += to_string(scan -> getTilt());
+    fileNamePlot += "_scanset";
+    fileNamePlot += to_string(scanSetId_m);
+    fileNamePlot += ".png";
+    // delete the plot file if it already exists:
+    remove(fileNamePlot.c_str());
+
+    string fileNameCmd = outputDirectory;
+    fileNameCmd += "gnuplot_cmd.txt";
+    // delete the command file if it already exists:
+    remove(fileNameCmd.c_str());
+
+    FILE *f = fopen(fileNameCmd.c_str(), "w");
+    if (!f)
+        return false;
+
+    string title = "Band ";
+    title += to_string(scan -> getBand());
+    title += ", pol ";
+    title += to_string(scan -> getPol());
+    title += " ";
+    title += scan -> getScanTypeString();
+    title += ", RF ";
+    title += to_string(scan -> getRFGhz());
+    title += " GHz, tilt ";
+    title += to_string(scan -> getTilt());
+    title += " deg";
+
+    // 500x500 pixel .png files.  crop=no blank space around plot:
+    fprintf(f, "set terminal png size 500, 500 crop\r\n");
+    fprintf(f, "set output '%s'\r\n", fileNamePlot.c_str());
+    fprintf(f, "set title '%s'\r\n", title.c_str());
+    // X and Y axis labels:
+    fprintf(f, "set xlabel '%s'\r\n", (nf) ? "X(m)" : "Az(deg)");
+    fprintf(f, "set ylabel '%s'\r\n", (nf) ? "Y(m)" : "El(deg)");
+    // Palette limited to -50 to 0:
+    fprintf(f, "set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n");
+    // Label for legend:
+    fprintf(f, "set cblabel 'Fitted FF Phase (deg)'\r\n");
+    // Top-down view:
+    fprintf(f, "set view 0,0\r\n");
+    // Palette mapped 3d style for splot:
+    fprintf(f, "set pm3d map\r\n");
+    // Force a square plot within the canvas:
+    fprintf(f, "set size square\r\n");
+    // Set the range of values which are colored using the current palette:
+    fprintf(f, "set cbrange [%s]\r\n", (phase) ? "-180:180" : "-50:0");
+    // Set the X and Y resolution of the plot:
+    fprintf(f, "set isosamples 201,201\r\n");
+
+    // Add the database keys label:
+    string label;
+    getDatabaseKeysLabel(label, scan -> getScanId());
+    if (!label.empty())
+        fprintf(f, "set label '%s' at screen 0.01, 0.05\r\n", label.c_str());
+
+    // Add the measurmement info label:
+    getMeasInfoLabel(label, *scan);
+    fprintf(f, "set label '%s' at screen 0.01, 0.02\r\n", label.c_str());
+
+    // We want Gnuplot to calculate in radians mode:
+    fprintf(f, "set angles radians\r\n");
+    fprintf(f, "set xtics 2\r\n");
+    fprintf(f, "set ytics 2\r\n");
+    fprintf(f, "set xrange [-16:16]\r\n");
+    fprintf(f, "set yrange [-16:16]\r\n");
+
+    // convert mm to radians:
+    float k = scan -> getKWaveNumber();     // rad/m
+    float deltaX = res.deltaX * 0.001 * k;  // rad
+    float deltaY = res.deltaY * 0.001 * k;
+    float deltaZ = res.deltaZ * 0.001 * k;
+
+    // our plot axes are degrees so define function to convert to radians:
+    fprintf(f, "torad(a) = a * pi / 180\r\n");
+    // define functions to offset the phase center by the nominal pointing:
+    fprintf(f, "azoffset(az) = az - %f\r\n", azPointing);
+    fprintf(f, "eloffset(el) = el - %f\r\n", elPointing);
+
+//  phaseFit = phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*cos(Az)*cos(El);
+    string func = "phase(x, y) = ";
+    func += to_string(deltaX);
+    func += " * sin(torad(azoffset(x)))*cos(torad(eloffset(y))) + ";
+    func += to_string(deltaY);
+    func += " * sin(torad(eloffset(y))) + ";
+    func += to_string(deltaZ);
+    func += " * cos(torad(azoffset(x)))*cos(torad(eloffset(y)))";
+
+    // convert back to degrees for plotting:
+    fprintf(f, "todeg(a) = a * 180 / pi\r\n");
+    fprintf(f, "%s\r\n", func.c_str());
+    // x mod 360: x-(floor(x/360)*360)
+    fprintf(f, "splot todeg(phase(x, y)) - (floor(todeg(phase(x, y)) / 360) * 360) - 180 title ''\r\n");
+
+    fclose(f);
+
+    // call gnuplot:
+    string gnuplotCommand = gnuplotPath;
+    gnuplotCommand += " ";
+    gnuplotCommand += fileNameCmd;
+    std::system(gnuplotCommand.c_str());
+    // delete the temporary command file:
+    remove(fileNameCmd.c_str());
+    return true;
+}
+
+
 
 bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
                                      std::string &fileNamePlot)
