@@ -21,9 +21,13 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.5");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.6-beta2");
 
 // Version history
+// 2.0.6:  Using multi-pass search with exact expression for fitted phase:
+//         1) CG search from {0, 0, probe-zdistance}
+//         2) Line search along delta_z
+//         3) CG search, line search, final CG search
 // 2.0.5:  Using exact expression for fitted phase including corrections from Alvaro Gonzalez
 //         Invert phase and rotate for LSB now.
 //         Invert signs of nominal pointing angles.  Matches scanner coord system now.

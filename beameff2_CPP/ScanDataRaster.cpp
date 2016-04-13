@@ -371,7 +371,7 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
     }
 }
 
-float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNominal) const {
+float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx) const {
     float Az, El, maskE, phaseRad;                                  // values from data arrays
     float phaseFit, phaseErr, eta_phase;                            // calculated values
     double costerm(0.0), sinterm(0.0), normalizationFactor(0.0);    // accumulate fit errors in the loop
@@ -390,14 +390,24 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
 
         // Notes from Alvaro Gonzalez "TN9 Analysis of the NRAO Efficiency Calculator Formulas" 11 Jan 2011.
         //   Restated in email 2016-03-07.
+        //   Expanded and further verified in "Phase Efficiency Calculation" NAOJ, March 11th 2016
         //
         // The phase -kr is exactly:
         //   -kr= -k(delta_x*sinAz*cosEl +delta_y*sinEl +delta_z*cosAz*cosEl)
         //
-        // p[1], p[2], p[3] are delta_x, delta_y, and delta_z:
-        phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*cos(Az)*cos(El);
+        // The approximation is:
+        //   -kr= -k(delta_x*Az + delta_y*El - delta_z*(Az^2 + El^2)/2)
+        //
+        // p[1], p[2], p[3] are delta_x, delta_y, and delta_z,
+        //   the current guesses for the phase center location, in radians.
 
-        // error between measured phase and fit phase:
+        if (approx) {
+            phaseFit = p[1]*Az + p[2]*El - p[3]*(Az*Az + El*El)/2.0;
+        } else {
+            phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*(cos(Az)*cos(El));
+        }
+
+        // to find the correlation between the fit phase and the measured phase:
         phaseErr = phaseRad + phaseFit;
 
         // accumulate the cos, sin, and total E field sums:

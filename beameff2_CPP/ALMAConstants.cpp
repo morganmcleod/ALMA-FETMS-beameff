@@ -26,7 +26,6 @@ using namespace std;
 namespace ALMAConstants {
 
 const float c = 2.99792458e8;       // m/s
-const float c_mm_per_ns = 299.79;   // c in mm/ns.
 const float TAU = 0.25;
 
 // Note: FOCAL_DEPTH=0.7197 comes from equation 22 of ALMA MEMO 456 using M=20 and phi_0 = 3.58

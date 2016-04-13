@@ -121,10 +121,12 @@ public:
     ///< @param subreflectorRadius: in degrees.
     ///< @param copolPeakAmp: If non-zero, use to normalize the FF beam (to normalize xpol to copol peak.)
 
-    float calcPhaseEfficiency(float p[], float azNominal, float elNominal) const;
+    float calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx) const;
     ///< calculate phase efficiency for the given phase center model p[].
     ///< called from within FitPhase()
-    ///< @param p: array giving phase center model in ??? units
+    ///< @param p: array giving phase phase center guess in radians {delta_x, delta_y, delta_z}.
+    ///< @param azNominal, elNominal: angle to center of the subreflector in degrees
+    ///< @param approx:  if true, use approximate equation for fitPhase else use exact equation.
     ///< @return phase efficiency in 0-1.
 
     float calcAmplitudeEfficiency(float p[], float azActual, float elActual) const;

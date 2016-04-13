@@ -140,7 +140,7 @@ public:
     ///< @return the RF
 
     float getKWaveNumber() const
-      { return 2 * M_PI * rfGHz_m / (ALMAConstants::c_mm_per_ns / 1000.0); }
+      { return 2 * M_PI * rfGHz_m * 1.0e9 / ALMAConstants::c; }
     ///< @return k, the wavenumber in rad/m computed from rfGHz_m
 
     const ScanDataRaster *getFFScan() const

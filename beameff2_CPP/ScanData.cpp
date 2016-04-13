@@ -149,8 +149,10 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
     sectionKey += ":zdistance";
     zDistance_m = static_cast<float>(iniparser_getdouble(dict, sectionKey.c_str(), 0.0));
     //If zero or not provided, assume the old FETMS default of 260 mm:
-    if (zDistance_m == 0.0)
+    if (zDistance_m == 0.0) {
         zDistance_m = 260.0;
+        cout << "zdistance not specified in input. Using " << zDistance_m << " mm<br>" << endl;
+    }
 
     //ifAtten_m
     sectionKey = inputSection_m;

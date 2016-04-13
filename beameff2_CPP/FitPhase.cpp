@@ -24,26 +24,39 @@
 #include "ScanDataRaster.h"
 #include <math.h>
 
+#include <iostream>
+#include <iomanip>
+#include <limits>
+using namespace std;
+
 extern "C" {
     #include "nr/nr.h"
 }
 
 namespace BeamFitting {
     // forward declare fitness functions:
-    float function_phase(float p[]);
     void dfunction_phase(float p[], float df[]);
+    float function_phase(float p[]);
+    float function_phase_z(float delta_z);
 
     const int nTerms_m(3);          ///< terms of phase center model
     ScanData *fitPhaseScan(NULL);   ///< Scan we are currently fitting against
     static float azNominal;         ///< nominal pointing in Az
     static float elNominal;         ///< nominal pointing in El
+    static float delta_x_m;         ///< delta_x to hold constant while searching in delta_z
+    static float delta_y_m;         ///< delta_y ""
+    static bool approxFit(false);   ///< true=use approximate phase fitting; false=exact.
 
     void FitPhase(ScanData *currentScan, float _azNominal, float _elNominal) {
         fitPhaseScan = currentScan;
         azNominal = _azNominal;
         elNominal = _elNominal;
 
-        float ftol = pow(10, -1.2 * fitPhaseScan -> getBand());
+        // set the linear search tolerance at about the square root of the machine epsilon for float:
+        float tol = 4.40e-4;
+
+        // set the function evaluation tolerance at about the machine epsilon for float:
+        float ftol = 1.93e-7;
 
         int iter_phase;
         float fret_phase;
@@ -55,12 +68,7 @@ namespace BeamFitting {
         functionphase = &function_phase;
         dfunctionphase = &dfunction_phase;
 
-        // TODO? better way to FitPhase:
-        //  first call with p = {0, 0, 0} and mask radius= 1 deg.
-        //  find phase center in rad/deg.
-        //  change mask to full subreflector ~3.8 deg.
-        //  fimd phase center again using P from first iteration.
-
+        // start from the probe z distance as our guess for delta_z:
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
@@ -72,27 +80,78 @@ namespace BeamFitting {
         p[2] *= 0.001 * k;
         p[3] *= 0.001 * k;
 
+        // first find the phase center minimum closest to the given Z distance:
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
 
+        cout << "FitPhase 1: " << 1000.0 * p[1] / k << ", "
+                               << 1000.0 * p[2] / k << ", "
+                               << 1000.0 * p[3] / k << ", "
+                               << 1.0 - fret_phase << ", "
+                               << iter_phase << " iterations<br>" << endl;
+
+        // now do a line search along the z axis:
+        delta_x_m = p[1];
+        delta_y_m = p[2];
+        float ax = p[3];
+        float bx = ax + 2.0;
+        float cx, fa, fb, fc;
+
+        // bracket the minimum of the phase fit function in delta_z:
+        mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
+
+        // now find the exact delta_z giving the minimum:
+        fb = brent(ax, bx, cx, function_phase_z, tol, &bx);
+
+        // now search the space around the first delta_x, delta_y and the new delta_z:
+        p[1] = delta_x_m;
+        p[2] = delta_y_m;
+        p[3] = bx;
+        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
+
+        cout << "FitPhase 2: " << 1000.0 * p[1] / k << ", "
+                               << 1000.0 * p[2] / k << ", "
+                               << 1000.0 * p[3] / k << ", "
+                               << 1.0 - fret_phase << ", "
+                               << iter_phase << " iterations<br>" << endl;
+
+        // another bracket and linear search in delta_z:
+        delta_x_m = p[1];
+        delta_y_m = p[2];
+        ax = p[3];
+        bx = ax + 2.0;
+        mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
+        fb = brent(ax, bx, cx, function_phase_z, tol, &bx);
+
+        // final multidimensional search:
+        p[3] = bx;
+        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
+
+        cout << "FitPhase 3: " << 1000.0 * p[1] / k << ", "
+                               << 1000.0 * p[2] / k << ", "
+                               << 1000.0 * p[3] / k << ", "
+                               << 1.0 - fret_phase << ", "
+                               << iter_phase << " iterations<br>" << endl << endl;
+
         // convert back to mm:
-        float deltaX = p[1] / k * 1000;
-        float deltaY = p[2] / k * 1000;
-        float deltaZ = p[3] / k * 1000;
+        float deltaX = 1000.0 * p[1] / k;
+        float deltaY = 1000.0 * p[2] / k;
+        float deltaZ = 1000.0 * p[3] / k;
 
         // save results into the scan object:
         fitPhaseScan -> setPhaseFitResults(deltaX, deltaY, deltaZ, 1.0 - fret_phase);
     }
 
+    /// Compute the gradient of the phase fitting function (1.0-eta_phase) at the given coordinates:
+    /// p[] = {delta_x, delta_y, delta_z} in radians.
+    /// Gradient is returned in df[].
     void dfunction_phase(float p[], float df[]) {
-    /* This function should compute the gradients of the chi-squared function,
-     * which are stored in the array "df". Since it is not a analytic function,
-     * we must compute the partial derivatives numerically, which is done using:
-     *    d(chi-square) / dp[j] = *chiSquare(p[j]+del) - chiSquare(p[j])) / del
-     *
-     */
+        // Since it is not a analytic function, we must compute the partial derivatives numerically,
+        // using:  d(func) / dp[j] = (func(p[j]+del) - func(p[j])) / del
+
         int i,j;
         float par[nTerms_m + 1];
         float delta = 0.01, del;
+        float tol = 4.40e-4;
 
         const ScanDataRaster *pscan = fitPhaseScan -> getFFScan();
         if (!pscan)
@@ -104,28 +163,37 @@ namespace BeamFitting {
                 par[i] = p[i];
             }
             /* apply a small offset to the parameter being adjusted this time through the loop */
-            if (fabs(par[j]) > (delta / 100000)) {
+            if (fabs(par[j]) >= tol) {
                 del = delta * par[j];
             } else {
                 /* this takes care of the unique case where the initial guess is zero */
                 del = delta;
             }
             par[j] += del;
-            df[j] = ((1.0 - pscan -> calcPhaseEfficiency(par, azNominal, elNominal))
-                   - (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal))) / del;
+            df[j] = ((1.0 - pscan -> calcPhaseEfficiency(par, azNominal, elNominal, approxFit))
+                   - (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal, approxFit))) / del;
         }
     }
 
+    /// Return (1.0-eta_phase) if we fit the phase center to the given coordinates:
+    /// p[] = {delta_x, delta_y, delta_z} in radians.
     float function_phase(float p[]) {
-    /* This function should return the chi-squared value for the current model
-     * parameters that are passed in as an argument.  In this case, we want
-     * to minimize the phase "inefficiency", so we simply calculate that.
-     */
         const ScanDataRaster *pscan = fitPhaseScan -> getFFScan();
         if (!pscan)
             return 0.0;
 
-        return (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal));
+        return (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal, approxFit));
+    }
+
+    /// Return (1 - eta_phase) if we fit the phase center delta_z to the given value in radians,
+    /// with delta_x and delta_y from the previous search:
+    float function_phase_z(float delta_z) {
+        float p[nTerms_m + 1];
+        p[0] = 0.0;
+        p[1] = delta_x_m;
+        p[2] = delta_y_m;
+        p[3] = delta_z;
+        return function_phase(p);
     }
 
 }; //namespace

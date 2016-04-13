@@ -51,7 +51,6 @@ void frprmn(float p[], int n, float ftol, int *iter, float *fret,
 		  fprintf(stderr,"returned from linmin\n");	
 		}
 		
-		
 		if (2.0*fabs(*fret-fp) <= ftol*(fabs(*fret)+fabs(fp)+EPS)) {
 			FREEALL
 			  if (DEBUGGING_NR) {
@@ -59,8 +58,9 @@ void frprmn(float p[], int n, float ftol, int *iter, float *fret,
 			  }
 			return;
 		}
-		fp= *fret;
+		fp= (*func)(p);
 		(*dfunc)(p,xi);
+
 		dgg=gg=0.0;
 		for (j=1;j<=n;j++) {
 			gg += g[j]*g[j];
