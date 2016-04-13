@@ -467,7 +467,7 @@ bool ScanSet::calcSquint_impl() {
     // 1.15 is the coefficient to multiply by lambda/D to get FWHM where D=diameter of primary mirror in mm.
     // 60.0 * 60.0 converts to arcseconds.
 
-    float lambda = ALMAConstants::c / (CopolPol0_m -> getRFGhz() * 1.0E9);
+    float lambda = ALMAConstants::c / (CopolPol0_m -> getRFGhz() * 1.0E6);
     float deg_per_rad = 180.0 / M_PI;
     CombinedEff_m.squint_percent = (100.0 * CombinedEff_m.squint_arcseconds) / (1.15 * lambda * deg_per_rad * 60.0 * 60.0 / dishDiameter);
 
