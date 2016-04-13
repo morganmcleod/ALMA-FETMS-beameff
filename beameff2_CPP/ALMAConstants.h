@@ -24,7 +24,6 @@
 namespace ALMAConstants {
 
     extern const float c;
-    extern const float c_mm_per_ns;
     extern const float TAU;
     extern const float FOCAL_DEPTH;
 

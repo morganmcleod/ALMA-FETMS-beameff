@@ -271,7 +271,7 @@ bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *
 
             // Defocus calculation to find subreflector shift:
             float probeZ = copolScan -> getZDistance();
-            lambda = ALMAConstants::c_mm_per_ns / copolScan -> getRFGhz();
+            lambda = ALMAConstants::c / (copolScan -> getRFGhz() * 1.0E9);
             delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
             beta = (2 * M_PI / lambda) * delta * (1 - cos(psi_o / 57.3));
 
@@ -467,7 +467,7 @@ bool ScanSet::calcSquint_impl() {
     // 1.15 is the coefficient to multiply by lambda/D to get FWHM where D=diameter of primary mirror in mm.
     // 60.0 * 60.0 converts to arcseconds.
 
-    float lambda = ALMAConstants::c_mm_per_ns / CopolPol0_m -> getRFGhz();
+    float lambda = ALMAConstants::c / (CopolPol0_m -> getRFGhz() * 1.0E9);
     float deg_per_rad = 180.0 / M_PI;
     CombinedEff_m.squint_percent = (100.0 * CombinedEff_m.squint_arcseconds) / (1.15 * lambda * deg_per_rad * 60.0 * 60.0 / dishDiameter);
 
@@ -1032,13 +1032,14 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     fprintf(f, "set yrange [-16:16]\r\n");
 
     // convert mm to radians:
-    float k = scan -> getKWaveNumber();     // rad/m
-    float deltaX = res.deltaX * 0.001 * k;  // rad
+    float k = scan -> getKWaveNumber();    // rad/m
+    float deltaX = res.deltaX * 0.001 * k; // rad
     float deltaY = res.deltaY * 0.001 * k;
     float deltaZ = res.deltaZ * 0.001 * k;
 
     // our plot axes are degrees so define function to convert to radians:
     fprintf(f, "torad(a) = a * pi / 180\r\n");
+
     // define functions to offset the phase center by the nominal pointing:
     fprintf(f, "azoffset(az) = az - %f\r\n", azPointing);
     fprintf(f, "eloffset(el) = el - %f\r\n", elPointing);
