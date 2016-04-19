@@ -11,6 +11,18 @@ Beam efficiency calculator for the ALMA Front End Test and Measurement System
 http://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules 
 
 Recent version history:
+ * 2.0.7:  Added input file option [settings] invertphase with options {lsb, usb, all, none}
+           and synonymns {yes, y, t, 1} for all, {no, n, f, 0} for none.  All options case-insensitive.
+ * 2.0.6:  Using multi-pass search with exact expression for fitted phase:
+           1) CG search from {0, 0, probe-zdistance}
+           2) Line search along delta_z
+           3) CG search, line search, final CG search
+           Fix calculation error in squint_percent
+ * 2.0.5:  Using exact expression for fitted phase including corrections from Alvaro Gonzalez
+           Invert phase and rotate for LSB now.
+           Invert signs of nominal pointing angles.  Matches scanner coord system now.
+           Added makePhaseFitPlot for visualizing the fitted phase surface.
+           Improved documentation of FitPhase and ScanDataRaster::calcPhaseEfficiency
  * 2.0.4:  Don't rotate nearfield scans but do invert phase when appropriate.
            Back to el = +2.48 for band1test dewar
  * 2.0.3:  Adjust labels on pointing angles plot
