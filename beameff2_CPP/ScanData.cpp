@@ -214,17 +214,35 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
     return true;
 }
 
-bool ScanData::loadListings(const std::string &delim) {
+bool ScanData::loadListings(const std::string &delim, ALMAConstants::InvertPhaseOptions invertPhaseOption) {
     // make sure there is not already raster data allocated:
     freeArrays();
     const bool rotateNF = false;    // never rotate NF scans
-    bool rotateFF = false;          // rotate FF scans if LSB
-    bool invertPhase = false;       // invert phase if LSB
-    if (sb_m == 2) {
-        rotateFF = true;
-        invertPhase = true;
-        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating LSB scans.<br>" << endl;
+    bool rotateFF = false;          // switch to rotate FF scans
+    bool invertPhase = false;       // switch to invert phase
+
+    // determine whether to invert phase and rotate FF scans:
+    switch (invertPhaseOption) {
+    case ALMAConstants::INVERT_LSB:
+        rotateFF = invertPhase = (sb_m == 2);
+        break;
+
+    case ALMAConstants::INVERT_USB:
+        rotateFF = invertPhase = (sb_m == 1);
+        break;
+
+    case ALMAConstants::INVERT_ALL:
+        rotateFF = invertPhase = true;
+        break;
+
+    case ALMAConstants::INVERT_NONE:
+    default:
+        break;
     }
+
+    if (rotateFF)
+        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating scans.<br>" << endl;
+
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
         NF_m = new ScanDataRaster;

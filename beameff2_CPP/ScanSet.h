@@ -50,12 +50,14 @@ public:
     ///< @param FEConfigId database key to FE_Config table.
     ///< @param TestDataHeaderId database key to TestData_Header table.
 
-    bool loadScan(const dictionary *dict, const std::string inputSection, const std::string delim);
+    bool loadScan(const dictionary *dict, const std::string inputSection,
+                  const std::string delim, ALMAConstants::InvertPhaseOptions invertPhaseOption);
     ///< load a scan from the input file into one of the ScanData slots.
     ///< this class determines which slot depending on the properties of the scan
     ///< @param dict: an iniparser dictionary
     ///< @param inputSection: name of the section to load
     ///< @param delim: the delimiter to use when loading listing files.
+    ///< @param invertPhaseOption: option for when to invert phase and rotate FF scans on load
     ///< @return true if no errors loading and parsing the section.
 
     bool calcEfficiencies(ALMAConstants::PointingOptions pointingOption);
@@ -84,6 +86,7 @@ private:
     int band_m;                 // ALMA band number (1-10)
     ALMAConstants::PointingOptions pointingOption_m;
                                 // pointing option passed to calcEfficiencies()
+
     ScanData *CopolPol0_m;      // Data set for pol0 copol
     ScanData *XpolPol0_m;       // Data set for pol0 xpol
     ScanData *CopolPol1_m;      // Data set for pol1 copol

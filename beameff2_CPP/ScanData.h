@@ -60,9 +60,10 @@ public:
     ///< @param inputSection: name of the section to load
     ///< @return true if no errors loading and parsing the section.
 
-    bool loadListings(const std::string &delim);
+    bool loadListings(const std::string &delim, ALMAConstants::InvertPhaseOptions invertPhaseOption);
     ///< load the beam scan listing files which were specified in the input file section.
     ///< @param delim: the delimiter to use when parsing the listing files, typically "," or "tab"
+    ///< @param invertPhaseOption: option for when to invert phase and rotate FF scans on load
     ///< @return true if no errors parsing the listing files.
 
     void combineDualZScans();

@@ -35,6 +35,14 @@ namespace ALMAConstants {
         BAND1TEST   // the band 1 test dewar
     };
 
+    /// Options for when to invert measured phase and rotate FF scan:
+    enum InvertPhaseOptions {
+        INVERT_LSB, // invert phase and rotate FF scan when in LSB, the FETMS default.
+        INVERT_USB, // invert phase and rotate FF scan when in USB.
+        INVERT_ALL, // always invert phase and rotate FF scan.
+        INVERT_NONE // never invert phase nor rotate FF scan.
+    };
+
     void getAntennaParameters(PointingOptions pointing,
                               float &M, float &psi_o, float &psi_m,
                               float &plateFactor, float &dishDiameter);

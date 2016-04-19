@@ -169,6 +169,17 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
         else if(!strcmp(pval, "band1test"))
             pointingOption_m = ALMAConstants::BAND1TEST;
 
+        // Read the invert phase and rotate FF option to use:
+        pval = iniparser_getstring(dict_m, "settings:invertphase", "lsb");
+        if (!stricmp(pval, "lsb"))
+            invertPhaseOption_m = ALMAConstants::INVERT_LSB;
+        else if (!stricmp(pval, "usb"))
+            invertPhaseOption_m = ALMAConstants::INVERT_USB;
+        else if (!stricmp(pval, "all") || !stricmp(pval, "yes") || !stricmp(pval, "y") || !stricmp(pval, "t") || !stricmp(pval, "1"))
+            invertPhaseOption_m = ALMAConstants::INVERT_ALL;
+        else if (!stricmp(pval, "none") || !stricmp(pval, "no") || !stricmp(pval, "n") || !stricmp(pval, "f") || !stricmp(pval, "0"))
+            invertPhaseOption_m = ALMAConstants::INVERT_NONE;
+
         // Read the gnuplot path:
         pval = iniparser_getstring(dict_m, "settings:gnuplot", "");
         gnuplotPath_m = pval;

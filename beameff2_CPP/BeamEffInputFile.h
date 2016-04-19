@@ -44,6 +44,10 @@ public:
       { return pointingOption_m; }
     ///< @return the pointing option specified in the input file.
 
+    ALMAConstants::InvertPhaseOptions getInvertPhaseOption() const
+      { return invertPhaseOption_m; }
+    ///< @return the invert phase option specified in the input file.
+
     const std::string &getOuputDirectory() const
       { return outputDir_m; }
     ///< @return the path for output files.
@@ -104,7 +108,10 @@ private:
     scanSetList *scanSets_m;            ///< implementation class for scanset and section metadata.
 
     ALMAConstants::PointingOptions pointingOption_m;
-                                        ///< pointing option seepcified in the [settings] section.
+                                        ///< pointing option sepecified in the [settings] section.
+
+    ALMAConstants::InvertPhaseOptions invertPhaseOption_m;
+                                        ///< invert phase and rotate FF scan option sepecified in the [settings] section.
 
     void loadScanSetIds();
     ///< private helper to load the scanset and section metadata

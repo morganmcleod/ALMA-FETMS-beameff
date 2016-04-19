@@ -71,7 +71,9 @@ void ScanSet::setDatabaseKeys(unsigned scanSetId, unsigned FEConfigId, unsigned 
     TestDataHeaderId_m = TestDataHeaderId;
 }
 
-bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection, const std::string delim) {
+bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection,
+                       const std::string delim, ALMAConstants::InvertPhaseOptions invertPhaseOption)
+{
     bool error = false;
 
     ScanData *scan = new ScanData;
@@ -81,7 +83,7 @@ bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection, c
         error = true;
 
     // load the listing files:
-    } else if (!scan -> loadListings(delim)) {
+    } else if (!scan -> loadListings(delim, invertPhaseOption)) {
         cout << "ERROR: ScanSet::loadScan(): loadListings failed." << endl;
         error = true;
 

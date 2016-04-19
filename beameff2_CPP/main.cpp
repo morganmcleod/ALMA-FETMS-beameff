@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
             }
 
             // load the section into a ScanData object in the ScanSet:
-            SS.loadScan(inFile.getDict(), section, inFile.getDelim());
+            SS.loadScan(inFile.getDict(), section, inFile.getDelim(), inFile.getInvertPhaseOption());
             // go to next section for the scanSet:
             section = inFile.nextSection(scanSet);
         }
