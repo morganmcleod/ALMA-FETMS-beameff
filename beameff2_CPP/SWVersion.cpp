@@ -21,9 +21,11 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.7");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.8");
 
 // Version history
+// 2.0.8:  Display actual pointing angles on the pointing plot.
+//
 // 2.0.7:  Added input file option [settings] invertphase with options {lsb, usb, all, none}
 //         and synonymns {yes, y, t, 1} for all, {no, n, f, 0} for none.  All options case-insensitive.
 // 2.0.6:  Using multi-pass search with exact expression for fitted phase:

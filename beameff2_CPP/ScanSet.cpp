@@ -1116,7 +1116,7 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     title += " deg";
 
     // always show nominal pointing in this plot, even if efficiencies are using ACTUAL:
-    float azNominal, elNominal, az, el;
+    float azNominal, elNominal, az0, el0, az1, el1;
     ALMAConstants::PointingOptions option = (pointingOption_m == ALMAConstants::ACTUAL)
                                           ? ALMAConstants::NOMINAL
                                           : pointingOption_m;
@@ -1152,9 +1152,23 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     if (!label.empty())
         fprintf(f, "set label '%s' at screen 0.01, 0.11\r\n", label.c_str());
 
-    // Add the measurmement info label:
+    // Add the measurement info label:
     getMeasInfoLabel(label, *CopolPol0_m);
     fprintf(f, "set label '%s' at screen 0.01, 0.09\r\n", label.c_str());
+
+    // Add the pointing angles label
+    CopolPol0_m -> getFFCenterOfMass(az0, el0);
+    CopolPol1_m -> getFFCenterOfMass(az1, el1);
+    label = "pol 0  az: ";
+    label += to_string(az0, std::fixed, 3);
+    label += "   el: ";
+    label += to_string(el0, std::fixed, 3);
+    fprintf(f, "set label '%s' at screen 0.70, 0.60\r\n", label.c_str());
+    label = "pol 1  az: ";
+    label += to_string(az1, std::fixed, 3);
+    label += "   el: ";
+    label += to_string(el1, std::fixed, 3);
+    fprintf(f, "set label '%s' at screen 0.70, 0.57\r\n", label.c_str());
 
     // plot the subreflector circle:
     fprintf(f, "plot [0:2*pi] %f+%.2f*sin(t),%f+%.2f*cos(t) title 'subreflector'",
@@ -1168,11 +1182,8 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     else
         fprintf(f, "title 'nominal pointing angle'");
 
-    CopolPol0_m -> getFFCenterOfMass(az, el);
-    fprintf(f, ", %f,%f with points lw 1 pt 4 title 'pol 0'", az, el);
-
-    CopolPol1_m -> getFFCenterOfMass(az, el);
-    fprintf(f, ", %f,%f with points lw 1 pt 3 title 'pol 1'", az, el);
+    fprintf(f, ", %f,%f with points lw 1 pt 4 title 'pol 0'", az0, el0);
+    fprintf(f, ", %f,%f with points lw 1 pt 3 title 'pol 1'", az1, el1);
     fprintf(f, "\r\n");
 
     fclose(f);
