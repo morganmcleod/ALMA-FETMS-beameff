@@ -1,0 +1,27 @@
+Dear Josh and Geoff,
+
+Next message will be a cleaned up version of my spread-sheet.
+
+The main purpose was to gather things together better, but I have added a few features.
+
+I guess the best thing to do is make an updated version of my note about these calculations rather than write out all the details here, but that may take a while.  It would be best if you could try this one out and let me know what seems to be missing or doesn't work.
+
+The main thing that is new is that there are fits for both the phase and the amplitude.  The phase is just fitted by the three coordinates of the phase centre as before.  We do still have an issue about signs to sort out here.  If you take some data with the scan centre offset that should resolve that.
+
+The amplitude is fit by six parameters - amplitude, beam radius, centre position (this is with respect to the nominal centre of the subreflector not the (0,0) direction), and two ellipticity measures - one for the difference between the up-down and the left-right directions and one for the differences at 45 and 135 degrees.  These are fractional ellipticity - i.e. differences in widths over mean width (at least that was what I was trying to do).   The fit is for the minimum of the sum of squares of the difference between the data amplitude and model amplitude over the area of the subreflector only.
+
+There is one more parameter which I have called N.  It is some sort of non-Gaussianity factor.  Our beams are flatter in the middle and steeper at the sides than a Gaussian so I have modified the functions to cope with that.  N = 1 would be a Gaussian.  If I include N as a free parameter in the fit it comes up with just over 2, so I have set it for 2 at the moment.  We might find it useful to leave it free to see if some data has peculiarities but I'm not sure whether it will always behave smoothly.
+
+There is a crude plot so you can play around with these parameters and see what happens.  I guess you may want to take the plots out when this is all under control.
+
+One snag with this is that means that the fitted width no longer refers to the 1/e amplitude.  If you want to know the 1/e amplitude for the best fitting Gaussian, set N = 1 and run the fit again.
+
+At the moment you have to run the fits for the phase and amplitude separately by changing the cells in the Solve boxes.  I did also try combining the fits - making the sum of the two errors the thing you solve for and giving it all 9 parameters to find at the same time.  This seemed to work but it took rather a long time and was a bit less accurate.  Alternatively you might be able to set things up so that a macro runs the two solves.
+
+I look forward to your comments.
+
+Best Richard
+</pre>
+
+
+-- Main.ToddHunter - 20 Aug 2008
