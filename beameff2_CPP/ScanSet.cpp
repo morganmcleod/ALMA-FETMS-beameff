@@ -210,7 +210,8 @@ bool ScanSet::calcEfficiencies_impl(ScanData *copolScan, ScanData *xpolScan, Eff
 }
 
 bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *xpolScan, EfficiencyData::OnePol &eff) {
-    float M, psi_o, psi_m, plateFactor, dishDiameter, lambda, delta, beta;
+    float M, psi_o, psi_m, plateFactor, dishDiameter;
+    //, lambda, delta, beta;
     ALMAConstants::getAntennaParameters(pointingOption_m, M, psi_o, psi_m, plateFactor, dishDiameter);
 
     if (copolScan && xpolScan) {
@@ -271,22 +272,24 @@ bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *
             // Total efficiency including defocus:
             eff.total_aperture_eff = eff.eta_tot_nd * eff.eta_defocus;
 
+// 2.0.9: MM commented this out because it is broken and of dubious value.
+// A. Gonzalez agreed that this doesn't make any sense.
             // Defocus calculation to find subreflector shift:
-            float probeZ = copolScan -> getZDistance();
-            lambda = ALMAConstants::c / (copolScan -> getRFGhz() * 1.0E9);
-            delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
-            beta = (2 * M_PI / lambda) * delta * (1 - cos(psi_o / 57.3));
-
-            eff.defocus_efficiency = pow(ALMAConstants::TAU, 2.0)
-                                   * pow(sin(beta / 2.0) / (beta / 2.0), 2.0)
-                                   + (1 - pow(ALMAConstants::TAU, 2.0))
-                                   * (
-                                       pow(sin(beta / 2.0) / (beta / 2.0), 4.0)
-                                       + 4.0 / pow(beta, 2.0)
-                                       * pow((sin(beta) / beta) - 1.0, 2.0)
-                                     );
-            eff.shift_from_focus_mm = eff.deltaZ - probeZ;
-            eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
+//            float probeZ = copolScan -> getZDistance();
+//            lambda = ALMAConstants::c / (copolScan -> getRFGhz() * 1.0E9);
+//            delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
+//            beta = (2 * M_PI / lambda) * delta * (1 - cos(psi_o / 57.3));
+//
+//            eff.defocus_efficiency = pow(ALMAConstants::TAU, 2.0)
+//                                   * pow(sin(beta / 2.0) / (beta / 2.0), 2.0)
+//                                   + (1 - pow(ALMAConstants::TAU, 2.0))
+//                                   * (
+//                                       pow(sin(beta / 2.0) / (beta / 2.0), 4.0)
+//                                       + 4.0 / pow(beta, 2.0)
+//                                       * pow((sin(beta) / beta) - 1.0, 2.0)
+//                                     );
+//            eff.shift_from_focus_mm = eff.deltaZ - probeZ;
+//            eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
             return true;
         }
     }
@@ -582,11 +585,13 @@ bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, c
     updateDictionary(dict, section, "eta_tot_np",           to_string(eff.eta_tot_np, std::fixed, 6));
     updateDictionary(dict, section, "eta_pol",              to_string(eff.eta_pol, std::fixed, 6));
     updateDictionary(dict, section, "eta_tot_nd",           to_string(eff.eta_tot_nd, std::fixed, 6));
-    updateDictionary(dict, section, "defocus_efficiency",   to_string(eff.eta_defocus, std::fixed, 6));
-    updateDictionary(dict, section, "shift_from_focus_mm",  to_string(eff.shift_from_focus_mm, std::fixed, 6));
-    updateDictionary(dict, section, "subreflector_shift_mm",to_string(eff.subreflector_shift_mm, std::fixed, 6));
-    updateDictionary(dict, section, "defocus_efficiency_due_to_moving_the_subreflector",
-                                                            to_string(eff.defocus_efficiency, std::fixed, 6));
+    updateDictionary(dict, section, "eta_defocus",          to_string(eff.eta_defocus, std::fixed, 6));
+    updateDictionary(dict, section, "defocus_efficiency",   to_string(eff.eta_defocus, std::fixed, 6));  // 2.0.9 keep old key name for now.
+
+//    updateDictionary(dict, section, "shift_from_focus_mm",  to_string(eff.shift_from_focus_mm, std::fixed, 6));
+//    updateDictionary(dict, section, "subreflector_shift_mm",to_string(eff.subreflector_shift_mm, std::fixed, 6));
+//    updateDictionary(dict, section, "defocus_efficiency_due_to_moving_the_subreflector",
+//                                                            to_string(eff.defocus_efficiency, std::fixed, 6));
     updateDictionary(dict, section, "total_aperture_eff",   to_string(eff.total_aperture_eff, std::fixed, 6));
 
     updateDictionary(dict, section, "ff_xcenter",           to_string(FF.xCenterOfMass, std::fixed, 6));

@@ -11,6 +11,9 @@ Beam efficiency calculator for the ALMA Front End Test and Measurement System
 http://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules 
 
 Recent version history:
+ * 2.0.9:  Removed outputs shift_from_focus_mm, subreflector_shift_mm, and defocus_efficiency_due_to_moving_the_subreflector.
+           Their calculation method was broken and of dubious valueR.
+ * 2.0.8:  Display actual pointing angles on the pointing plot.
  * 2.0.7:  Added input file option [settings] invertphase with options {lsb, usb, all, none}
            and synonymns {yes, y, t, 1} for all, {no, n, f, 0} for none.  All options case-insensitive.
  * 2.0.6:  Using multi-pass search with exact expression for fitted phase:

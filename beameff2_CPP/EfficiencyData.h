@@ -78,9 +78,9 @@ namespace EfficiencyData {
         float eta_tot_nd;               ///< Efficiency other than defocus in [0..1] (eta_tot_np * eta_pol)
         float eta_defocus;              ///< Defocus efficency in [0..1]
         float total_aperture_eff;       ///< Overall aperture efficiency in [0..1] (eta_tot_nd * eta_defocus)
-        float shift_from_focus_mm;      ///< Difference between delta_z and the nominal probe distance.
-        float subreflector_shift_mm;    ///< Distance subreflector must move in order to get best defocus efficiency.
-        float defocus_efficiency;       ///< Defocus efficency in [0..1] assuming a subreflector shift.
+//        float shift_from_focus_mm;      ///< Difference between delta_z and the nominal probe distance.
+//        float subreflector_shift_mm;    ///< Distance subreflector must move in order to get best defocus efficiency.
+//        float defocus_efficiency;       ///< Defocus efficency in [0..1] assuming a subreflector shift.
 
         //Plot filenames
         std::string FFCopolAmpPlot;
