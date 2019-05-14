@@ -26,6 +26,8 @@ namespace ALMAConstants {
     extern const float c;
     extern const float TAU;
     extern const float FOCAL_DEPTH;
+    extern const float DEG_TO_RAD;
+    extern const float RAD_TO_DEG;
 
     /// Different pointing options can be used for efficiency calculation:
     enum PointingOptions {

@@ -20,6 +20,7 @@
 */
 
 #include "ALMAConstants.h"
+#include <math.h>
 #include <iostream>
 using namespace std;
 
@@ -31,6 +32,9 @@ const float TAU = 0.25;
 // Note: FOCAL_DEPTH=0.7197 comes from equation 22 of ALMA MEMO 456 using M=20 and phi_0 = 3.58
 // TODO: Is it incorrect for ACA 7m antennas?
 const float FOCAL_DEPTH(0.7197);
+
+const float DEG_TO_RAD(M_PI / 180.0);
+const float RAD_TO_DEG(180.0 / M_PI);
 
 void getAntennaParameters(PointingOptions pointing,
                           float &M, float &psi_o, float &psi_m,
