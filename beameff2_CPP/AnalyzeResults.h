@@ -29,6 +29,8 @@ struct AnalyzeResults {
     float yCenterOfMass;        ///< center of mass y coordinate.
     float xStepSize;            ///< step size in x coordinate
     float yStepSize;            ///< step size in y coordinate
+    unsigned xDimension;        ///< scan grid size in x
+    unsigned yDimension;        ///< scan grid size in y
     double sumMask;             ///< sum of the secondary reflector mask
     double sumE;                ///< sum of E-field voltages, whole scan
     double sumSqE;              ///< sum of squares of E-field voltages, whole scan

@@ -32,6 +32,8 @@ void AnalyzeResults::print(int _indent) const {
     cout << indent << "yCenterOfMass = " << yCenterOfMass << endl;
     cout << indent << "xStepSize = " << xStepSize << endl;
     cout << indent << "yStepSize = " << yStepSize << endl;
+    cout << indent << "xDimension = " << xDimension << endl;
+    cout << indent << "yDimension = " << yDimension << endl;
     cout << indent << "sumMask = " << sumMask << endl;
     cout << indent << "sumE = " << sumE << endl;
     cout << indent << "sumSqE = " << sumSqE << endl;
