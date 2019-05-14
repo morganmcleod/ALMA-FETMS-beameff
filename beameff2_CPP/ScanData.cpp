@@ -303,11 +303,11 @@ void ScanData::combineDualZScans_impl(ScanDataRaster &z1, ScanDataRaster &z2) {
 
     // Calculate whether to add or subtract z2 based on peak amps and phases found:
     float intensity1 = pow(10.0, (amp1 / 20.0));
-    float z1real = intensity1 * cos(M_PI * phase1 / 180.0);
-    float z1imag = intensity1 * sin(M_PI * phase1 / 180.0);
+    float z1real = intensity1 * cos(phase1);
+    float z1imag = intensity1 * sin(phase1);
     float intensity2 = pow(10.0, (amp2 / 20.0));
-    float z2real = intensity2 * cos(M_PI * phase2 / 180.0);
-    float z2imag = intensity2 * sin(M_PI * phase2 / 180.0);
+    float z2real = intensity2 * cos(phase2);
+    float z2imag = intensity2 * sin(phase2);
     float magZPLUS = sqrt(pow(z1real - z2imag, 2.0) + pow(z1imag + z1real, 2.0));
     float magZMINUS = sqrt(pow(z1real + z2imag, 2.0) + pow(z1imag - z2real, 2.0));
 
@@ -327,8 +327,6 @@ void ScanData::combineDualZScans_impl(ScanDataRaster &z1, ScanDataRaster &z2) {
     vector<float> newAmps;
     vector<float> newPhis;
 
-    const float DEGREES_PER_RADIAN = 360.0 / (2 * M_PI);
-
     // loop on all four arrays:
     vector<float>::const_iterator itA1 = z1Amps.begin();
     vector<float>::const_iterator itP1 = z1Phis.begin();
@@ -343,11 +341,11 @@ void ScanData::combineDualZScans_impl(ScanDataRaster &z1, ScanDataRaster &z2) {
 
         // Compute new output values from values read:
         intensity1 = pow(10.0 , (amp1 / 20.0));
-        z1real = intensity1 * cos(M_PI * phase1 / 180.0);
-        z1imag = intensity1 * sin(M_PI * phase1 / 180.0);
+        z1real = intensity1 * cos(phase1);
+        z1imag = intensity1 * sin(phase1);
         intensity2 = pow(10.0 , (amp2 / 20.0));
-        z2real = intensity2 * cos(M_PI * phase2 / 180.0);
-        z2imag = intensity2 * sin(M_PI * phase2 / 180.0);
+        z2real = intensity2 * cos(phase2);
+        z2imag = intensity2 * sin(phase2);
 
         if (addingZ) {
            z1real = 0.5 * (z1real - z2imag);
@@ -357,7 +355,7 @@ void ScanData::combineDualZScans_impl(ScanDataRaster &z1, ScanDataRaster &z2) {
            z1imag = 0.5 * (z1imag - z2real);
         }
         amp1 = 20.0 * log10(sqrt(pow(z1real, 2.0) + pow(z1imag, 2.0)));
-        phase1 = atan2(z1imag, z1real) * DEGREES_PER_RADIAN;
+        phase1 = atan2(z1imag, z1real);  // radians
         newAmps.push_back(amp1);
         newPhis.push_back(phase1);
 
@@ -381,6 +379,10 @@ void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption, float
         FF_m -> calcPeakAndPhase();
         // find the actual (center of mass) beam pointing:
         FF_m -> calcCenterOfMass();
+        // for copol scans, compute the unwrapped phase, needed for finding the phase center:
+        cout << "analyzeBeams: scanType_m=" << scanType_m << endl;
+        if (scanType_m == COPOL || scanType_m == COPOL180)
+            FF_m -> unwrapPhase();
 
         // if the pointing to use for calculation is not already specified from another beam,
         if (azPointing == 0.0 && elPointing == 0.0) {

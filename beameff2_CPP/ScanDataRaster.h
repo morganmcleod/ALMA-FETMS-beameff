@@ -70,17 +70,18 @@ public:
 
     const std::vector<float> &getPhaseArray() const
       { return phiArray_m; }
-    ///< @return const access to the phase array.
+    ///< @return const access to the phase array as radians.
 
     void replaceAmpAndPhase(const std::vector<float> &newAmpArray, const std::vector<float> &newPhaseArray)
       { ampArray_m = newAmpArray;
         phiArray_m = newPhaseArray; }
     ///< replace the contents of the amplitude and phase arrays.
     ///< @param newAmpArray new array of amplitudes
-    ///< @param newPhaseArray new array of phases
+    ///< @param newPhaseArray new array of phases in radians.
 
     void calcStepSize();
     ///< calculate the X and Y step sizes
+    ///< calculate the X and Y dimensions
 
     float getStepSize() const
       { return (results_m.xStepSize != 0.0) ? results_m.xStepSize : results_m.yStepSize; }
@@ -89,14 +90,14 @@ public:
 
     void calcPeakAndPhase();
     ///< calculate beam peak amplitude and the phase at the peak.
-    ///< results are stored internally and can be retrieved with getPeakAndPhase()
+    ///< results are stored internally and can be retrieved with getPeak()
 
     float getPeak(float *phase = NULL) const
       { if (phase)
           *phase = results_m.phaseAtPeak;
         return results_m.maxAmp; }
     ///< @return the peak amplitude seen and optionally the phase at the peak.
-    ///< @param phase: if not NULL return the phase at the peak.
+    ///< @param phase: if not NULL return the phase in radians at the peak.
 
     void calcCenterOfMass();
     ///< calculate the center of mass of the beam.
@@ -121,7 +122,10 @@ public:
     ///< @param subreflectorRadius: in degrees.
     ///< @param copolPeakAmp: If non-zero, use to normalize the FF beam (to normalize xpol to copol peak.)
 
-    float calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx) const;
+    bool unwrapPhase();
+    ///< unwraps the phase array
+
+    float calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx = false) const;
     ///< calculate phase efficiency for the given phase center model p[].
     ///< called from within FitPhase()
     ///< @param p: array giving phase phase center guess in radians {delta_x, delta_y, delta_z}.
@@ -158,15 +162,16 @@ private:
     std::string NSIDateTime_m;          ///< timestamp from NSI format text file.
 
     // raw raster data arrays:
-    std::vector<float> xArray_m;        ///< x or az coordinates
-    std::vector<float> yArray_m;        ///< y or el coordinates
-    std::vector<float> ampArray_m;      ///< amplitudes in dB
-    std::vector<float> phiArray_m;      ///< phases in deg
-    std::vector<float> EArray_m;        ///< electric field voltages
-    std::vector<float> RadiusArray_m;   ///< distance from nominal beam center
-    std::vector<float> MaskArray_m;     ///< subreflector mask
+    std::vector<float> xArray_m;            ///< x or az coordinates
+    std::vector<float> yArray_m;            ///< y or el coordinates
+    std::vector<float> ampArray_m;          ///< amplitudes in dB
+    std::vector<float> phiArray_m;          ///< phases in radians
+    std::vector<unsigned char> phiMask_m;   ///< mask for unwrapPhase() 0=invalid pixel, 1=valid pixel
+    std::vector<float> EArray_m;            ///< electric field voltages
+    std::vector<float> RadiusArray_m;       ///< distance from nominal beam center
+    std::vector<float> MaskArray_m;         ///< subreflector mask
 
-    AnalyzeResults results_m;           ///< results from calcPeakAndPhase(), calcCenterOfMass(), and analyzeBeam()
+    AnalyzeResults results_m;               ///< results from calcPeakAndPhase(), calcCenterOfMass(), and analyzeBeam()
 
     void printRow(unsigned index) const;
     ///< print a single row.

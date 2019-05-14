@@ -130,11 +130,11 @@ public:
 
     float getFFPeak(float *phase = NULL) const;
     ///< @return the peak power and optionally phase at peak in the farfield scan
-    ///< @param phase: if not NULL, where to put the phase value.
+    ///< @param phase: if not NULL, where to put the phase value: radians.
 
     float getNFPeak(float *phase = NULL) const;
     ///< @return the peak power and optionally phase at peak in the nearfield scan
-    ///< @param phase: if not NULL, where to put the phase value.
+    ///< @param phase: if not NULL, where to put the phase value: radians.
 
     float getRFGhz() const
       { return rfGHz_m; }

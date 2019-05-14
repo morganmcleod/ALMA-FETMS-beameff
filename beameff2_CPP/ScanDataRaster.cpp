@@ -20,11 +20,15 @@
 */
 
 #include "ScanDataRaster.h"
+#include "ALMAConstants.h"
+#include "unwrap2D/unwrap2D.h"
 #include <cstring>
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
 using namespace std;
+
+static const double DEGTORAD(M_PI / 180.0);
 
 void ScanDataRaster::clear() {
     size_m = 0;
@@ -35,6 +39,7 @@ void ScanDataRaster::clear() {
     yArray_m.clear();
     ampArray_m.clear();
     phiArray_m.clear();
+    phiMask_m.clear();
     EArray_m.clear();
     RadiusArray_m.clear();
     MaskArray_m.clear();
@@ -98,7 +103,7 @@ bool ScanDataRaster::loadFile(const std::string filename, const std::string deli
                 xArray_m.push_back(x);
                 yArray_m.push_back(y);
                 ampArray_m.push_back(amp);
-                phiArray_m.push_back(phi);
+                phiArray_m.push_back(phi * ALMAConstants::DEG_TO_RAD);  // store as radians
                 size_m++;
 
             // Report error only if we are in the body of the file:
@@ -142,8 +147,8 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
     while (itX != xArray_m.end()) {
         x = *itX;
         y = *itY;
-        amp = *itAmp - copolPeakAmp;    // normalize to the copol peak
-        phase = *itPhi;
+        amp = *itAmp - copolPeakAmp;            // normalize to the copol peak
+        phase = *itPhi * ALMAConstants::RAD_TO_DEG;      // save as degrees
 
         // if first iteration, save the last value of x and y
         if (first) {
@@ -186,6 +191,8 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
 }
 
 void ScanDataRaster::calcStepSize() {
+    results_m.xDimension = results_m.yDimension = 0;
+
     // try just looking at the first two elements:
     results_m.xStepSize = fabs(xArray_m[1] - xArray_m[0]);
 
@@ -195,6 +202,7 @@ void ScanDataRaster::calcStepSize() {
         float x0 = xArray_m[0];
         while (results_m.xStepSize == 0.0 && it != xArray_m.end()) {
             results_m.xStepSize = fabs(*it - x0);
+            results_m.yDimension++;
             it++;
         }
     }
@@ -208,8 +216,19 @@ void ScanDataRaster::calcStepSize() {
         float y0 = yArray_m[0];
         while (results_m.yStepSize == 0.0 && it != yArray_m.end()) {
             results_m.yStepSize = fabs(*it - y0);
+            results_m.xDimension++;
             it++;
         }
+    }
+
+    // one or the other of these was incremented a loop above.
+    // Assuming rectangular, calculate the other one:
+    if (results_m.xDimension) {
+        results_m.xDimension--;
+        results_m.yDimension = size_m / results_m.xDimension;
+    } else if (results_m.yDimension) {
+        results_m.yDimension--;
+        results_m.xDimension = size_m / results_m.yDimension;
     }
 }
 
@@ -294,6 +313,7 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
     EArray_m.clear();
     MaskArray_m.clear();
     RadiusArray_m.clear();
+    phiMask_m.clear();
 
     // reset the beam statistics:
     results_m.sumMask = 0.0;
@@ -342,6 +362,7 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
             mask = (outer - radius) / getStepSize();
         }
         MaskArray_m.push_back(mask);
+        phiMask_m.push_back(1);  //not masking for phase unwrap yet.
 
         // accumulate sum of the mask:
         results_m.sumMask += mask;
@@ -371,22 +392,33 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
     }
 }
 
+bool ScanDataRaster::unwrapPhase() {
+    if (phiArray_m.empty())
+        return false;
+
+    cout << "unwrapPhase()..." << endl;
+    // make a copy of the wrapped phase:
+    std::vector<float> wrapped_image(phiArray_m);
+    // our target will be into the original vector:
+    float *unwrapped_image = phiArray_m.data();
+    // call the unwrap function:
+    unwrap2D(wrapped_image.data(), unwrapped_image, phiMask_m.data(), results_m.xDimension, results_m.yDimension, 0, 0);
+    return true;
+}
+
 float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx) const {
-    float Az, El, maskE, phaseRad;                                  // values from data arrays
+    float Az, El, maskE;                                            // values from data arrays
     float phaseFit, phaseErr, eta_phase;                            // calculated values
     double costerm(0.0), sinterm(0.0), normalizationFactor(0.0);    // accumulate fit errors in the loop
 
     unsigned i;
     for (i = 0; i < size_m; i++) {
         // Az and El relative to subreflector center, in radians:
-        Az = (xArray_m[i] - azNominal) * M_PI / 180.0;
-        El = (yArray_m[i] - elNominal) * M_PI / 180.0;
+        Az = (xArray_m[i] - azNominal) * ALMAConstants::DEG_TO_RAD;
+        El = (yArray_m[i] - elNominal) * ALMAConstants::DEG_TO_RAD;
 
         // maskE is electric field voltage on the subreflector:
         maskE = MaskArray_m[i] * EArray_m[i];
-
-        // phaseRad is the measured phase:
-        phaseRad = phiArray_m[i] * M_PI / 180.0;
 
         // Notes from Alvaro Gonzalez "TN9 Analysis of the NRAO Efficiency Calculator Formulas" 11 Jan 2011.
         //   Restated in email 2016-03-07.
@@ -401,14 +433,14 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
         // p[1], p[2], p[3] are delta_x, delta_y, and delta_z,
         //   the current guesses for the phase center location, in radians.
 
-        if (approx) {
-            phaseFit = p[1]*Az + p[2]*El - p[3]*(Az*Az + El*El)/2.0;
-        } else {
+        if (!approx) {
             phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*(cos(Az)*cos(El));
+        } else {
+            phaseFit = p[1]*Az + p[2]*El - p[3]*(Az*Az + El*El)/2.0;
         }
 
         // to find the correlation between the fit phase and the measured phase:
-        phaseErr = phaseRad + phaseFit;
+        phaseErr = phiArray_m[i] + phaseFit;
 
         // accumulate the cos, sin, and total E field sums:
         costerm += maskE * cos(phaseErr);
@@ -482,7 +514,7 @@ void ScanDataRaster::print(int _indent, unsigned headRows, unsigned tailRows) co
 
 void ScanDataRaster::printRow(unsigned index) const {
     cout << xArray_m[index] << ", " << yArray_m[index] << ", "
-         << ampArray_m[index] << ", " << phiArray_m[index] << endl;
+         << ampArray_m[index] << ", " << (phiArray_m[index] * ALMAConstants::RAD_TO_DEG) << endl;
 }
 
 
