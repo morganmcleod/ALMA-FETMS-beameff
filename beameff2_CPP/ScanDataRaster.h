@@ -126,12 +126,14 @@ public:
     bool unwrapPhase();
     ///< unwraps the phase array
 
-    float calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx = false) const;
+    float calcPhaseEfficiency(float p[], float azNominal, float elNominal,
+                              bool approx = false, bool reduceSubreflector = false) const;
     ///< calculate phase efficiency for the given phase center model p[].
     ///< called from within FitPhase()
     ///< @param p: array giving phase phase center guess in radians {delta_x, delta_y, delta_z}.
     ///< @param azNominal, elNominal: angle to center of the subreflector in degrees
     ///< @param approx:  if true, use approximate equation for fitPhase else use exact equation.
+    ///< @param reduceSubreflector:  if true, reduce the subreflector radius to calculate over.
     ///< @return phase efficiency in 0-1.
 
     float calcAmplitudeEfficiency(float p[], float azActual, float elActual) const;
@@ -167,11 +169,11 @@ private:
     std::vector<float> yArray_m;            ///< y or el coordinates
     std::vector<float> ampArray_m;          ///< amplitudes in dB
     std::vector<float> phiArray_m;          ///< phases in radians
-    std::vector<float> phiMask_m;           ///< mask for phase
     std::vector<float> unwrappedArray_m;    ///< unwrapped phases
     std::vector<float> EArray_m;            ///< electric field voltages
     std::vector<float> RadiusArray_m;       ///< distance from nominal beam center
     std::vector<float> MaskArray_m;         ///< subreflector mask
+    std::vector<float> MaskArrayReduced_m;  ///< reduced subreflector mask option phase
 
     AnalyzeResults results_m;               ///< results from calcPeakAndPhase(), calcCenterOfMass(), and analyzeBeam()
 

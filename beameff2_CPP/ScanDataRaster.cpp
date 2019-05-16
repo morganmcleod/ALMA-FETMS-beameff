@@ -39,11 +39,11 @@ void ScanDataRaster::clear() {
     yArray_m.clear();
     ampArray_m.clear();
     phiArray_m.clear();
-    phiMask_m.clear();
     unwrappedArray_m.clear();
     EArray_m.clear();
     RadiusArray_m.clear();
     MaskArray_m.clear();
+    MaskArrayReduced_m.clear();
 
     memset(&results_m, 0, sizeof(AnalyzeResults));
     results_m.maxAmp = -999;
@@ -297,7 +297,7 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
     float inner = subreflectorRadius - (getStepSize() / 2.0);
     float outer = subreflectorRadius + (getStepSize() / 2.0);
 
-    float reducedRadius = subreflectorRadius; // ALMAConstants::getSubreflectorRadius(ALMAConstants::REDUCE_SUB);
+    float reducedRadius = ALMAConstants::getSubreflectorRadius(ALMAConstants::REDUCE_SUB);
     float reducedInner = reducedRadius - (getStepSize() / 2.0);
     float reducedOuter = reducedRadius + (getStepSize() / 2.0);
 
@@ -308,7 +308,7 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
     EArray_m.clear();
     MaskArray_m.clear();
     RadiusArray_m.clear();
-    phiMask_m.clear();
+    MaskArrayReduced_m.clear();
 
     // reset the beam statistics:
     results_m.sumMask = 0.0;
@@ -361,21 +361,21 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
         // accumulate sum of the mask:
         results_m.sumMask += mask;
 
-        // Compute mask of secondary reflector for phase fitting:
-        float phiMask;
+        // Compute mask of secondary reflector for phase fitting option:
+        float reducedMask;
         if (radius > reducedOuter) {
             // zero outside the subreflectorRadius angle
-            phiMask = 0.0;
+            reducedMask = 0.0;
 
         } else if (radius < reducedInner) {
             // one inside the subreflector
-            phiMask = 1.0;
+            reducedMask = 1.0;
 
         } else {
             // at points on the edge, a linear taper between 0 and 1:
-            phiMask = (reducedOuter - radius) / getStepSize();
+            reducedMask = (reducedOuter - radius) / getStepSize();
         }
-        phiMask_m.push_back(phiMask);
+        MaskArrayReduced_m.push_back(reducedMask);
 
         // accumulate sum and sum of squares of the electric field voltage:
         results_m.sumE += E;
@@ -448,7 +448,7 @@ bool ScanDataRaster::unwrapPhase() {
     return true;
 }
 
-float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx) const {
+float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNominal, bool approx, bool reduceSubreflector) const {
     float Az, El, maskE;                                            // values from data arrays
     float phaseFit, phaseErr, eta_phase;                            // calculated values
     double costerm(0.0), sinterm(0.0), normalizationFactor(0.0);    // accumulate fit errors in the loop
@@ -482,7 +482,7 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
         phaseErr = unwrappedArray_m[i] + phaseFit;
 
         // maskE is electric field voltage on the subreflector:
-        maskE = phiMask_m[i] * EArray_m[i];
+        maskE = EArray_m[i] * (reduceSubreflector ? MaskArrayReduced_m[i] : MaskArray_m[i]);
 
         // accumulate the cos, sin, and total E field sums:
         costerm += maskE * cos(phaseErr);

@@ -46,6 +46,7 @@ namespace BeamFitting {
     static float delta_x_m;         ///< delta_x to hold constant while searching in delta_z
     static float delta_y_m;         ///< delta_y ""
     static bool approxFit(false);   ///< true=use approximate phase fitting; false=exact.
+    bool reduceSubreflector(false);  ///< true=use a reduced size subreflector to search
 
     void FitPhase(ScanData *currentScan, float _azNominal, float _elNominal) {
         fitPhaseScan = currentScan;
@@ -80,7 +81,8 @@ namespace BeamFitting {
         p[2] *= 0.001 * k;
         p[3] *= 0.001 * k;
 
-        // first find the phase center minimum closest to the given Z distance:
+        // first find the phase center minimum closest to the given Z distance, using a reduced subreflector radius:
+        reduceSubreflector = true;
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
 
         cout << "FitPhase 1: " << 1000.0 * p[1] / k << " mm, "
@@ -103,6 +105,7 @@ namespace BeamFitting {
         fb = brent(ax, bx, cx, function_phase_z, tol, &bx);
 
         // now search the space around the first delta_x, delta_y and the new delta_z:
+        reduceSubreflector = false;
         p[1] = delta_x_m;
         p[2] = delta_y_m;
         p[3] = bx;
@@ -170,8 +173,8 @@ namespace BeamFitting {
                 del = delta;
             }
             par[j] += del;
-            df[j] = ((1.0 - pscan -> calcPhaseEfficiency(par, azNominal, elNominal, approxFit))
-                   - (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal, approxFit))) / del;
+            df[j] = ((1.0 - pscan -> calcPhaseEfficiency(par, azNominal, elNominal, approxFit, reduceSubreflector))
+                   - (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal, approxFit, reduceSubreflector))) / del;
         }
     }
 
@@ -182,7 +185,7 @@ namespace BeamFitting {
         if (!pscan)
             return 0.0;
 
-        return (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal, approxFit));
+        return (1.0 - pscan -> calcPhaseEfficiency(p, azNominal, elNominal, approxFit, reduceSubreflector));
     }
 
     /// Return (1 - eta_phase) if we fit the phase center delta_z to the given value in radians,
