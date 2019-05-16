@@ -83,10 +83,10 @@ namespace BeamFitting {
         // first find the phase center minimum closest to the given Z distance:
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
 
-        cout << "FitPhase 1: " << 1000.0 * p[1] / k << ", "
-                               << 1000.0 * p[2] / k << ", "
-                               << 1000.0 * p[3] / k << ", "
-                               << 1.0 - fret_phase << ", "
+        cout << "FitPhase 1: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, "
+                               << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
         // now do a line search along the z axis:
@@ -108,10 +108,10 @@ namespace BeamFitting {
         p[3] = bx;
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
 
-        cout << "FitPhase 2: " << 1000.0 * p[1] / k << ", "
-                               << 1000.0 * p[2] / k << ", "
-                               << 1000.0 * p[3] / k << ", "
-                               << 1.0 - fret_phase << ", "
+        cout << "FitPhase 2: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, "
+                               << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
         // another bracket and linear search in delta_z:
@@ -126,11 +126,11 @@ namespace BeamFitting {
         p[3] = bx;
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
 
-        cout << "FitPhase 3: " << 1000.0 * p[1] / k << ", "
-                               << 1000.0 * p[2] / k << ", "
-                               << 1000.0 * p[3] / k << ", "
-                               << 1.0 - fret_phase << ", "
-                               << iter_phase << " iterations<br>" << endl << endl;
+        cout << "FitPhase 3: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, "
+                               << "eta=" << 1.0 - fret_phase << ", "
+                               << iter_phase << " iterations<br>" << endl;
 
         // convert back to mm:
         float deltaX = 1000.0 * p[1] / k;
