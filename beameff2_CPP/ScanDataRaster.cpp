@@ -297,7 +297,7 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
     float inner = subreflectorRadius - (getStepSize() / 2.0);
     float outer = subreflectorRadius + (getStepSize() / 2.0);
 
-    float reducedRadius = ALMAConstants::getSubreflectorRadius(ALMAConstants::REDUCE_SUB);
+    float reducedRadius = subreflectorRadius; // ALMAConstants::getSubreflectorRadius(ALMAConstants::REDUCE_SUB);
     float reducedInner = reducedRadius - (getStepSize() / 2.0);
     float reducedOuter = reducedRadius + (getStepSize() / 2.0);
 
