@@ -479,7 +479,7 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
         }
 
         // to find the correlation between the fit phase and the measured phase:
-        phaseErr = phiArray_m[i] + phaseFit;
+        phaseErr = unwrappedArray_m[i] + phaseFit;
 
         // maskE is electric field voltage on the subreflector:
         maskE = phiMask_m[i] * EArray_m[i];

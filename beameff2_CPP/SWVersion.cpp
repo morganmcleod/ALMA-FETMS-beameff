@@ -25,8 +25,9 @@ const std::string BEAMEFF_SW_VERSION_STRING("2.0.10.2");
 
 // Version history
 // 2.0.10: Testing phase unwrapping:
-//         .1 using REDUCED_SUB with wrapped phase.  Folders output2.10.1
-//         .2 usung default sub with wrapped phase.  Filders outout2.10.2
+//         .1 using REDUCED_SUB with wrapped phase.   Folders output2.10.1
+//         .2 using default sub with wrapped phase.   Folders output2.10.2
+//         .3 using default sub with unwrapped phase. Folders output2.10.3
 // 2.0.9:  Removed outputs shift_from_focus_mm, subreflector_shift_mm, and defocus_efficiency_due_to_moving_the_subreflector.
 //         Their calculation method was broken and of dubious value.
 // 2.0.8:  Display actual pointing angles on the pointing plot.
