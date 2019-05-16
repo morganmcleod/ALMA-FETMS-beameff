@@ -114,13 +114,14 @@ public:
     ///< adjust all points for the difference in attenuation.
     ///< @param ifAttenDiff: copol - xpol attenuator setting in dB.
 
-    void analyzeBeam(float azNominal, float elNominal, float subreflectorRadius, float copolPeakAmp = 0.0);
+    void analyzeBeam(float azNominal, float elNominal, float subreflectorRadius, float copolPeakAmp = 0.0, bool doUnwrapPhase = false);
     ///< calculate statistics of the beam used for efficiency calculation.
     ///< This function only makes sense to use for far-field scans where x=Az and y=El.
     ///< @param azNominal: the nominal azimuth pointing to use for the subreflector mask.
     ///< @param elNominal: the nominal elevation pointing to use for the subreflector mask.
     ///< @param subreflectorRadius: in degrees.
     ///< @param copolPeakAmp: If non-zero, use to normalize the FF beam (to normalize xpol to copol peak.)
+    ///< @param doUnwrapPhase: If true, unwrap the phase for copol beams
 
     bool unwrapPhase();
     ///< unwraps the phase array
@@ -166,7 +167,8 @@ private:
     std::vector<float> yArray_m;            ///< y or el coordinates
     std::vector<float> ampArray_m;          ///< amplitudes in dB
     std::vector<float> phiArray_m;          ///< phases in radians
-    std::vector<unsigned char> phiMask_m;   ///< mask for unwrapPhase() 0=invalid pixel, 1=valid pixel
+    std::vector<float> phiMask_m;           ///< mask for phase
+    std::vector<float> unwrappedArray_m;    ///< unwrapped phases
     std::vector<float> EArray_m;            ///< electric field voltages
     std::vector<float> RadiusArray_m;       ///< distance from nominal beam center
     std::vector<float> MaskArray_m;         ///< subreflector mask
@@ -175,6 +177,11 @@ private:
 
     void printRow(unsigned index) const;
     ///< print a single row.
+
+    void calcPeakAndPhase_impl(float &maxAmp, float &phaseAtPeak,
+                               const std::vector<float> &ampArray,
+                               const std::vector<float> &phiArray) const;
+    ///< private implementation
 };
 
 #endif /* SCANDATARASTER_H_ */

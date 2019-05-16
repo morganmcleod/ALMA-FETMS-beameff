@@ -301,7 +301,7 @@ bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &azPointing, float &e
         return false;
 
     // accumulate values needed for efficiency calculation, using the selected pointing option:
-    copolScan -> analyzeBeams(pointingOption_m);
+    copolScan -> analyzeBeams(pointingOption_m, 0.0, 0.0, 0.0, true);
 
     // get the actual pointing angles:
     float azActual(0), elActual(0);
@@ -681,27 +681,32 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
         if (writePlotDataFiles(outputDirectory, CopolPol0_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
             // make the Farfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
-                                     false, false, azPointing, elPointing, Pol0Eff_m.FFCopolAmpPlot);
+                                     false, false, false, azPointing, elPointing, Pol0Eff_m.FFCopolAmpPlot);
             // make the Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
-                                     false, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
+                                     false, true, false, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
+            // make the Unwrapped Farfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
+                                     false, true, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
 
             // make the Farfield PhaseFit plot:
             string tmp;
-            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol0_m,
-                                          azPointing, elPointing, tmp);
+            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol0_m, azPointing, elPointing, tmp);
 
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol0_m,
-                                     true, false, azPointing, elPointing, Pol0Eff_m.NFCopolAmpPlot);
+                                     true, false, false, azPointing, elPointing, Pol0Eff_m.NFCopolAmpPlot);
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol0_m,
-                                     true, true, azPointing, elPointing, Pol0Eff_m.NFCopolPhasePlot);
+                                     true, true, false, azPointing, elPointing, Pol0Eff_m.NFCopolPhasePlot);
             // delete the tempory data files:
             remove(fileNameFF.c_str());
             remove(fileNameNF.c_str());
         }
     }
+
+//    return true;   // exit early for debug
+
     // Make the pol0 xpol plots:
     if (XpolPol0_m) {
 
@@ -711,16 +716,16 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
         if (writePlotDataFiles(outputDirectory, XpolPol0_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
             // make the Farfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol0_m,
-                                     false, false, azPointing, elPointing, Pol0Eff_m.FFXpolAmpPlot);
+                                     false, false, false, azPointing, elPointing, Pol0Eff_m.FFXpolAmpPlot);
             // make the Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol0_m,
-                                     false, true, azPointing, elPointing, Pol0Eff_m.FFXpolPhasePlot);
+                                     false, true, false, azPointing, elPointing, Pol0Eff_m.FFXpolPhasePlot);
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol0_m,
-                                     true, false, azPointing, elPointing, Pol0Eff_m.NFXpolAmpPlot);
+                                     true, false, false, azPointing, elPointing, Pol0Eff_m.NFXpolAmpPlot);
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol0_m,
-                                     true, true, azPointing, elPointing, Pol0Eff_m.NFXpolPhasePlot);
+                                     true, true, false, azPointing, elPointing, Pol0Eff_m.NFXpolPhasePlot);
             // delete the tempory data files:
             remove(fileNameFF.c_str());
             remove(fileNameNF.c_str());
@@ -747,22 +752,25 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
         if (writePlotDataFiles(outputDirectory, CopolPol1_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
             // make the Farfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
-                                     false, false, azPointing, elPointing, Pol1Eff_m.FFCopolAmpPlot);
+                                     false, false, false, azPointing, elPointing, Pol1Eff_m.FFCopolAmpPlot);
             // make the Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
-                                     false, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhasePlot);
+                                     false, true, false, azPointing, elPointing, Pol1Eff_m.FFCopolPhasePlot);
+
+            // make the Unwrapped Farfield Phase plot:
+            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
+                                     false, true, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhasePlot);
 
             // make the Farfield PhaseFit plot:
             string tmp;
-            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol1_m,
-                                          azPointing, elPointing, tmp);
+            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol1_m, azPointing, elPointing, tmp);
 
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol1_m,
-                                     true, false, azPointing, elPointing, Pol1Eff_m.NFCopolAmpPlot);
+                                     true, false, false, azPointing, elPointing, Pol1Eff_m.NFCopolAmpPlot);
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol1_m,
-                                     true, true, azPointing, elPointing, Pol1Eff_m.NFCopolPhasePlot);
+                                     true, true, false, azPointing, elPointing, Pol1Eff_m.NFCopolPhasePlot);
             // delete the tempory data files:
             remove(fileNameFF.c_str());
             remove(fileNameNF.c_str());
@@ -777,16 +785,16 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
         if (writePlotDataFiles(outputDirectory, XpolPol1_m, fileNameFF, fileNameNF, copolPeakAmpFF, copolPeakAmpNF)) {
             // make the Farfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol1_m,
-                                     false, false, azPointing, elPointing, Pol1Eff_m.FFXpolAmpPlot);
+                                     false, false, false, azPointing, elPointing, Pol1Eff_m.FFXpolAmpPlot);
             // make the Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, XpolPol1_m,
-                                     false, true, azPointing, elPointing, Pol1Eff_m.FFXpolPhasePlot);
+                                     false, true, false, azPointing, elPointing, Pol1Eff_m.FFXpolPhasePlot);
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol1_m,
-                                     true, false, azPointing, elPointing, Pol1Eff_m.NFXpolAmpPlot);
+                                     true, false, false, azPointing, elPointing, Pol1Eff_m.NFXpolAmpPlot);
             // make the Nearfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, XpolPol1_m,
-                                     true, true, azPointing, elPointing, Pol1Eff_m.NFXpolPhasePlot);
+                                     true, true, false, azPointing, elPointing, Pol1Eff_m.NFXpolPhasePlot);
             // delete the tempory data files:
             remove(fileNameFF.c_str());
             remove(fileNameNF.c_str());
@@ -828,7 +836,8 @@ bool ScanSet::writePlotDataFiles(const std::string &outputDirectory, const ScanD
 }
 
 bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string &gnuplotPath,
-                          const std::string &dataFilename, const ScanData *scan, bool nf, bool phase,
+                          const std::string &dataFilename, const ScanData *scan,
+                          bool nf, bool phase, bool unwrapped,
                           float azPointing, float elPointing, std::string &fileNamePlot)
 {
     fileNamePlot.clear();
@@ -847,6 +856,7 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     fileNamePlot += "GHz";
     fileNamePlot += (nf) ? "_nf" : "_ff";
     fileNamePlot += (phase) ? "phase" : "amp";
+    fileNamePlot += (unwrapped) ? "_unw" : "";
     fileNamePlot += "_tilt";
     fileNamePlot += to_string(scan -> getTilt());
     fileNamePlot += "_scanset";
@@ -856,7 +866,11 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     remove(fileNamePlot.c_str());
 
     string fileNameCmd = outputDirectory;
-    fileNameCmd += "gnuplot_cmd.txt";
+    fileNameCmd += "gnuplot_cmd";
+    fileNameCmd += (nf) ? "_nf" : "_ff";
+    fileNameCmd += (phase) ? "phase" : "amp";
+    fileNameCmd += (unwrapped) ? "_unw" : "";
+    fileNameCmd += ".txt";
     // delete the command file if it already exists:
     remove(fileNameCmd.c_str());
 
@@ -887,27 +901,29 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     fprintf(f, "set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n");
     // Label for legend:
     fprintf(f, "set cblabel '%s %s'\r\n", (nf) ? "Nearfield" : "Farfield", (phase) ? "Phase (deg)" : "Amplitude (dB)");
+    // Set the range of values which are colored using the current palette:
+    if (!phase)
+        fprintf(f, "set cbrange [-50:0]\r\n");
+    else if (!unwrapped)
+        fprintf(f, "set cbrange [-180:180]\r\n");
     // Top-down view:
     fprintf(f, "set view 0,0\r\n");
     // Palette mapped 3d style for splot:
     fprintf(f, "set pm3d map\r\n");
     // Force a square plot within the canvas:
     fprintf(f, "set size square\r\n");
-    // Set the range of values which are colored using the current palette:
-    fprintf(f, "set cbrange [%s]\r\n", (phase) ? "-180:180" : "-50:0");
+
     // For FF plots use parametric mode in degrees to draw the subreflector circle:
     if (!nf) {
         fprintf(f, "set parametric\r\n");
         fprintf(f, "set angles degrees \r\n");
         fprintf(f, "set urange [0:360]\r\n");
+        // for FF plots, set the resolution of the subreflector circle:
+        fprintf(f, "set isosamples 13,11\r\n");
     }
     // Set X and Y major tics...?
     fprintf(f, "set xtics %s\r\n", (nf) ? "0.02" : "2");
     fprintf(f, "set ytics %s\r\n", (nf) ? "0.02" : "2");
-
-    // for FF plots, set the resolution of the subreflector circle:
-    if (!nf)
-        fprintf(f, "set isosamples 13,11\r\n");
 
     // Add the database keys label:
     string label;
@@ -919,13 +935,13 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     getMeasInfoLabel(label, *scan);
     fprintf(f, "set label '%s' at screen 0.01, 0.02\r\n", label.c_str());
 
-    // plot from the data file.  Column 3 is amplitude, 4 is phase:
-    fprintf(f, "splot '%s' using 1:2:%s title ''", dataFilename.c_str(), (phase) ? "4" : "3");
+    // plot from the data file.  Column 3 is amplitude, 4 is phase, 5 is unwrapped phase:
+    fprintf(f, "splot '%s' using 1:2:%s title ''", dataFilename.c_str(), (phase) ? ((unwrapped) ? "5" : "4") : "3");
 
     // for FF plots, draw a circle for the subreflector position:
     if (!nf) {
         float subreflectorRadius = ALMAConstants::getSubreflectorRadius(pointingOption_m);
-        fprintf(f, ",%f + %.2f*cos(u),%f + %.2f*sin(u),1 notitle linetype 0 ",
+        fprintf(f, ",%f + %.2f*cos(u),%f + %.2f*sin(u),1 notitle lw 3 ",
                    azPointing, subreflectorRadius, elPointing, subreflectorRadius);
     }
     fprintf(f, "\r\n");
@@ -956,9 +972,6 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
 
     const AnalyzeResults &res = pFF -> getAnalyzeResults();
 
-    bool nf(false);
-    bool phase(true);
-
     fileNamePlot = outputDirectory;
     fileNamePlot += "band";
     fileNamePlot += to_string(scan -> getBand());
@@ -979,7 +992,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     remove(fileNamePlot.c_str());
 
     string fileNameCmd = outputDirectory;
-    fileNameCmd += "gnuplot_cmd.txt";
+    fileNameCmd += "gnuplot_cmd_phasefit.txt";
     // delete the command file if it already exists:
     remove(fileNameCmd.c_str());
 
@@ -1004,10 +1017,12 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     fprintf(f, "set output '%s'\r\n", fileNamePlot.c_str());
     fprintf(f, "set title '%s'\r\n", title.c_str());
     // X and Y axis labels:
-    fprintf(f, "set xlabel '%s'\r\n", (nf) ? "X(m)" : "Az(deg)");
-    fprintf(f, "set ylabel '%s'\r\n", (nf) ? "Y(m)" : "El(deg)");
-    // Palette limited to -50 to 0:
-    fprintf(f, "set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n");
+    fprintf(f, "set xlabel 'Az(deg)'\r\n");
+    fprintf(f, "set ylabel 'El(deg)'\r\n");
+    // Using the reverse range of colors from phase fit plots so we can visually compare the peaks:
+    fprintf(f, "set palette model RGB defined (-50 'black', -49.9 'red', -40 'orange', -30 'yellow', -20 'green', -10 'blue', 0 'purple')\r\n");
+    // Scale it to this many unwrapped degrees:
+    fprintf(f, "set cbrange [-4000:]\r\n");
     // Label for legend:
     fprintf(f, "set cblabel 'Fitted FF Phase (deg)'\r\n");
     // Top-down view:
@@ -1016,10 +1031,17 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     fprintf(f, "set pm3d map\r\n");
     // Force a square plot within the canvas:
     fprintf(f, "set size square\r\n");
-    // Set the range of values which are colored using the current palette:
-    fprintf(f, "set cbrange [%s]\r\n", (phase) ? "-180:180" : "-50:0");
+
+    // calculate in rad:
+    fprintf(f, "set angles radians\r\n");
+
     // Set the X and Y resolution of the plot:
     fprintf(f, "set isosamples 201,201\r\n");
+
+    fprintf(f, "set xtics 2\r\n");
+    fprintf(f, "set ytics 2\r\n");
+    fprintf(f, "set xrange [-16:16]\r\n");
+    fprintf(f, "set yrange [-16:16]\r\n");
 
     // Add the database keys label:
     string label;
@@ -1030,13 +1052,6 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     // Add the measurmement info label:
     getMeasInfoLabel(label, *scan);
     fprintf(f, "set label '%s' at screen 0.01, 0.02\r\n", label.c_str());
-
-    // We want Gnuplot to calculate in radians mode:
-    fprintf(f, "set angles radians\r\n");
-    fprintf(f, "set xtics 2\r\n");
-    fprintf(f, "set ytics 2\r\n");
-    fprintf(f, "set xrange [-16:16]\r\n");
-    fprintf(f, "set yrange [-16:16]\r\n");
 
     // convert mm to radians:
     float k = scan -> getKWaveNumber();    // rad/m
@@ -1059,13 +1074,14 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     func += " * sin(torad(eloffset(y))) + ";
     func += to_string(deltaZ);
     func += " * cos(torad(azoffset(x)))*cos(torad(eloffset(y)))";
-
-    // convert back to degrees for plotting:
-    fprintf(f, "todeg(a) = a * 180 / pi\r\n");
     fprintf(f, "%s\r\n", func.c_str());
-    // x mod 360: x-(floor(x/360)*360)
-    fprintf(f, "splot todeg(phase(x, y)) - (floor(todeg(phase(x, y)) / 360) * 360) - 180 title ''\r\n");
 
+    // convert to degrees for plotting:
+    fprintf(f, "todeg(a) = a * 180 / pi\r\n");
+    // a mod b:
+    fprintf(f, "mod(a,b) = a - (b * floor(a / b))\r\n");
+    // plot in (-inf:0]:
+    fprintf(f, "splot todeg(phase(x, y)) - todeg(phase(%f, %f)) title ''\r\n", azPointing, elPointing);
     fclose(f);
 
     // call gnuplot:
@@ -1078,7 +1094,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     return true;
 }
 
-
+/////////////////////////////////////////////////////
 
 bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
                                      std::string &fileNamePlot)

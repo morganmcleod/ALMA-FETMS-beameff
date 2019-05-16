@@ -79,12 +79,14 @@ public:
     ///< @param yCenter will contain the y center of mass
 
     void analyzeBeams(ALMAConstants::PointingOptions pointingOption,
-                      float azPointing = 0.0, float elPointing = 0.0, float copolPeakAmp = 0.0);
+                      float azPointing = 0.0, float elPointing = 0.0,
+                      float copolPeakAmp = 0.0, bool doUnwrapPhase = false);
     ///< Compute peak amplitude and phase, NF and FF beam centers of mass, etc.
     ///< @param pointingOption: to use for calculating efficiencies
     ///< @param azPointing, elPointing: if noth non-zero use for calculating efficiencies;
     ///<                                else use nominal or actual from this beam.
     ///< @param copolPeakAmp: If non-zero, use to normalize the FF beam xpol to copol peak.
+    ///< @param doUnwrapPhase: If true, unwrap the FF phase
 
     const std::string &getInputSection() const
       { return inputSection_m; }

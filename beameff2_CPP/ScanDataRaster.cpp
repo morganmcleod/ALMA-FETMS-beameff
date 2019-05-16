@@ -40,6 +40,7 @@ void ScanDataRaster::clear() {
     ampArray_m.clear();
     phiArray_m.clear();
     phiMask_m.clear();
+    unwrappedArray_m.clear();
     EArray_m.clear();
     RadiusArray_m.clear();
     MaskArray_m.clear();
@@ -129,7 +130,7 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
         return false;
     }
 
-    float x, y, amp, phase; // individual pixels in file
+    float x, y, amp, phase, unw;  // individual pixels in file
     float lastX(0), lastY(0);     // use these to determine if the file is X-major or Y-major.
     char textline[500];
 
@@ -138,6 +139,7 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
     vector<float>::const_iterator itY = yArray_m.begin();
     vector<float>::const_iterator itAmp = ampArray_m.begin();
     vector<float>::const_iterator itPhi = phiArray_m.begin();
+    vector<float>::const_iterator itUnw = unwrappedArray_m.begin();
 
     // to detect first and second time in loop:
     bool first = true;
@@ -149,6 +151,11 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
         y = *itY;
         amp = *itAmp - copolPeakAmp;            // normalize to the copol peak
         phase = *itPhi * ALMAConstants::RAD_TO_DEG;      // save as degrees
+        unw = 0.0;
+        if (itUnw != unwrappedArray_m.end()) {
+            unw = *itUnw * ALMAConstants::RAD_TO_DEG;
+            itUnw++;
+        }
 
         // if first iteration, save the last value of x and y
         if (first) {
@@ -173,11 +180,12 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
         }
 
         // write a line:
-        sprintf(textline, "%f%s%f%s%f%s%f%s",
+        sprintf(textline, "%f%s%f%s%f%s%f%s%f%s",
                           x, delim.c_str(),
                           y, delim.c_str(),
                           amp, delim.c_str(),
-                          phase, lineterm.c_str());
+                          phase, delim.c_str(),
+                          unw, lineterm.c_str());
         fputs(textline, f);
 
         // increment iterators:
@@ -233,25 +241,7 @@ void ScanDataRaster::calcStepSize() {
 }
 
 void ScanDataRaster::calcPeakAndPhase() {
-    // reset peak variables:
-    results_m.maxAmp = -999;
-    results_m.phaseAtPeak = 0;
-
-    // loop to find peak power and phase at peak:
-    vector<float>::const_iterator itAmp = ampArray_m.begin();
-    vector<float>::const_iterator itPhi = phiArray_m.begin();
-    float amp, phi;
-
-    while (itAmp != ampArray_m.end()) {
-        amp = *itAmp;
-        phi = *itPhi;
-        if (amp > results_m.maxAmp) {
-            results_m.maxAmp = amp;
-            results_m.phaseAtPeak = phi;
-        }
-        itAmp++;
-        itPhi++;
-    }
+    calcPeakAndPhase_impl(results_m.maxAmp, results_m.phaseAtPeak, ampArray_m, phiArray_m);
 }
 
 void ScanDataRaster::calcCenterOfMass() {
@@ -300,11 +290,16 @@ void ScanDataRaster::subtractForAttenuator(float ifAttenDiff) {
    }
 }
 
-void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subreflectorRadius, float copolPeakAmp) {
-
+void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subreflectorRadius,
+                                 float copolPeakAmp, bool doUnwrapPhase)
+{
     // values to use for computing the mask:
     float inner = subreflectorRadius - (getStepSize() / 2.0);
     float outer = subreflectorRadius + (getStepSize() / 2.0);
+
+    float reducedRadius = ALMAConstants::getSubreflectorRadius(ALMAConstants::REDUCE_SUB);
+    float reducedInner = reducedRadius - (getStepSize() / 2.0);
+    float reducedOuter = reducedRadius + (getStepSize() / 2.0);
 
     // variables used in the loop:
     float x, y, azOnSub, elOnSub, amp, E, radius, mask, EOnSec, powerOnSec;
@@ -362,10 +357,25 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
             mask = (outer - radius) / getStepSize();
         }
         MaskArray_m.push_back(mask);
-        phiMask_m.push_back(1);  //not masking for phase unwrap yet.
 
         // accumulate sum of the mask:
         results_m.sumMask += mask;
+
+        // Compute mask of secondary reflector for phase fitting:
+        float phiMask;
+        if (radius > reducedOuter) {
+            // zero outside the subreflectorRadius angle
+            phiMask = 0.0;
+
+        } else if (radius < reducedInner) {
+            // one inside the subreflector
+            phiMask = 1.0;
+
+        } else {
+            // at points on the edge, a linear taper between 0 and 1:
+            phiMask = (reducedOuter - radius) / getStepSize();
+        }
+        phiMask_m.push_back(phiMask);
 
         // accumulate sum and sum of squares of the electric field voltage:
         results_m.sumE += E;
@@ -390,19 +400,51 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
         itY++;
         itAmp++;
     }
+    if (doUnwrapPhase)
+        ScanDataRaster::unwrapPhase();
 }
 
 bool ScanDataRaster::unwrapPhase() {
     if (phiArray_m.empty())
         return false;
-
     cout << "unwrapPhase()..." << endl;
-    // make a copy of the wrapped phase:
-    std::vector<float> wrapped_image(phiArray_m);
-    // our target will be into the original vector:
-    float *unwrapped_image = phiArray_m.data();
+
+    // make new arrays for wrapped and unwrapped phase:
+    std::vector<double> wrapped_image;
+    std::vector<double> unwrapped_image(size_m, 0.0);
+
+    // copy the phase data into the wrapped image array:
+    // build a mask of the suitable type for unwrap2D:
+    std::vector<unsigned char> input_mask;
+    unsigned i;
+    for (i = 0; i < size_m; i++) {
+        wrapped_image.push_back(static_cast<double>(phiArray_m[i]));
+        input_mask.push_back(0);
+    }
+
     // call the unwrap function:
-    unwrap2D(wrapped_image.data(), unwrapped_image, phiMask_m.data(), results_m.xDimension, results_m.yDimension, 0, 0);
+    double *pwrapped_image = wrapped_image.data();
+    double *punwrapped_image = unwrapped_image.data();
+    unsigned char *pinput_mask = input_mask.data();
+    unwrap2D(pwrapped_image, punwrapped_image, pinput_mask, results_m.xDimension, results_m.yDimension, 0, 0);
+
+    // copy the results to member array, corrected to the former phase at the peak:
+    unwrappedArray_m.clear();
+    for (i = 0; i < size_m; i++)
+        unwrappedArray_m.push_back(static_cast<float>(unwrapped_image[i]));
+
+    // find the new phase at the peak and offset it to be the same as the wrapped phase array:
+    float maxAmp, newPhaseAtPeak, phaseOffset;
+    calcPeakAndPhase_impl(maxAmp, newPhaseAtPeak, ampArray_m, unwrappedArray_m);
+    phaseOffset = results_m.phaseAtPeak - newPhaseAtPeak;
+
+    cout << "results_m.phaseAtPeak=" << results_m.phaseAtPeak
+         << " newPhaseAtPeak=" << newPhaseAtPeak
+         << " phaseOffset=" << phaseOffset << endl;
+
+    for (i = 0; i < size_m; i++)
+        unwrappedArray_m[i] = unwrappedArray_m[i] + phaseOffset;
+
     return true;
 }
 
@@ -416,9 +458,6 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
         // Az and El relative to subreflector center, in radians:
         Az = (xArray_m[i] - azNominal) * ALMAConstants::DEG_TO_RAD;
         El = (yArray_m[i] - elNominal) * ALMAConstants::DEG_TO_RAD;
-
-        // maskE is electric field voltage on the subreflector:
-        maskE = MaskArray_m[i] * EArray_m[i];
 
         // Notes from Alvaro Gonzalez "TN9 Analysis of the NRAO Efficiency Calculator Formulas" 11 Jan 2011.
         //   Restated in email 2016-03-07.
@@ -441,6 +480,9 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
 
         // to find the correlation between the fit phase and the measured phase:
         phaseErr = phiArray_m[i] + phaseFit;
+
+        // maskE is electric field voltage on the subreflector:
+        maskE = phiMask_m[i] * EArray_m[i];
 
         // accumulate the cos, sin, and total E field sums:
         costerm += maskE * cos(phaseErr);
@@ -517,5 +559,28 @@ void ScanDataRaster::printRow(unsigned index) const {
          << ampArray_m[index] << ", " << (phiArray_m[index] * ALMAConstants::RAD_TO_DEG) << endl;
 }
 
+void ScanDataRaster::calcPeakAndPhase_impl(float &maxAmp, float &phaseAtPeak,
+                                           const std::vector<float> &ampArray,
+                                           const std::vector<float> &phiArray) const
+{
+    // reset peak variables:
+    maxAmp = -999;
+    phaseAtPeak = 0;
 
+    // loop to find peak power and phase at peak:
+    vector<float>::const_iterator itAmp = ampArray.begin();
+    vector<float>::const_iterator itPhi = phiArray.begin();
+    float amp, phi;
+
+    while (itAmp != ampArray.end()) {
+        amp = *itAmp;
+        phi = *itPhi;
+        if (amp > maxAmp) {
+            maxAmp = amp;
+            phaseAtPeak = phi;
+        }
+        itAmp++;
+        itPhi++;
+    }
+}
 

@@ -368,7 +368,10 @@ void ScanData::combineDualZScans_impl(ScanDataRaster &z1, ScanDataRaster &z2) {
     z1.replaceAmpAndPhase(newAmps, newPhis);
 }
 
-void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption, float azPointing, float elPointing, float copolPeakAmp) {
+void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption,
+                            float azPointing, float elPointing,
+                            float copolPeakAmp, bool doUnwrapPhase)
+{
     if (NF_m) {
         NF_m -> calcStepSize();
         NF_m -> calcPeakAndPhase();
@@ -380,9 +383,6 @@ void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption, float
         // find the actual (center of mass) beam pointing:
         FF_m -> calcCenterOfMass();
         // for copol scans, compute the unwrapped phase, needed for finding the phase center:
-        cout << "analyzeBeams: scanType_m=" << scanType_m << endl;
-        if (scanType_m == COPOL || scanType_m == COPOL180)
-            FF_m -> unwrapPhase();
 
         // if the pointing to use for calculation is not already specified from another beam,
         if (azPointing == 0.0 && elPointing == 0.0) {
@@ -401,7 +401,7 @@ void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption, float
         float peak = (copolPeakAmp != 0.0) ? copolPeakAmp : FF_m -> getPeak();
 
         // Calculate sums to compute efficiencies using the pointing and radius determined abiove:
-        FF_m -> analyzeBeam(azPointing, elPointing, subreflectorRadius, peak);
+        FF_m -> analyzeBeam(azPointing, elPointing, subreflectorRadius, peak, doUnwrapPhase);
     }
 }
 

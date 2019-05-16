@@ -125,7 +125,8 @@ private:
     ///< filenames are returned in fileNameFF and fileNameNF
 
     bool makeOnePlot(const std::string &outputDirectory, const std::string &gnuplotPath,
-                     const std::string &dataFilename, const ScanData *scan, bool nf, bool phase,
+                     const std::string &dataFilename, const ScanData *scan,
+                     bool nf, bool phase, bool unwrapped,
                      float azPointing, float elPointing, std::string &fileNamePlot);
     ///< private helper to produce an amplitude or phase plot, FF or NF
     ///< prites a Gnuplot command file then executes it
@@ -135,6 +136,7 @@ private:
     ///< @param scan ScanData object holding all the metadata to include in the plot
     ///< @param nf true if this is a nearfield plot, false if farfield
     ///< @param phase true is this is a phase plot, false if amplitude
+    ///< @param unwrapped true is plot phase unwrapped, false if as-measured
     ///< @param azPointing, elPointing where to center the subreflector circle on the FF plot
     ///< @param fileNamePlot out: the filename of the plot produced
     ///< @return true if no errors setting up the plot.  Won't catch Gnuplot errors.
