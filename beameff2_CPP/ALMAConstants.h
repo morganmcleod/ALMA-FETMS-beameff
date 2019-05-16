@@ -34,7 +34,8 @@ namespace ALMAConstants {
         NOMINAL,    // the direction of the subreflector
         ACTUAL,     // the actual beam pointing direction, even if not centered on the subreflector
         ACA7METER,  // the nominal direction of the ACA 7 meter antenna.  Also controls other constants.
-        BAND1TEST   // the band 1 test dewar
+        BAND1TEST,  // the band 1 test dewar
+        REDUCE_SUB  // a reduced-size subreflector to use when phase fitting
     };
 
     /// Options for when to invert measured phase and rotate FF scan:

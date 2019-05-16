@@ -65,10 +65,14 @@ void getAntennaParameters(PointingOptions pointing,
 float getSubreflectorRadius(PointingOptions pointing) {
     const float subreflector_radius12m = 3.57633437;  // degrees
     const float subreflector_radius7m = 3.5798212165; // degrees
+    const float subreflector_reduced = 2.0;
 
     switch (pointing) {
     case ACA7METER:
         return subreflector_radius7m;
+
+    case REDUCE_SUB:
+        return subreflector_reduced;
 
     case ACTUAL:
     case NOMINAL:
