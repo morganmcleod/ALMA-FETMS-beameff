@@ -1066,7 +1066,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     fprintf(f, "azoffset(az) = az - %f\r\n", azPointing);
     fprintf(f, "eloffset(el) = el - %f\r\n", elPointing);
 
-//  phaseFit = phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*cos(Az)*cos(El);
+//  phaseFit = p[1]*sin(Az)*cos(El) + p[2]*sin(El) + p[3]*cos(Az)*cos(El);
     string func = "phase(x, y) = ";
     func += to_string(deltaX);
     func += " * sin(torad(azoffset(x)))*cos(torad(eloffset(y))) + ";
