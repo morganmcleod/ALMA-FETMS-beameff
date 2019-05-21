@@ -29,8 +29,8 @@ dictionary.o: iniparser4.0/dictionary.c
 iniparser.o: iniparser4.0/iniparser.c
 	$(CC) -c iniparser4.0/iniparser.c -o iniparser4.0/iniparser.o $(INC)
 
-unwrap2D.o: unwrap2D/unwrap2D.c
-	$(CC) -c unwrap2D/unwrap2D.c -o unwrap2D/unwrap2D.o $(INC)
+unwrap2D.o: unwrap2D/unwrap2D.cpp
+	$(CPP) -c unwrap2D/unwrap2D.cpp -o unwrap2D/unwrap2D.o $(INC)
 
 brent.o: nr/brent.c
 	$(CC) -c nr/brent.c -o nr/brent.o $(INC)
