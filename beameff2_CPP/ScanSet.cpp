@@ -614,6 +614,8 @@ bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, c
 
     updateDictionary(dict, section, "plot_copol_ffamp",     eff.FFCopolAmpPlot);
     updateDictionary(dict, section, "plot_copol_ffphase",   eff.FFCopolPhasePlot);
+    updateDictionary(dict, section, "plot_copol_ffphase_unwrap",    eff.FFCopolPhaseUnwrappedPlot);
+    updateDictionary(dict, section, "plot_copol_ffphase_model",     eff.FFCopolPhaseModelPlot);
     updateDictionary(dict, section, "plot_copol_nfamp",     eff.NFCopolAmpPlot);
     updateDictionary(dict, section, "plot_copol_nfphase",   eff.NFCopolPhasePlot);
 
@@ -687,11 +689,10 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
                                      false, true, false, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
             // make the Unwrapped Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
-                                     false, true, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
+                                     false, true, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhaseUnwrappedPlot);
 
-            // make the Farfield PhaseFit plot:
-            string tmp;
-            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol0_m, azPointing, elPointing, tmp);
+            // make the Farfield PhaseFit model plot:
+            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol0_m, azPointing, elPointing, Pol0Eff_m.FFCopolPhaseModelPlot);
 
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol0_m,
@@ -704,8 +705,6 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             remove(fileNameNF.c_str());
         }
     }
-
-//    return true;   // exit early for debug
 
     // Make the pol0 xpol plots:
     if (XpolPol0_m) {
@@ -759,11 +758,10 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
 
             // make the Unwrapped Farfield Phase plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
-                                     false, true, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhasePlot);
+                                     false, true, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhaseUnwrappedPlot);
 
-            // make the Farfield PhaseFit plot:
-            string tmp;
-            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol1_m, azPointing, elPointing, tmp);
+            // make the Farfield PhaseFit model plot:
+            ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol1_m, azPointing, elPointing, Pol1Eff_m.FFCopolPhaseModelPlot);
 
             // make the Nearfield Amplitude plot:
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameNF, CopolPol1_m,
@@ -1093,8 +1091,6 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
     remove(fileNameCmd.c_str());
     return true;
 }
-
-/////////////////////////////////////////////////////
 
 bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
                                      std::string &fileNamePlot)

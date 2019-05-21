@@ -28,8 +28,6 @@
 #include <math.h>
 using namespace std;
 
-static const double DEGTORAD(M_PI / 180.0);
-
 void ScanDataRaster::clear() {
     size_m = 0;
     startRow_m = 0;

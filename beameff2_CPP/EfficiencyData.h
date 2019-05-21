@@ -87,6 +87,8 @@ namespace EfficiencyData {
         std::string FFCopolPhasePlot;
         std::string NFCopolAmpPlot;
         std::string NFCopolPhasePlot;
+        std::string FFCopolPhaseUnwrappedPlot;
+        std::string FFCopolPhaseModelPlot;
         std::string FFXpolAmpPlot;
         std::string FFXpolPhasePlot;
         std::string NFXpolAmpPlot;
