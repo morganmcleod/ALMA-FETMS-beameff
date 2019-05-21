@@ -272,24 +272,6 @@ bool ScanSet::calcEfficiencies_impl2(const ScanData *copolScan, const ScanData *
             // Total efficiency including defocus:
             eff.total_aperture_eff = eff.eta_tot_nd * eff.eta_defocus;
 
-// 2.0.9: MM commented this out because it is broken and of dubious value.
-// A. Gonzalez agreed that this doesn't make any sense.
-            // Defocus calculation to find subreflector shift:
-//            float probeZ = copolScan -> getZDistance();
-//            lambda = ALMAConstants::c / (copolScan -> getRFGhz() * 1.0E9);
-//            delta = (eff.deltaZ - probeZ + 0.0000000000001) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
-//            beta = (2 * M_PI / lambda) * delta * (1 - cos(psi_o / 57.3));
-//
-//            eff.defocus_efficiency = pow(ALMAConstants::TAU, 2.0)
-//                                   * pow(sin(beta / 2.0) / (beta / 2.0), 2.0)
-//                                   + (1 - pow(ALMAConstants::TAU, 2.0))
-//                                   * (
-//                                       pow(sin(beta / 2.0) / (beta / 2.0), 4.0)
-//                                       + 4.0 / pow(beta, 2.0)
-//                                       * pow((sin(beta) / beta) - 1.0, 2.0)
-//                                     );
-//            eff.shift_from_focus_mm = eff.deltaZ - probeZ;
-//            eff.subreflector_shift_mm = fabs(eff.shift_from_focus_mm) / pow(M, 2.0) / ALMAConstants::FOCAL_DEPTH;
             return true;
         }
     }
