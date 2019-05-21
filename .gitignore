@@ -1,0 +1,7 @@
+.settings
+.cproject
+.project
+*.o
+*.a
+beameff_C/beam_eff.exe
+/Debug/
