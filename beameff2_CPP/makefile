@@ -4,12 +4,12 @@
 
 CPP  = g++ -DLINUX -g
 CC   = gcc -DLINUX -g
-OBJ  = iniparser4.0/dictionary.o iniparser4.0/iniparser.o \
+OBJ  = iniparser4.0/dictionary.o iniparser4.0/iniparser.o unwrap2D/unwrap2D.o \
 	nr/brent.o nr/f1dim.o nr/mnbrak.o nr/linmin.o nr/frprmn.o nr/nrutil.o \
 	main.o ALMAConstants.o AnalyzeResults.o BeamEffInputFile.o EfficiencyData.o \
 	FitAmplitude.o FitPhase.o ScanDataRaster.o ScanData.o ScanSet.o SWVersion.o
 LIBS = -lm
-INC = -I./iniparser4.0 -I./nr -I./util
+INC = -I./iniparser4.0 -I./nr -I./util -I./unwrap2D
 BIN  = beameff2_64
 RM = rm -f
 
@@ -28,6 +28,9 @@ dictionary.o: iniparser4.0/dictionary.c
 
 iniparser.o: iniparser4.0/iniparser.c
 	$(CC) -c iniparser4.0/iniparser.c -o iniparser4.0/iniparser.o $(INC)
+
+unwrap2D.o: unwrap2D/unwrap2D.c
+	$(CC) -c unwrap2D/unwrap2D.c -o unwrap2D/unwrap2D.o $(INC)
 
 brent.o: nr/brent.c
 	$(CC) -c nr/brent.c -o nr/brent.o $(INC)
