@@ -60,7 +60,7 @@ public:
     ///< @param invertPhaseOption: option for when to invert phase and rotate FF scans on load
     ///< @return true if no errors loading and parsing the section.
 
-    bool calcEfficiencies(ALMAConstants::PointingOptions pointingOption);
+    bool calcEfficiencies(ALMAConstants::PointingOptions pointingOption, bool unwrapPhaseOption);
     ///< calculate beam efficiencies, etc. from the loaded data.
     ///< @return true if no errors during calculation.
 
@@ -86,6 +86,7 @@ private:
     int band_m;                 // ALMA band number (1-10)
     ALMAConstants::PointingOptions pointingOption_m;
                                 // pointing option passed to calcEfficiencies()
+    bool unwrapPhaseOption_m;   // unwrap phase option passed to analyzeBeams()
 
     ScanData *CopolPol0_m;      // Data set for pol0 copol
     ScanData *XpolPol0_m;       // Data set for pol0 xpol

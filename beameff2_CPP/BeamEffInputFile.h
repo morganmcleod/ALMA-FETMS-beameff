@@ -48,6 +48,10 @@ public:
       { return invertPhaseOption_m; }
     ///< @return the invert phase option specified in the input file.
 
+    bool getUnwrapPhaseOption() const
+      { return unwrapPhaseOption_m; }
+    ///< @return whether to unwrap phase before the phase fit
+
     const std::string &getOuputDirectory() const
       { return outputDir_m; }
     ///< @return the path for output files.
@@ -112,6 +116,8 @@ private:
 
     ALMAConstants::InvertPhaseOptions invertPhaseOption_m;
                                         ///< invert phase and rotate FF scan option sepecified in the [settings] section.
+
+    bool unwrapPhaseOption_m;           ///< unwrap FF phase before phase fit
 
     void loadScanSetIds();
     ///< private helper to load the scanset and section metadata

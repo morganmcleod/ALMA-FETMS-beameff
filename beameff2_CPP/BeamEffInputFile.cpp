@@ -180,6 +180,11 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
         else if (!stricmp(pval, "none") || !stricmp(pval, "no") || !stricmp(pval, "n") || !stricmp(pval, "f") || !stricmp(pval, "0"))
             invertPhaseOption_m = ALMAConstants::INVERT_NONE;
 
+        // Read the unwrap phase option:
+        int val = iniparser_getint(dict_m, "settings:unwrapphase", 0);
+        unwrapPhaseOption_m = (val != 0);
+
+
         // Read the gnuplot path:
         pval = iniparser_getstring(dict_m, "settings:gnuplot", "");
         gnuplotPath_m = pval;

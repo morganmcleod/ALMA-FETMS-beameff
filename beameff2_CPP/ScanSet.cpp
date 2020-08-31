@@ -147,11 +147,12 @@ bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection,
         return true;
 }
 
-bool ScanSet::calcEfficiencies(ALMAConstants::PointingOptions pointingOption) {
+bool ScanSet::calcEfficiencies(ALMAConstants::PointingOptions pointingOption, bool unwrapPhaseOption) {
     bool ret = true;
 
-    // save the pointing option specified:
+    // save the pointing and unwrap phase options specified:
     pointingOption_m = pointingOption;
+    unwrapPhaseOption_m = unwrapPhaseOption;
 
     // calculate for pol0:
     ret = ret && calcEfficiencies_impl(CopolPol0_m, XpolPol0_m, Pol0Eff_m);
@@ -283,7 +284,7 @@ bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &azPointing, float &e
         return false;
 
     // accumulate values needed for efficiency calculation, using the selected pointing option:
-    copolScan -> analyzeBeams(pointingOption_m, 0.0, 0.0, 0.0, true);
+    copolScan -> analyzeBeams(pointingOption_m, 0.0, 0.0, 0.0, unwrapPhaseOption_m);
 
     // get the actual pointing angles:
     float azActual(0), elActual(0);

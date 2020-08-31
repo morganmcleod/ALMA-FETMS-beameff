@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
             section = inFile.nextSection(scanSet);
         }
         // calculate beam efficiencies:
-        SS.calcEfficiencies(inFile.getPointingOption());
+        SS.calcEfficiencies(inFile.getPointingOption(), inFile.getUnwrapPhaseOption());
 
         // Generate all the plots:
         SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath());
