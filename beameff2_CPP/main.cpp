@@ -75,6 +75,7 @@ int main(int argc, char *argv[]) {
 
         // loop on sections belonging to the scanset ID.
         section = inFile.nextSection(scanSet, true);
+        bool error = false;
         while (!section.empty()) {
             cout << "section: " << section << "<br>" << endl;
 
@@ -86,26 +87,29 @@ int main(int argc, char *argv[]) {
             }
 
             // load the section into a ScanData object in the ScanSet:
-            SS.loadScan(inFile.getDict(), section, inFile.getDelim(), inFile.getInvertPhaseOption());
+            if (!SS.loadScan(inFile.getDict(), section, inFile.getDelim(), inFile.getInvertPhaseOption()))
+                error = true;
             // go to next section for the scanSet:
             section = inFile.nextSection(scanSet);
         }
-        // calculate beam efficiencies:
-        SS.calcEfficiencies(inFile.getPointingOption(), inFile.getUnwrapPhaseOption());
+        if (error)
+            cout << "ERROR: failed to load scanSet: " << scanSet << endl;
+        else {
+            // calculate beam efficiencies:
+            SS.calcEfficiencies(inFile.getPointingOption(), inFile.getUnwrapPhaseOption());
 
-        // Generate all the plots:
-        SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath());
+            // Generate all the plots:
+            SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath());
 
-//        SS.print();
-//        cout << "----" << endl;
+    //        SS.print();
+    //        cout << "----" << endl;
 
-        // Write the summary output file containing efficiencies and computed results:
-        SS.writeOutputFile(inFile.useDict(), outputFile);
-
+            // Write the summary output file containing efficiencies and computed results:
+            SS.writeOutputFile(inFile.useDict(), outputFile);
+        }
         // Go to the next scanset in the input file:
         scanSet = inFile.nextScanSet();
     }
-
     cout << "done.<br>" << endl;
     return 0;
 }

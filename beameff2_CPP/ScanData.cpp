@@ -246,23 +246,27 @@ bool ScanData::loadListings(const std::string &delim, ALMAConstants::InvertPhase
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
         NF_m = new ScanDataRaster;
-        NF_m -> loadFile(filenameNF_m, delim, rotateNF, invertPhase);
+        if (!NF_m -> loadFile(filenameNF_m, delim, rotateNF, invertPhase))
+            return false;
         startrowNF_m = NF_m -> getStartRow();
         NSIDateTime_m = NF_m -> getNSIDateTime();
     }
     if (!filenameFF_m.empty()) {
         FF_m = new ScanDataRaster;
-        FF_m -> loadFile(filenameFF_m, delim, rotateFF, invertPhase);
+        if (!FF_m -> loadFile(filenameFF_m, delim, rotateFF, invertPhase))
+            return false;
         startrowFF_m = FF_m -> getStartRow();
     }
     if (!filenameNF2_m.empty()) {
         NF2_m = new ScanDataRaster;
-        NF2_m -> loadFile(filenameNF2_m, delim, rotateNF, invertPhase);
+        if (!NF2_m -> loadFile(filenameNF2_m, delim, rotateNF, invertPhase))
+            return false;
         startrowNF2_m = NF2_m -> getStartRow();
     }
     if (!filenameFF2_m.empty()) {
         FF2_m = new ScanDataRaster;
-        FF2_m -> loadFile(filenameFF2_m, delim, rotateFF, invertPhase);
+        if (!FF2_m -> loadFile(filenameFF2_m, delim, rotateFF, invertPhase))
+            return false;
         startrowFF2_m = FF2_m -> getStartRow();
     }
     return true;

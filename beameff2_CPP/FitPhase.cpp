@@ -22,11 +22,11 @@
 #include "FitPhase.h"
 #include "ScanData.h"
 #include "ScanDataRaster.h"
-#include <math.h>
-
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <math.h>
 using namespace std;
 
 extern "C" {
@@ -39,51 +39,47 @@ namespace BeamFitting {
     float function_phase(float p[]);
     float function_phase_z(float delta_z);
 
-    const int nTerms_m(3);          ///< terms of phase center model
-    ScanData *fitPhaseScan(NULL);   ///< Scan we are currently fitting against
-    static float azNominal;         ///< nominal pointing in Az
-    static float elNominal;         ///< nominal pointing in El
-    static float delta_x_m;         ///< delta_x to hold constant while searching in delta_z
-    static float delta_y_m;         ///< delta_y ""
-    static bool approxFit(false);   ///< true=use approximate phase fitting; false=exact.
-    bool reduceSubreflector(false);  ///< true=use a reduced size subreflector to search
+    // forward declare debug function:
+    void MapPhaseEff(float p[]);
+
+    const int nTerms_m(3);              ///< terms of phase center model
+    const float linSearchTol(4.40e-4);  ///< linear search tolerance = about the square root of the machine epsilon for float
+    const float ftol(1.93e-7);          ///< function evaluation tolerance = about the machine epsilon for float
+    ScanData *fitPhaseScan(NULL);       ///< Scan we are currently fitting against
+    static float azNominal;             ///< nominal pointing in Az
+    static float elNominal;             ///< nominal pointing in El
+    static float delta_x_m;             ///< delta_x to hold constant while searching in delta_z
+    static float delta_y_m;             ///< delta_y ""
+    static bool approxFit(false);       ///< true=use approximate phase fitting; false=exact.
+    bool reduceSubreflector(false);     ///< true=use a reduced size subreflector to search
 
     void FitPhase(ScanData *currentScan, float _azNominal, float _elNominal) {
-        fitPhaseScan = currentScan;
-        azNominal = _azNominal;
-        elNominal = _elNominal;
+        BeamFitting::fitPhaseScan = currentScan;
+        BeamFitting::azNominal = _azNominal;
+        BeamFitting::elNominal = _elNominal;
 
-        // set the linear search tolerance at about the square root of the machine epsilon for float:
-        float tol = 4.40e-4;
-
-        // set the function evaluation tolerance at about the machine epsilon for float:
-        float ftol = 1.93e-7;
-
-        int iter_phase;
-        float fret_phase;
-        float p[nTerms_m + 1];
-
-        void (*dfunctionphase)(float p[], float df[]);
-        float (*functionphase)(float p[]);
-
-        functionphase = &function_phase;
-        dfunctionphase = &dfunction_phase;
+        int iter_phase;         // how many iterations taken by frprmn()
+        float fret_phase;       // fit residual error returned by frprmn() = 1-eta_phase
+        float p[nTerms_m + 1];  // terms of the fit search: [0, x, y, z]
+        float p1[nTerms_m + 1];
+        float p2[nTerms_m + 1];
+        float p3[nTerms_m + 1];
 
         // start from the probe z distance as our guess for delta_z:
+        float k = fitPhaseScan -> getKWaveNumber();  // rad/m
+        float zRadians = fitPhaseScan -> getZDistance() * 0.001 * k;
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
-        p[3] = fitPhaseScan -> getZDistance();
+        p[3] = zRadians;
 
-        // convert initial guess to radians:
-        float k = fitPhaseScan -> getKWaveNumber();  // rad/m
-        p[1] *= 0.001 * k;                           // rad
-        p[2] *= 0.001 * k;
-        p[3] *= 0.001 * k;
+        cout << "StartPos 0: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, " << endl;
 
-        // first find the phase center minimum closest to the given Z distance, using a reduced subreflector radius:
-        reduceSubreflector = true;
-        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
+        // first find the phase center minimum closest to the given Z distance:
+        reduceSubreflector = false;
+        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
 
         cout << "FitPhase 1: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
@@ -91,25 +87,29 @@ namespace BeamFitting {
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
+        memcpy(p1, p, (nTerms_m + 1) * sizeof(float));
+
         // now do a line search along the z axis:
         delta_x_m = p[1];
         delta_y_m = p[2];
-        float ax = p[3];
-        float bx = ax + 2.0;
+        float ax = p[3] - zRadians / 2;
+        float bx = p[3] + zRadians / 2;
         float cx, fa, fb, fc;
 
         // bracket the minimum of the phase fit function in delta_z:
         mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
 
         // now find the exact delta_z giving the minimum:
-        fb = brent(ax, bx, cx, function_phase_z, tol, &bx);
+        fb = brent(ax, bx, cx, function_phase_z, linSearchTol, &bx);
+        p[3] = bx;
+
+        cout << "LineSrch 1: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, " << endl;
 
         // now search the space around the first delta_x, delta_y and the new delta_z:
         reduceSubreflector = false;
-        p[1] = delta_x_m;
-        p[2] = delta_y_m;
-        p[3] = bx;
-        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
+        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
 
         cout << "FitPhase 2: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
@@ -117,23 +117,37 @@ namespace BeamFitting {
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
+        memcpy(p2, p, (nTerms_m + 1) * sizeof(float));
+
         // another bracket and linear search in delta_z:
         delta_x_m = p[1];
         delta_y_m = p[2];
-        ax = p[3];
-        bx = ax + 2.0;
+        ax = p[3] - 1.0;
+        bx = p[3] + 1.0;
         mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
-        fb = brent(ax, bx, cx, function_phase_z, tol, &bx);
-
-        // final multidimensional search:
+        fb = brent(ax, bx, cx, function_phase_z, linSearchTol, &bx);
         p[3] = bx;
-        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, functionphase, dfunctionphase);
+
+        cout << "LineSrch 2: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, " << endl;
+
+        // final multidimensional search with full subreflector:
+        reduceSubreflector = false;
+        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
 
         cout << "FitPhase 3: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
                                << 1000.0 * p[3] / k << " mm, "
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
+
+        memcpy(p3, p, (nTerms_m + 1) * sizeof(float));
+
+        // Output plottable matrices of eta_phase vs delta_x, delta_y:
+//        MapPhaseEff(p1);
+//        MapPhaseEff(p2);
+//        MapPhaseEff(p3);
 
         // convert back to mm:
         float deltaX = 1000.0 * p[1] / k;
@@ -142,6 +156,35 @@ namespace BeamFitting {
 
         // save results into the scan object:
         fitPhaseScan -> setPhaseFitResults(deltaX, deltaY, deltaZ, 1.0 - fret_phase);
+    }
+
+    void MapPhaseEff(float p[]) {
+        // Was used for troubleshooting the phase fit.
+        // Outputs a matrix of eta_phase vs delta_x, delta_y at fixed delta_z
+        float k = fitPhaseScan -> getKWaveNumber();  // rad/m
+        float delta_x = 1000.0 * p[1] / k;
+        float delta_y = 1000.0 * p[2] / k;
+        float delta_z = 1000.0 * p[3] / k;
+        float searchWin = 0.25;
+        float stepSize = 0.02;
+        float eta_phase;
+
+        cout << "\ndelta_z = " << delta_z << endl;
+
+        for (float x = delta_x - searchWin; x <= delta_x + searchWin; x += stepSize)
+            cout << "\t" << x;
+        cout << endl;
+        for (float y = delta_y - searchWin; y <= delta_y + searchWin; y += stepSize) {
+            cout << y;
+            for (float x = delta_x - searchWin; x <= delta_x + searchWin; x += stepSize) {
+                p[1] = 0.001 * x * k;
+                p[2] = 0.001 * y * k;
+                eta_phase = 1.0 - function_phase(p);
+                cout << '\t' << eta_phase;
+            }
+            cout << endl;
+        }
+        cout << endl;
     }
 
     /// Compute the gradient of the phase fitting function (1.0-eta_phase) at the given coordinates:

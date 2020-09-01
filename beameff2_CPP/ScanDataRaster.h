@@ -169,7 +169,8 @@ private:
     std::vector<float> yArray_m;            ///< y or el coordinates
     std::vector<float> ampArray_m;          ///< amplitudes in dB
     std::vector<float> phiArray_m;          ///< phases in radians
-    std::vector<float> unwrappedArray_m;    ///< unwrapped phases
+    std::vector<float> phiArrayUnwrapped_m; ///< unwrapped phases
+    std::vector<float> *phiArrayPhaseFit_mp; ///< pointer to which phiArray to use for phasefit
     std::vector<float> EArray_m;            ///< electric field voltages
     std::vector<float> RadiusArray_m;       ///< distance from nominal beam center
     std::vector<float> MaskArray_m;         ///< subreflector mask

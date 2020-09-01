@@ -37,7 +37,8 @@ void ScanDataRaster::clear() {
     yArray_m.clear();
     ampArray_m.clear();
     phiArray_m.clear();
-    unwrappedArray_m.clear();
+    phiArrayUnwrapped_m.clear();
+    phiArrayPhaseFit_mp = &phiArray_m;  // by default, use the wrapped phases for phase fit
     EArray_m.clear();
     RadiusArray_m.clear();
     MaskArray_m.clear();
@@ -137,7 +138,7 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
     vector<float>::const_iterator itY = yArray_m.begin();
     vector<float>::const_iterator itAmp = ampArray_m.begin();
     vector<float>::const_iterator itPhi = phiArray_m.begin();
-    vector<float>::const_iterator itUnw = unwrappedArray_m.begin();
+    vector<float>::const_iterator itUnw = phiArrayUnwrapped_m.begin();
 
     // to detect first and second time in loop:
     bool first = true;
@@ -150,7 +151,7 @@ bool ScanDataRaster::saveFile(const std::string filename, float copolPeakAmp,
         amp = *itAmp - copolPeakAmp;            // normalize to the copol peak
         phase = *itPhi * ALMAConstants::RAD_TO_DEG;      // save as degrees
         unw = 0.0;
-        if (itUnw != unwrappedArray_m.end()) {
+        if (itUnw != phiArrayUnwrapped_m.end()) {
             unw = *itUnw * ALMAConstants::RAD_TO_DEG;
             itUnw++;
         }
@@ -371,7 +372,7 @@ void ScanDataRaster::analyzeBeam(float azNominal, float elNominal, float subrefl
 
         } else {
             // at points on the edge, a linear taper between 0 and 1:
-            reducedMask = (reducedOuter - radius) / getStepSize();
+            reducedMask = (reducedOuter - reducedRadius) / getStepSize();
         }
         MaskArrayReduced_m.push_back(reducedMask);
 
@@ -427,13 +428,13 @@ bool ScanDataRaster::unwrapPhase() {
     unwrap2D(pwrapped_image, punwrapped_image, pinput_mask, results_m.xDimension, results_m.yDimension, 0, 0);
 
     // copy the results to member array, corrected to the former phase at the peak:
-    unwrappedArray_m.clear();
+    phiArrayUnwrapped_m.clear();
     for (i = 0; i < size_m; i++)
-        unwrappedArray_m.push_back(static_cast<float>(unwrapped_image[i]));
+        phiArrayUnwrapped_m.push_back(static_cast<float>(unwrapped_image[i]));
 
     // find the new phase at the peak and offset it to be the same as the wrapped phase array:
     float maxAmp, newPhaseAtPeak, phaseOffset;
-    calcPeakAndPhase_impl(maxAmp, newPhaseAtPeak, ampArray_m, unwrappedArray_m);
+    calcPeakAndPhase_impl(maxAmp, newPhaseAtPeak, ampArray_m, phiArrayUnwrapped_m);
     phaseOffset = results_m.phaseAtPeak - newPhaseAtPeak;
 
     cout << "results_m.phaseAtPeak=" << results_m.phaseAtPeak
@@ -441,8 +442,9 @@ bool ScanDataRaster::unwrapPhase() {
          << " phaseOffset=" << phaseOffset << endl;
 
     for (i = 0; i < size_m; i++)
-        unwrappedArray_m[i] = unwrappedArray_m[i] + phaseOffset;
+        phiArrayUnwrapped_m[i] = phiArrayUnwrapped_m[i] + phaseOffset;
 
+    phiArrayPhaseFit_mp = &phiArrayUnwrapped_m; // now using the unwrapped phases for phase fit
     return true;
 }
 
@@ -477,7 +479,7 @@ float ScanDataRaster::calcPhaseEfficiency(float p[], float azNominal, float elNo
         }
 
         // to find the correlation between the fit phase and the measured phase:
-        phaseErr = unwrappedArray_m[i] + phaseFit;
+        phaseErr = (*phiArrayPhaseFit_mp)[i] + phaseFit;
 
         // maskE is electric field voltage on the subreflector:
         maskE = EArray_m[i] * (reduceSubreflector ? MaskArrayReduced_m[i] : MaskArray_m[i]);

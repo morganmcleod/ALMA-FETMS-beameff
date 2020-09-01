@@ -448,16 +448,19 @@ bool ScanSet::calcSquint_impl() {
     float M, psi_o, psi_m, plateFactor, dishDiameter;
     ALMAConstants::getAntennaParameters(pointingOption_m, M, psi_o, psi_m, plateFactor, dishDiameter);
 
-    // Compute squint:
+    // Calculate squint:
     CombinedEff_m.squint_arcseconds = CombinedEff_m.dist_between_centers_mm * plateFactor;
 
     // Calculate squint in percentage of units of FWHM of the beam:
+
+    // lambda in mm, hence 1.0E6, not 1.0E9:
+    float lambda = ALMAConstants::c / (CopolPol0_m -> getRFGhz() * 1.0E6);
+
     // 1.15 is the coefficient to multiply by lambda/D to get FWHM where D=diameter of primary mirror in mm.
     // 60.0 * 60.0 converts to arcseconds.
+    CombinedEff_m.squint_percent = (100.0 * CombinedEff_m.squint_arcseconds) / (1.15 * lambda * ALMAConstants::RAD_TO_DEG * 60.0 * 60.0 / dishDiameter);
 
-    float lambda = ALMAConstants::c / (CopolPol0_m -> getRFGhz() * 1.0E6);
-    float deg_per_rad = 180.0 / M_PI;
-    CombinedEff_m.squint_percent = (100.0 * CombinedEff_m.squint_arcseconds) / (1.15 * lambda * deg_per_rad * 60.0 * 60.0 / dishDiameter);
+    cout << "squint_percent = " << CombinedEff_m.squint_percent << endl;
 
     return true;
 }
@@ -597,7 +600,8 @@ bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, c
 
     updateDictionary(dict, section, "plot_copol_ffamp",     eff.FFCopolAmpPlot);
     updateDictionary(dict, section, "plot_copol_ffphase",   eff.FFCopolPhasePlot);
-    updateDictionary(dict, section, "plot_copol_ffphase_unwrap",    eff.FFCopolPhaseUnwrappedPlot);
+    if (unwrapPhaseOption_m)
+        updateDictionary(dict, section, "plot_copol_ffphase_unwrap",    eff.FFCopolPhaseUnwrappedPlot);
     updateDictionary(dict, section, "plot_copol_ffphase_model",     eff.FFCopolPhaseModelPlot);
     updateDictionary(dict, section, "plot_copol_nfamp",     eff.NFCopolAmpPlot);
     updateDictionary(dict, section, "plot_copol_nfphase",   eff.NFCopolPhasePlot);
@@ -671,8 +675,9 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
             ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
                                      false, true, false, azPointing, elPointing, Pol0Eff_m.FFCopolPhasePlot);
             // make the Unwrapped Farfield Phase plot:
-            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
-                                     false, true, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhaseUnwrappedPlot);
+            if (unwrapPhaseOption_m)
+                ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol0_m,
+                                         false, true, true, azPointing, elPointing, Pol0Eff_m.FFCopolPhaseUnwrappedPlot);
 
             // make the Farfield PhaseFit model plot:
             ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol0_m, azPointing, elPointing, Pol0Eff_m.FFCopolPhaseModelPlot);
@@ -740,8 +745,9 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
                                      false, true, false, azPointing, elPointing, Pol1Eff_m.FFCopolPhasePlot);
 
             // make the Unwrapped Farfield Phase plot:
-            ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
-                                     false, true, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhaseUnwrappedPlot);
+            if (unwrapPhaseOption_m)
+                ret = ret && makeOnePlot(outputDirectory, gnuplotPath, fileNameFF, CopolPol1_m,
+                                         false, true, true, azPointing, elPointing, Pol1Eff_m.FFCopolPhaseUnwrappedPlot);
 
             // make the Farfield PhaseFit model plot:
             ret = ret && makePhaseFitPlot(outputDirectory, gnuplotPath, CopolPol1_m, azPointing, elPointing, Pol1Eff_m.FFCopolPhaseModelPlot);
@@ -871,50 +877,59 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
     title += to_string(scan -> getTilt());
     title += " deg";
 
+    // newline constant.   TODO: See if just \n works on Windows and Linux:
+    const char *NL = "\n";
+
     // 500x500 pixel .png files.  crop=no blank space around plot:
-    fprintf(f, "set terminal png size 500, 500 crop\r\n");
-    fprintf(f, "set output '%s'\r\n", fileNamePlot.c_str());
-    fprintf(f, "set title '%s'\r\n", title.c_str());
+    fprintf(f, "set terminal png size 500, 500 crop%s", NL);
+    fprintf(f, "set output '%s'%s", fileNamePlot.c_str(), NL);
+    fprintf(f, "set title '%s'%s", title.c_str(), NL);
     // X and Y axis labels:
-    fprintf(f, "set xlabel '%s'\r\n", (nf) ? "X(m)" : "Az(deg)");
-    fprintf(f, "set ylabel '%s'\r\n", (nf) ? "Y(m)" : "El(deg)");
+    fprintf(f, "set xlabel '%s'%s", (nf) ? "X(mm)" : "Az(deg)", NL);
+    fprintf(f, "set ylabel '%s'%s", (nf) ? "Y(mm)" : "El(deg)", NL);
     // Palette limited to -50 to 0:
-    fprintf(f, "set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')\r\n");
+    fprintf(f, "set palette model RGB defined (-50 'purple', -40 'blue', -30 'green', -20 'yellow', -10 'orange', 0 'red')%s", NL);
     // Label for legend:
-    fprintf(f, "set cblabel '%s %s'\r\n", (nf) ? "Nearfield" : "Farfield", (phase) ? "Phase (deg)" : "Amplitude (dB)");
+    fprintf(f, "set cblabel '%s %s'%s", (nf) ? "Nearfield" : "Farfield", (phase) ? "Phase (deg)" : "Amplitude (dB)", NL);
     // Set the range of values which are colored using the current palette:
     if (!phase)
-        fprintf(f, "set cbrange [-50:0]\r\n");
+        fprintf(f, "set cbrange [-50:0]%s", NL);
     else if (!unwrapped)
-        fprintf(f, "set cbrange [-180:180]\r\n");
+        fprintf(f, "set cbrange [-180:180]%s", NL);
     // Top-down view:
-    fprintf(f, "set view 0,0\r\n");
+    fprintf(f, "set view 0,0%s", NL);
     // Palette mapped 3d style for splot:
-    fprintf(f, "set pm3d map\r\n");
+    fprintf(f, "set pm3d map%s", NL);
     // Force a square plot within the canvas:
-    fprintf(f, "set size square\r\n");
+    fprintf(f, "set size square%s", NL);
 
     // For FF plots use parametric mode in degrees to draw the subreflector circle:
     if (!nf) {
-        fprintf(f, "set parametric\r\n");
-        fprintf(f, "set angles degrees \r\n");
-        fprintf(f, "set urange [0:360]\r\n");
         // for FF plots, set the resolution of the subreflector circle:
-        fprintf(f, "set isosamples 13,11\r\n");
+        fprintf(f, "set isosamples 13,11%s", NL);
+        // draw parametric:
+        fprintf(f, "set parametric%s", NL);
+        fprintf(f, "set angles degrees%s", NL);
+        fprintf(f, "set urange [0:360]%s", NL);
     }
-    // Set X and Y major tics...?
-    fprintf(f, "set xtics %s\r\n", (nf) ? "0.02" : "2");
-    fprintf(f, "set ytics %s\r\n", (nf) ? "0.02" : "2");
+
+    // Set X and Y major tics:
+    if (nf)
+        fprintf(f, "set xtics rotate%s", NL);
+    else {
+        fprintf(f, "set xtics rotate 2%s", NL);
+        fprintf(f, "set ytics 2%s", NL);
+    }
 
     // Add the database keys label:
     string label;
     getDatabaseKeysLabel(label, scan -> getScanId());
     if (!label.empty())
-        fprintf(f, "set label '%s' at screen 0.01, 0.05\r\n", label.c_str());
+        fprintf(f, "set label '%s' at screen 0.01, 0.05%s", label.c_str(), NL);
 
     // Add the measurmement info label:
     getMeasInfoLabel(label, *scan);
-    fprintf(f, "set label '%s' at screen 0.01, 0.02\r\n", label.c_str());
+    fprintf(f, "set label '%s' at screen 0.01, 0.02%s", label.c_str(), NL);
 
     // plot from the data file.  Column 3 is amplitude, 4 is phase, 5 is unwrapped phase:
     fprintf(f, "splot '%s' using 1:2:%s title ''", dataFilename.c_str(), (phase) ? ((unwrapped) ? "5" : "4") : "3");
@@ -925,8 +940,7 @@ bool ScanSet::makeOnePlot(const std::string &outputDirectory, const std::string 
         fprintf(f, ",%f + %.2f*cos(u),%f + %.2f*sin(u),1 notitle lw 3 ",
                    azPointing, subreflectorRadius, elPointing, subreflectorRadius);
     }
-    fprintf(f, "\r\n");
-
+    fprintf(f, "%s", NL);
     fclose(f);
 
     // call gnuplot:
