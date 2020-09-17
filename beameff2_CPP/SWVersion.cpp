@@ -23,7 +23,7 @@
 
 const std::string BEAMEFF_SW_VERSION_STRING("2.0.13");
 
-//******* Be sure to update resource.rc!
+//*******                        Be sure to update resource.rc!
 
 
 // Version history
