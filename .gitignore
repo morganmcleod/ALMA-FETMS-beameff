@@ -2,3 +2,4 @@
 *.a
 beameff_C/beam_eff.exe
 /Debug/
+/SampleData_local/

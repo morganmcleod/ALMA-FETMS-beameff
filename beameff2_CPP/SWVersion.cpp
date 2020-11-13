@@ -21,12 +21,13 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.13");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.14");
 
 //*******                        Be sure to update resource.rc!
 
 
 // Version history
+// 2.0.14: FitPhase: ftol=1.19e-7, reduceSubReflector=true for first pass, no z linear searches
 // 2.0.13: Rotate xtics in plots.  FitPhase instrumented to make surface plots of eta_phase around the phase center.
 //         Print error message if a file can't be loaded.   Fix NF axis units 'mm'
 // 2.0.12: Fix bug when using reduced subreflector, but that code is disabled in this version.

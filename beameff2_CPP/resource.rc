@@ -2,8 +2,8 @@
 
 // DLL version information.
 VS_VERSION_INFO    VERSIONINFO
-FILEVERSION        2,0,13,0
-PRODUCTVERSION     2,0,13,0
+FILEVERSION        2,0,14,0
+PRODUCTVERSION     2,0,14,0
 FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
   FILEFLAGS        VS_FF_DEBUG | VS_FF_PRERELEASE
@@ -20,12 +20,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "NRAO"
       VALUE "FileDescription", "ALMA FETMS Beam Efficiency Calculator"
-      VALUE "FileVersion", "2.0.13"
+      VALUE "FileVersion", "2.0.14"
       VALUE "InternalName", "beam_eff2"
       VALUE "LegalCopyright", "2020 NRAO"
       VALUE "OriginalFilename", "beam_eff2.exe"
       VALUE "ProductName", "FALMA FETMS Beam Efficiency Calculator"
-      VALUE "ProductVersion", "2.0.13"
+      VALUE "ProductVersion", "2.0.14"
     END
   END
   BLOCK "VarFileInfo"

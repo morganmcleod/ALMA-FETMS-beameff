@@ -44,7 +44,7 @@ namespace BeamFitting {
 
     const int nTerms_m(3);              ///< terms of phase center model
     const float linSearchTol(4.40e-4);  ///< linear search tolerance = about the square root of the machine epsilon for float
-    const float ftol(1.93e-7);          ///< function evaluation tolerance = about the machine epsilon for float
+    const float ftol(1.19e-7);          ///< function evaluation tolerance = about the machine epsilon for float
     ScanData *fitPhaseScan(NULL);       ///< Scan we are currently fitting against
     static float azNominal;             ///< nominal pointing in Az
     static float elNominal;             ///< nominal pointing in El
@@ -61,24 +61,25 @@ namespace BeamFitting {
         int iter_phase;         // how many iterations taken by frprmn()
         float fret_phase;       // fit residual error returned by frprmn() = 1-eta_phase
         float p[nTerms_m + 1];  // terms of the fit search: [0, x, y, z]
-        float p1[nTerms_m + 1];
-        float p2[nTerms_m + 1];
-        float p3[nTerms_m + 1];
+//        float p1[nTerms_m + 1];
+//        float p2[nTerms_m + 1];    // for plotting intermediate results with MapPhaseEff()
+//        float p3[nTerms_m + 1];
 
         // start from the probe z distance as our guess for delta_z:
         float k = fitPhaseScan -> getKWaveNumber();  // rad/m
-        float zRadians = fitPhaseScan -> getZDistance() * 0.001 * k;
+        float zRadians = fitPhaseScan -> getZDistance() * k / 1000.0;
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
         p[3] = zRadians;
 
+//        cout << "k = " << k / 1000.0 << " rad/mm" << endl;
         cout << "StartPos 0: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
                                << 1000.0 * p[3] / k << " mm, " << endl;
 
         // first find the phase center minimum closest to the given Z distance:
-        reduceSubreflector = false;
+        reduceSubreflector = true;
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
 
         cout << "FitPhase 1: " << 1000.0 * p[1] / k << " mm, "
@@ -87,8 +88,9 @@ namespace BeamFitting {
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
-        memcpy(p1, p, (nTerms_m + 1) * sizeof(float));
+//        memcpy(p1, p, (nTerms_m + 1) * sizeof(float));   // for plotting intermediate results with MapPhaseEff()
 
+#if 0
         // now do a line search along the z axis:
         delta_x_m = p[1];
         delta_y_m = p[2];
@@ -105,7 +107,9 @@ namespace BeamFitting {
 
         cout << "LineSrch 1: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
-                               << 1000.0 * p[3] / k << " mm, " << endl;
+                               << 1000.0 * p[3] / k << " mm, "
+                               << "eta=" << 1.0 - fb << endl;
+#endif
 
         // now search the space around the first delta_x, delta_y and the new delta_z:
         reduceSubreflector = false;
@@ -117,7 +121,8 @@ namespace BeamFitting {
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
-        memcpy(p2, p, (nTerms_m + 1) * sizeof(float));
+#if 0
+//        memcpy(p2, p, (nTerms_m + 1) * sizeof(float));    // for plotting intermediate results with MapPhaseEff()
 
         // another bracket and linear search in delta_z:
         delta_x_m = p[1];
@@ -130,7 +135,8 @@ namespace BeamFitting {
 
         cout << "LineSrch 2: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
-                               << 1000.0 * p[3] / k << " mm, " << endl;
+                               << 1000.0 * p[3] / k << " mm, "
+                               << "eta=" << 1.0 - fb << endl;
 
         // final multidimensional search with full subreflector:
         reduceSubreflector = false;
@@ -141,12 +147,12 @@ namespace BeamFitting {
                                << 1000.0 * p[3] / k << " mm, "
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
-
-        memcpy(p3, p, (nTerms_m + 1) * sizeof(float));
+#endif
+//        memcpy(p3, p, (nTerms_m + 1) * sizeof(float));  // for plotting intermediate results with MapPhaseEff()
 
         // Output plottable matrices of eta_phase vs delta_x, delta_y:
 //        MapPhaseEff(p1);
-//        MapPhaseEff(p2);
+//        MapPhaseEff(p2);      // for plotting intermediate results with MapPhaseEff()
 //        MapPhaseEff(p3);
 
         // convert back to mm:
