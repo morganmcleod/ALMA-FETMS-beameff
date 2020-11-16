@@ -44,7 +44,7 @@ const std::string BEAMEFF_SW_VERSION_STRING("2.0.14");
 // 2.0.8:  Display actual pointing angles on the pointing plot.
 //
 // 2.0.7:  Added input file option [settings] invertphase with options {lsb, usb, all, none}
-//         and synonymns {yes, y, t, 1} for all, {no, n, f, 0} for none.  All options case-insensitive.
+//         and synonyms {yes, y, t, 1} for all, {no, n, f, 0} for none.  All options case-insensitive.
 // 2.0.6:  Using multi-pass search with exact expression for fitted phase:
 //         1) CG search from {0, 0, probe-zdistance}
 //         2) Line search along delta_z
