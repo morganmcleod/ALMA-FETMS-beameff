@@ -30,6 +30,7 @@ void AnalyzeResults::print(int _indent) const {
     cout << indent << "phaseAtPeak = " << phaseAtPeak << endl;
     cout << indent << "xCenterOfMass = " << xCenterOfMass << endl;
     cout << indent << "yCenterOfMass = " << yCenterOfMass << endl;
+    cout << indent << "totalPower = " << totalPower << endl;
     cout << indent << "xStepSize = " << xStepSize << endl;
     cout << indent << "yStepSize = " << yStepSize << endl;
     cout << indent << "xDimension = " << xDimension << endl;

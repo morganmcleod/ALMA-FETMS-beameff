@@ -104,11 +104,15 @@ public:
     ///< results are stored and can be retrieved with getCenterOfMass
 
     void getCenterOfMass(float &xCenter, float &yCenter) const
-      { xCenter = results_m.xCenterOfMass;
-        yCenter = results_m.yCenterOfMass; }
     ///< retrieve the caculated center of mass of the beam.
     ///< @param xCenter will contain the x center of mass
     ///< @param yCenter will contain the y center of mass
+      { xCenter = results_m.xCenterOfMass;
+        yCenter = results_m.yCenterOfMass; }
+
+    float getTotalPower() const
+      { return results_m.totalPower; }
+    ///< @return the total linear power found in the Center Of Mass calculation
 
     void subtractForAttenuator(float ifAttenDiff);
     ///< adjust all points for the difference in attenuation.

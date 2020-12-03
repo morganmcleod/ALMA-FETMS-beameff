@@ -50,7 +50,7 @@ namespace BeamFitting {
     static float elNominal;             ///< nominal pointing in El
     static float delta_x_m;             ///< delta_x to hold constant while searching in delta_z
     static float delta_y_m;             ///< delta_y ""
-    static bool approxFit(false);       ///< true=use approximate phase fitting; false=exact.
+    static bool approxFit(false);       ///< true=use small-angle approximation phase model for fit; false=use exact model
     bool reduceSubreflector(false);     ///< true=use a reduced size subreflector to search
 
     void FitPhase(ScanData *currentScan, float _azNominal, float _elNominal) {
@@ -61,9 +61,6 @@ namespace BeamFitting {
         int iter_phase;         // how many iterations taken by frprmn()
         float fret_phase;       // fit residual error returned by frprmn() = 1-eta_phase
         float p[nTerms_m + 1];  // terms of the fit search: [0, x, y, z]
-//        float p1[nTerms_m + 1];
-//        float p2[nTerms_m + 1];    // for plotting intermediate results with MapPhaseEff()
-//        float p3[nTerms_m + 1];
 
         // start from the probe z distance as our guess for delta_z:
         float k = fitPhaseScan -> getKWaveNumber();  // rad/m
@@ -73,12 +70,11 @@ namespace BeamFitting {
         p[2] = 0.0;
         p[3] = zRadians;
 
-//        cout << "k = " << k / 1000.0 << " rad/mm" << endl;
         cout << "StartPos 0: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
                                << 1000.0 * p[3] / k << " mm, " << endl;
 
-        // first find the phase center minimum closest to the given Z distance:
+        // first pass multidimensional search with a reduced subreflector mask:
         reduceSubreflector = true;
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
 
@@ -88,30 +84,7 @@ namespace BeamFitting {
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
-//        memcpy(p1, p, (nTerms_m + 1) * sizeof(float));   // for plotting intermediate results with MapPhaseEff()
-
-#if 0
-        // now do a line search along the z axis:
-        delta_x_m = p[1];
-        delta_y_m = p[2];
-        float ax = p[3] - zRadians / 2;
-        float bx = p[3] + zRadians / 2;
-        float cx, fa, fb, fc;
-
-        // bracket the minimum of the phase fit function in delta_z:
-        mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
-
-        // now find the exact delta_z giving the minimum:
-        fb = brent(ax, bx, cx, function_phase_z, linSearchTol, &bx);
-        p[3] = bx;
-
-        cout << "LineSrch 1: " << 1000.0 * p[1] / k << " mm, "
-                               << 1000.0 * p[2] / k << " mm, "
-                               << 1000.0 * p[3] / k << " mm, "
-                               << "eta=" << 1.0 - fb << endl;
-#endif
-
-        // now search the space around the first delta_x, delta_y and the new delta_z:
+        // second pass search with the full subreflector maskL
         reduceSubreflector = false;
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
 
@@ -120,40 +93,6 @@ namespace BeamFitting {
                                << 1000.0 * p[3] / k << " mm, "
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
-
-#if 0
-//        memcpy(p2, p, (nTerms_m + 1) * sizeof(float));    // for plotting intermediate results with MapPhaseEff()
-
-        // another bracket and linear search in delta_z:
-        delta_x_m = p[1];
-        delta_y_m = p[2];
-        ax = p[3] - 1.0;
-        bx = p[3] + 1.0;
-        mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
-        fb = brent(ax, bx, cx, function_phase_z, linSearchTol, &bx);
-        p[3] = bx;
-
-        cout << "LineSrch 2: " << 1000.0 * p[1] / k << " mm, "
-                               << 1000.0 * p[2] / k << " mm, "
-                               << 1000.0 * p[3] / k << " mm, "
-                               << "eta=" << 1.0 - fb << endl;
-
-        // final multidimensional search with full subreflector:
-        reduceSubreflector = false;
-        frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
-
-        cout << "FitPhase 3: " << 1000.0 * p[1] / k << " mm, "
-                               << 1000.0 * p[2] / k << " mm, "
-                               << 1000.0 * p[3] / k << " mm, "
-                               << "eta=" << 1.0 - fret_phase << ", "
-                               << iter_phase << " iterations<br>" << endl;
-#endif
-//        memcpy(p3, p, (nTerms_m + 1) * sizeof(float));  // for plotting intermediate results with MapPhaseEff()
-
-        // Output plottable matrices of eta_phase vs delta_x, delta_y:
-//        MapPhaseEff(p1);
-//        MapPhaseEff(p2);      // for plotting intermediate results with MapPhaseEff()
-//        MapPhaseEff(p3);
 
         // convert back to mm:
         float deltaX = 1000.0 * p[1] / k;

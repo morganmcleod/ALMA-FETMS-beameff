@@ -246,6 +246,7 @@ void ScanDataRaster::calcPeakAndPhase() {
 void ScanDataRaster::calcCenterOfMass() {
     results_m.xCenterOfMass = 0;
     results_m.yCenterOfMass = 0;
+    results_m.totalPower = 0;
 
     // loop to accumulate center of mass:
     vector<float>::const_iterator itX = xArray_m.begin();
@@ -279,6 +280,7 @@ void ScanDataRaster::calcCenterOfMass() {
     }
     results_m.xCenterOfMass = sumXAmp / sumAmp;
     results_m.yCenterOfMass = sumYAmp / sumAmp;
+    results_m.totalPower = sumAmp;
 }
 
 void ScanDataRaster::subtractForAttenuator(float ifAttenDiff) {

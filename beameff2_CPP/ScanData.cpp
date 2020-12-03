@@ -283,6 +283,12 @@ void ScanData::getFFCenterOfMass(float &xCenter, float &yCenter) const {
         FF_m -> getCenterOfMass(xCenter, yCenter);
 }
 
+float ScanData::getFFTotalPower() const {
+    if (FF_m)
+        return FF_m -> getTotalPower();
+    else
+        return 0.0;
+}
 void ScanData::combineDualZScans() {
     if (NF_m && NF2_m) {
         combineDualZScans_impl(*NF_m, *NF2_m);
@@ -379,13 +385,10 @@ void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption,
     if (NF_m) {
         NF_m -> calcStepSize();
         NF_m -> calcPeakAndPhase();
-        NF_m -> calcCenterOfMass();
     }
     if (FF_m) {
         FF_m -> calcStepSize();
         FF_m -> calcPeakAndPhase();
-        // find the actual (center of mass) beam pointing:
-        FF_m -> calcCenterOfMass();
         // for copol scans, compute the unwrapped phase, needed for finding the phase center:
 
         // if the pointing to use for calculation is not already specified from another beam,
@@ -404,7 +407,7 @@ void ScanData::analyzeBeams(ALMAConstants::PointingOptions pointingOption,
         // Use the copolPeakAmp for normalizing if specified. Otherwise normalize using this beam's peak:
         float peak = (copolPeakAmp != 0.0) ? copolPeakAmp : FF_m -> getPeak();
 
-        // Calculate sums to compute efficiencies using the pointing and radius determined abiove:
+        // Calculate sums to compute efficiencies using the pointing and radius determined above:
         FF_m -> analyzeBeam(azPointing, elPointing, subreflectorRadius, peak, doUnwrapPhase);
     }
 }

@@ -27,6 +27,7 @@ struct AnalyzeResults {
     float phaseAtPeak;          ///< phase at the amplitude peak.
     float xCenterOfMass;        ///< center of mass x coordinate.
     float yCenterOfMass;        ///< center of mass y coordinate.
+    float totalPower;           ///< total mass as linear power from center of mass calculation.
     float xStepSize;            ///< step size in x coordinate
     float yStepSize;            ///< step size in y coordinate
     unsigned xDimension;        ///< scan grid size in x

@@ -78,6 +78,9 @@ public:
     ///< @param xCenter will contain the x center of mass
     ///< @param yCenter will contain the y center of mass
 
+    float getFFTotalPower() const;
+    ///< @return the total power in linear units collected during the Center Of Mass calculation
+
     void analyzeBeams(ALMAConstants::PointingOptions pointingOption,
                       float azPointing = 0.0, float elPointing = 0.0,
                       float copolPeakAmp = 0.0, bool doUnwrapPhase = false);

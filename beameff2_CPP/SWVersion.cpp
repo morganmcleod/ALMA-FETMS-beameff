@@ -21,12 +21,14 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.14");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.15");
 
 //*******                        Be sure to update resource.rc!
 
 
 // Version history
+// 2.0.15: When using pointingOption::ACTUAL, use the weighted average of the pol0, pol1 beam direction in the phase fit model.
+//         Moved call to calcCenterOfMass() from ScanData::AnalyzeBeams() to ScanSet::loadScan() so both pols are precomputed before the first call to FitPhase.
 // 2.0.14: FitPhase: ftol=1.19e-7, reduceSubReflector=true for first pass, no z linear searches
 // 2.0.13: Rotate xtics in plots.  FitPhase instrumented to make surface plots of eta_phase around the phase center.
 //         Print error message if a file can't be loaded.   Fix NF axis units 'mm'

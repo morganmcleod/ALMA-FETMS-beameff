@@ -95,8 +95,11 @@ bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection,
         // combine dual Z scans:
         scan -> combineDualZScans();
 
-        // determine which slot to store the scan object in:
+        // calculate center of mass for copol scans:
+        if (scan -> getScanType() == ScanData::COPOL || scan -> getScanType() == ScanData::COPOL180)
+            scan -> calcCenterOfMass();
 
+        // determine which slot to store the scan object in:
         // check whether this is a 180-degree copol scan for phase center correction (can be either pol):
         if (scan -> getScanType() == ScanData::COPOL180) {
             if (Copol180_m) {
@@ -286,24 +289,39 @@ bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &azPointing, float &e
     // accumulate values needed for efficiency calculation, using the selected pointing option:
     copolScan -> analyzeBeams(pointingOption_m, 0.0, 0.0, 0.0, unwrapPhaseOption_m);
 
-    // get the actual pointing angles:
-    float azActual(0), elActual(0);
+    // get the actual pointing angles for THIS BEAM:
+    float azActual, elActual;
     copolScan -> getFFCenterOfMass(azActual, elActual);
 
-    // If the pointing option is ACTUAL then return that as azPointing, elPointing
+    // pointing we will use for FitPhase which may be different:
+    float azPhaseFit, elPhaseFit;
+
+    // If the pointing option is ACTUAL then find the weighted average pointing of pol0 and po1 beams:
     if (pointingOption_m == ALMAConstants::ACTUAL) {
+        float az0, el0, az1, el1;
+        CopolPol0_m -> getFFCenterOfMass(az0, el0);
+        CopolPol1_m -> getFFCenterOfMass(az1, el1);
+        float totalPower0 = CopolPol0_m -> getFFTotalPower();
+        float totalPower1 = CopolPol1_m -> getFFTotalPower();
+        float weight0 = (totalPower0 / (totalPower0 + totalPower1));
+        azPhaseFit = (az0 * weight0) + (az1 * (1.0 - weight0));
+        elPhaseFit = (el0 * weight0) + (el1 * (1.0 - weight0));
+        // but return the pointing of THIS BEAM:
         azPointing = azActual;
         elPointing = elActual;
-        cout << "using azActual = " << azPointing << "<br>" << endl;
-        cout << "using elActual = " << elPointing << "<br>" << endl;
-    // otherwise use the nominal pointing for the specified band and pointint option:
-    } else
+        cout << "FitPhase using average of pol0, pol1 pointings: Az=" << azPhaseFit << " El=" << elPhaseFit << "<br>" << endl;
+    // otherwise use the nominal pointing for the specified band and pointing option:
+    } else {
         ALMAConstants::getNominalAngles(band_m, pointingOption_m, azPointing, elPointing);
+        azPhaseFit = azPointing;
+        elPhaseFit = elPointing;
+        cout << "FitPhase using nominal pointing: Az=" << azPhaseFit << " El=" << elPhaseFit << "<br>" << endl;
+    }
 
-    // perform phase fit using the selected pointing option as a starting guess:
-    BeamFitting::FitPhase(copolScan, azPointing, elPointing);
+    // perform phase fit using the selected pointing angle:
+    BeamFitting::FitPhase(copolScan, azPhaseFit, elPhaseFit);
 
-    // perform amplitude fit always using the ACTUAL beam pointing as a starting guess:
+    // perform amplitude fit always using the ACTUAL pointing of THIS BEAM.
     BeamFitting::FitAmplitude(copolScan, azActual, elActual);
     return true;
 }
