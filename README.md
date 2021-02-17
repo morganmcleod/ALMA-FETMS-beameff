@@ -11,6 +11,20 @@ Beam efficiency calculator for the ALMA Front End Test and Measurement System
 http://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules 
 
 Recent version history:
+* 2.0.15:  When using pointingOption::ACTUAL, use the weighted average of the pol0, pol1 beam direction in the phase fit model.
+           Moved call to calcCenterOfMass() from ScanData::AnalyzeBeams() to ScanSet::loadScan() so both pols are precomputed before the first call to FitPhase.
+* 2.0.14:  FitPhase: ftol=1.19e-7, reduceSubReflector=true for first pass, no z linear searches
+* 2.0.13:  Rotate xtics in plots.  FitPhase instrumented to make surface plots of eta_phase around the phase center.
+           Print error message if a file can't be loaded.   Fix NF axis units 'mm'
+* 2.0.12:  Fix bug when using reduced subreflector, but that code is disabled in this version.
+           Prints all steps of the phase center search to stdout.
+           Only makes unwrapped phase plots if "[settings] unwrapphase=1"
+           Fix bug in NF axis tics.
+* 2.0.11:  Unwrap FF phase defaults to false if not specified with "[settings] unwrapphase=1"
+           Added version resource for Windows.
+* 2.0.10:  Unwrap FF phase before phase fit; use a reduced subreflector mask for the first pass of phase fit.
+           ScanDataRaster: store phase in radians, not degrees.
+           Added plot_copol_ffphase_unwrap and plot_copol_ffphase_model to output file.
  * 2.0.9:  Removed outputs shift_from_focus_mm, subreflector_shift_mm, and defocus_efficiency_due_to_moving_the_subreflector.
            Their calculation method was broken and of dubious valueR.
  * 2.0.8:  Display actual pointing angles on the pointing plot.
