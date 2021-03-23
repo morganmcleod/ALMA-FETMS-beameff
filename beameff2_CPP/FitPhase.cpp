@@ -64,7 +64,7 @@ namespace BeamFitting {
 
         // start from the probe z distance as our guess for delta_z:
         float k = fitPhaseScan -> getKWaveNumber();  // rad/m
-        float zRadians = fitPhaseScan -> getZDistance() * k / 1000.0;
+        float zRadians = - fitPhaseScan -> getZDistance() * k / 1000.0;
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;

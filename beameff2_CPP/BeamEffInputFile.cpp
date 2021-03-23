@@ -184,10 +184,20 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
         int val = iniparser_getint(dict_m, "settings:unwrapphase", 0);
         unwrapPhaseOption_m = (val != 0);
 
-
         // Read the gnuplot path:
         pval = iniparser_getstring(dict_m, "settings:gnuplot", "");
         gnuplotPath_m = pval;
+
+        // Read it from environment variable if it was not specified:
+        if (gnuplotPath_m.empty()) {
+            cout << "Gnuplot not specified in input file.";
+            pval = std::getenv("GNUPLOT_BIN");
+            if (pval) {
+                gnuplotPath_m = pval;
+                cout << " Found from env: GNUPLOT_BIN=" << gnuplotPath_m;
+            }
+            cout << " <br>" << endl;
+        }
 
         // Load all the scanset and section metadata:
         loadScanSetIds();

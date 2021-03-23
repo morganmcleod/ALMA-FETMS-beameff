@@ -2,3 +2,6 @@
 /doc/
 DoxygenIndex.html
 beameff2_64
+testdata_local/
+*.png
+output.txt
