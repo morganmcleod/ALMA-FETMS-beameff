@@ -573,7 +573,7 @@ bool ScanSet::updateCopolSection(dictionary *dict, const std::string &section, c
     const AnalyzeResults &FF = pFF -> getAnalyzeResults();
     const AnalyzeResults &NF = pNF -> getAnalyzeResults();
 
-    updateDictionary(dict, section, "zdistance",            to_string(copol -> getZDistance(), std::fixed, 2));
+    updateDictionary(dict, section, "zdistance",            to_string(copol -> getNominalFocusZ(), std::fixed, 2));
 
     updateDictionary(dict, section, "ifatten_diff",         to_string(eff.ifatten_diff, std::fixed, 3));
     updateDictionary(dict, section, "eta_spillover",        to_string(eff.eta_spillover, std::fixed, 6));
@@ -642,7 +642,7 @@ bool ScanSet::updateXpolSection(dictionary *dict, const std::string &section, co
 
     const AnalyzeResults &FF = pFF -> getAnalyzeResults();
 
-    updateDictionary(dict, section, "zdistance",            to_string(xpol -> getZDistance(), std::fixed, 2));
+    updateDictionary(dict, section, "zdistance",            to_string(xpol -> getNominalFocusZ(), std::fixed, 2));
     updateDictionary(dict, section, "eta_spill_co_cross",   to_string(eff.eta_spill_co_cross, std::fixed, 6));
     updateDictionary(dict, section, "eta_pol_on_secondary", to_string(eff.eta_pol_on_secondary, std::fixed, 6));
     updateDictionary(dict, section, "eta_pol_spill",        to_string(eff.eta_pol_spill, std::fixed, 6));

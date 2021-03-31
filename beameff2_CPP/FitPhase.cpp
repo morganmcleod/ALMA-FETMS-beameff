@@ -62,13 +62,12 @@ namespace BeamFitting {
         float fret_phase;       // fit residual error returned by frprmn() = 1-eta_phase
         float p[nTerms_m + 1];  // terms of the fit search: [0, x, y, z]
 
-        // start from the probe z distance as our guess for delta_z:
+        // start from the nominal focus Z as our guess for delta_z:
         float k = fitPhaseScan -> getKWaveNumber();  // rad/m
-        float zRadians = - fitPhaseScan -> getZDistance() * k / 1000.0;
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
-        p[3] = zRadians;
+        p[3] = fitPhaseScan -> getNominalFocusZ() * k / 1000.0;
 
         cout << "StartPos 0: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "

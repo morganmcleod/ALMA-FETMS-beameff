@@ -28,8 +28,8 @@ const std::string BEAMEFF_SW_VERSION_STRING("2.0.16b0");
 
 // Version history
 // 2.0.16b0: Look for GNUPLOT_BIN in environment if not specified in input file.
-//         Initialize phase fit at -zdistance.
-//         Create output dir if not exists
+//         Initialize nominal focus at -zdistance, but invert it to positive if scan phase is inverted.
+//         Create output dir if not exists.
 // 2.0.15: When using pointingOption::ACTUAL, use the weighted average of the pol0, pol1 beam direction in the phase fit model.
 //         Moved call to calcCenterOfMass() from ScanData::AnalyzeBeams() to ScanSet::loadScan() so both pols are precomputed before the first call to FitPhase.
 // 2.0.14: FitPhase: ftol=1.19e-7, reduceSubReflector=true for first pass, no z linear searches
