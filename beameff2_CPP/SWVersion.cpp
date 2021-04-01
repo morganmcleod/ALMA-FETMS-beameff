@@ -21,12 +21,13 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.16b0");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.16b1");
 
 //*******                        Be sure to update resource.rc!
 
 
 // Version history
+// 2.0.16b1: Do a linear search in Z before multidimensional FitPhase.
 // 2.0.16b0: Look for GNUPLOT_BIN in environment if not specified in input file.
 //         Initialize nominal focus at -zdistance, but invert it to positive if scan phase is inverted.
 //         Create output dir if not exists.

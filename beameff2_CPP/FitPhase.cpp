@@ -64,12 +64,31 @@ namespace BeamFitting {
 
         // start from the nominal focus Z as our guess for delta_z:
         float k = fitPhaseScan -> getKWaveNumber();  // rad/m
+        float zRadians = fitPhaseScan -> getNominalFocusZ() * k / 1000.0;
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
-        p[3] = fitPhaseScan -> getNominalFocusZ() * k / 1000.0;
+        p[3] = zRadians;
 
         cout << "StartPos 0: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, " << endl;
+
+        // First do a line search along the z axis:
+        delta_x_m = p[1];
+        delta_y_m = p[2];
+        float ax = p[3] - fabsf(zRadians) / 2;
+        float bx = p[3] + fabsf(zRadians) / 2;
+        float cx, fa, fb, fc;
+
+        // bracket the minimum of the phase fit function in delta_z:
+        mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
+
+        // now find the exact delta_z giving the minimum:
+        fb = brent(ax, bx, cx, function_phase_z, linSearchTol, &bx);
+        p[3] = bx;
+
+        cout << "LineSrch 1: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
                                << 1000.0 * p[3] / k << " mm, " << endl;
 
