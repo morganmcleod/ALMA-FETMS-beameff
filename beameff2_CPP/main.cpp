@@ -23,7 +23,7 @@
 #include "BeamEffInputFile.h"
 #include "ScanSet.h"
 #include "ScanData.h"
-
+#include <cstdlib>
 #include <iostream>
 using namespace std;
 
@@ -34,12 +34,7 @@ int main(int argc, char *argv[]) {
     cout << "<br> Beam Efficiency Calculator Version  " << BEAMEFF_SW_VERSION_STRING << endl;
     cout << "<br> ********************************************\n<br>" << endl;
 
-    // temporary input file name can be put here for debugging:
     string inputFile = "";
-                     //"T:\\validation2.0\\fecfg1076\\ssid2091\\output2\\1_13_2016__4_41 PM_INPUT.txt";
-                     //"T:\\validation2.0\\fecfg1076\\ssid1749\\output2\\1_13_2016__2_50 PM_INPUT.txt";
-                     //"T:\\validation2.0\\fecfg866\\ssid1647\\output2\\1_13_2016__4_52 PM_INPUT.txt";
-                     //"T:\\validation2.0\\RF50\\output2\\1_12_2016__3_59 PM_INPUT.txt";
 
     if (argc > 1)
         inputFile = argv[1];
@@ -97,6 +92,10 @@ int main(int argc, char *argv[]) {
         else {
             // calculate beam efficiencies:
             SS.calcEfficiencies(inFile.getPointingOption(), inFile.getUnwrapPhaseOption());
+
+            // Create the output directory in case it does not exist:
+            string cmd = "mkdir " + inFile.getOuputDirectory();
+            std::system(cmd.c_str());
 
             // Generate all the plots:
             SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath());

@@ -43,7 +43,7 @@ namespace BeamFitting {
     void MapPhaseEff(float p[]);
 
     const int nTerms_m(3);              ///< terms of phase center model
-    const float linSearchTol(4.40e-4);  ///< linear search tolerance = about the square root of the machine epsilon for float
+    const float tol(4.40e-4);  ///< linear search tolerance = about the square root of the machine epsilon for float
     const float ftol(1.19e-7);          ///< function evaluation tolerance = about the machine epsilon for float
     ScanData *fitPhaseScan(NULL);       ///< Scan we are currently fitting against
     static float azNominal;             ///< nominal pointing in Az
@@ -62,9 +62,9 @@ namespace BeamFitting {
         float fret_phase;       // fit residual error returned by frprmn() = 1-eta_phase
         float p[nTerms_m + 1];  // terms of the fit search: [0, x, y, z]
 
-        // start from the probe z distance as our guess for delta_z:
+        // start from the nominal focus Z as our guess for delta_z:
         float k = fitPhaseScan -> getKWaveNumber();  // rad/m
-        float zRadians = fitPhaseScan -> getZDistance() * k / 1000.0;
+        float zRadians = fitPhaseScan -> getNominalFocusZ() * k / 1000.0;
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
@@ -73,6 +73,24 @@ namespace BeamFitting {
         cout << "StartPos 0: " << 1000.0 * p[1] / k << " mm, "
                                << 1000.0 * p[2] / k << " mm, "
                                << 1000.0 * p[3] / k << " mm, " << endl;
+
+        // First do a line search along the z axis:
+        delta_x_m = p[1];
+        delta_y_m = p[2];
+        float ax = p[3] - fabsf(zRadians) / 2;
+        float bx = p[3] + fabsf(zRadians) / 2;
+        float cx, fa, fb, fc;
+
+//        // bracket the minimum of the phase fit function in delta_z:
+//        mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
+//
+//        // now find the exact delta_z giving the minimum:
+//        fb = brent(ax, bx, cx, function_phase_z, tol, &bx);
+//        p[3] = bx;
+//
+//        cout << "LineSrch 1: " << 1000.0 * p[1] / k << " mm, "
+//                               << 1000.0 * p[2] / k << " mm, "
+//                               << 1000.0 * p[3] / k << " mm, " << endl;
 
         // first pass multidimensional search with a reduced subreflector mask:
         reduceSubreflector = true;
@@ -84,7 +102,24 @@ namespace BeamFitting {
                                << "eta=" << 1.0 - fret_phase << ", "
                                << iter_phase << " iterations<br>" << endl;
 
-        // second pass search with the full subreflector maskL
+        // Second a line search along the z axis:
+        delta_x_m = p[1];
+        delta_y_m = p[2];
+        ax = p[3] - fabsf(zRadians) / 2;
+        bx = p[3] + fabsf(zRadians) / 2;
+
+        // bracket the minimum of the phase fit function in delta_z:
+        mnbrak(&ax, &bx, &cx, &fa, &fb, &fc, function_phase_z);
+
+        // now find the exact delta_z giving the minimum:
+        fb = brent(ax, bx, cx, function_phase_z, tol, &bx);
+        p[3] = bx;
+
+        cout << "LineSrch 2: " << 1000.0 * p[1] / k << " mm, "
+                               << 1000.0 * p[2] / k << " mm, "
+                               << 1000.0 * p[3] / k << " mm, " << endl;
+
+        // second pass search with the full subreflector mask
         reduceSubreflector = false;
         frprmn(p, nTerms_m, ftol, &iter_phase, &fret_phase, &function_phase, &dfunction_phase);
 
@@ -142,7 +177,6 @@ namespace BeamFitting {
         int i,j;
         float par[nTerms_m + 1];
         float delta = 0.01, del;
-        float tol = 4.40e-4;
 
         const ScanDataRaster *pscan = fitPhaseScan -> getFFScan();
         if (!pscan)

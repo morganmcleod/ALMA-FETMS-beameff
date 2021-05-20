@@ -125,9 +125,9 @@ public:
       { return tilt_m; }
     ///< @return the tilt angle of the measurement
 
-    float getZDistance() const
-      { return zDistance_m; }
-    ///< @return the probe z distance
+    float getNominalFocusZ() const
+      { return nominalFocusZ_m; }
+    ///< @return the nominal Z position of the phase center, computed from the initial probe Z distance.
 
     float getIfAtten() const
       { return ifAtten_m; }
@@ -191,7 +191,7 @@ private:
     int pol_m;                  ///< -1=undefined, 0 or 1
     int sb_m;                   ///< -1=undefined, 1=USB, 2=LSB
     int tilt_m;                 ///< tilt angle in degrees.
-    float zDistance_m;          ///< Z distance of scan probe in mm
+    float nominalFocusZ_m;          ///< Z distance of scan probe in mm
     float ifAtten_m;            ///< IF processor attenuation in dB for this single scan.
 
     unsigned startrowNF_m;      ///< number of header rows to skip when reading filenameNF

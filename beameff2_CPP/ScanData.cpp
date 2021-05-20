@@ -58,7 +58,7 @@ void ScanData::clear() {
     rfGHz_m = 0.0;
     pol_m = sb_m = -1;
     tilt_m = 0;
-    zDistance_m = 0;
+    nominalFocusZ_m = 0;
     ifAtten_m = 0;
 
     startrowNF_m = startrowFF_m = startrowNF2_m = startrowFF2_m = 0;
@@ -144,15 +144,17 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
     sectionKey += ":tilt";
     tilt_m = iniparser_getint(dict, sectionKey.c_str(), 0);
 
-    //probe zDistance_m
+    //probe Z distance
     sectionKey = inputSection_m;
     sectionKey += ":zdistance";
-    zDistance_m = static_cast<float>(iniparser_getdouble(dict, sectionKey.c_str(), 0.0));
-    //If zero or not provided, assume the old FETMS default of 260 mm:
-    if (zDistance_m == 0.0) {
-        zDistance_m = 260.0;
-        cout << "zdistance not specified in input. Using " << zDistance_m << " mm<br>" << endl;
+    nominalFocusZ_m = static_cast<float>(iniparser_getdouble(dict, sectionKey.c_str(), 0.0));
+    //If zero or not provided, assume the FETMS default of 200 mm:
+    if (nominalFocusZ_m == 0.0) {
+        nominalFocusZ_m = 200.0;
+        cout << "zdistance not specified in input. Using " << nominalFocusZ_m << " mm<br>" << endl;
     }
+    //Start the nominal focus is negative relative to the probe (but may get inverted in loadListings):
+    nominalFocusZ_m = -nominalFocusZ_m;
 
     //ifAtten_m
     sectionKey = inputSection_m;
@@ -242,6 +244,10 @@ bool ScanData::loadListings(const std::string &delim, ALMAConstants::InvertPhase
 
     if (rotateFF)
         cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating scans.<br>" << endl;
+
+    if (invertPhase)
+        // we now expect the nominal focus to be at positive Z:
+        nominalFocusZ_m = -nominalFocusZ_m;
 
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
@@ -494,7 +500,7 @@ void ScanData::print(int _indent) const {
     cout << indent << "rfGHz_m = " << rfGHz_m << endl;
     cout << indent << "pol_m = " << pol_m << endl;
     cout << indent << "sb_m = " << sb_m << endl;
-    cout << indent << "zDistance_m = " << zDistance_m << endl;
+    cout << indent << "nominalFocusZ_m = " << nominalFocusZ_m << endl;
     cout << indent << "ifAtten_m = " << ifAtten_m << endl;
 
     cout << indent << "startrowNF_m = " << startrowNF_m << endl;

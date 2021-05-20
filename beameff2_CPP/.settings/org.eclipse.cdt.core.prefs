@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/GNUPLOT_BIN/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/GNUPLOT_BIN/operation=append
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/GNUPLOT_BIN/value=C\:\\gnuplot\\bin\\gnuplot.exe
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/append=true
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/appendContributed=true
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/GNUPLOT_BIN/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/GNUPLOT_BIN/operation=append
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/GNUPLOT_BIN/value=C\:\\gnuplot\\bin\\gnuplot.exe
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/append=true
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/appendContributed=true
