@@ -162,23 +162,36 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
 
         // Read the pointing option to use:
         pval = iniparser_getstring(dict_m, "settings:centers", "nominal");
-        if (!stricmp(pval, "actual"))
+        if (!stricmp(pval, "actual")) {
             pointingOption_m = ALMAConstants::ACTUAL;
-        else if (!stricmp(pval, "7meter"))
+            cout << "Using pointing: ACTUAL" << endl;
+        } else if (!stricmp(pval, "7meter")) {
             pointingOption_m = ALMAConstants::ACA7METER;
-        else if(!strcmp(pval, "band1test"))
+            cout << "Using pointing: ACA7METER" << endl;
+        } else if(!strcmp(pval, "band1test")) {
             pointingOption_m = ALMAConstants::BAND1TEST;
+            cout << "Using pointing: BAND1TEST" << endl;
+        } else {
+            cout << "Using pointing: NOMINAL for 12-meter antennas" << endl;
+        }
 
         // Read the invert phase and rotate FF option to use:
         pval = iniparser_getstring(dict_m, "settings:invertphase", "lsb");
-        if (!stricmp(pval, "lsb"))
+        if (!stricmp(pval, "lsb")) {
             invertPhaseOption_m = ALMAConstants::INVERT_LSB;
-        else if (!stricmp(pval, "usb"))
+            cout << "Inverting phase: LSB" << endl;
+        } else if (!stricmp(pval, "usb")) {
             invertPhaseOption_m = ALMAConstants::INVERT_USB;
-        else if (!stricmp(pval, "all") || !stricmp(pval, "yes") || !stricmp(pval, "y") || !stricmp(pval, "t") || !stricmp(pval, "1"))
+            cout << "Inverting phase: USB" << endl;
+        } else if (!stricmp(pval, "all") || !stricmp(pval, "yes") || !stricmp(pval, "y") || !stricmp(pval, "t") || !stricmp(pval, "1")) {
             invertPhaseOption_m = ALMAConstants::INVERT_ALL;
-        else if (!stricmp(pval, "none") || !stricmp(pval, "no") || !stricmp(pval, "n") || !stricmp(pval, "f") || !stricmp(pval, "0"))
+            cout << "Inverting phase: ALL" << endl;
+        } else if (!stricmp(pval, "none") || !stricmp(pval, "no") || !stricmp(pval, "n") || !stricmp(pval, "f") || !stricmp(pval, "0")) {
             invertPhaseOption_m = ALMAConstants::INVERT_NONE;
+            cout << "Inverting phase: NONE" << endl;
+        } else {
+            cout << "Inverting phase: LSB" << endl;
+        }
 
         // Read the unwrap phase option:
         int val = iniparser_getint(dict_m, "settings:unwrapphase", 0);

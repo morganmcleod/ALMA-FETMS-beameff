@@ -153,8 +153,6 @@ bool ScanData::loadFromIni(const dictionary *dict, const std::string inputSectio
         nominalFocusZ_m = 200.0;
         cout << "zdistance not specified in input. Using " << nominalFocusZ_m << " mm<br>" << endl;
     }
-    //Start the nominal focus is negative relative to the probe (but may get inverted in loadListings):
-    nominalFocusZ_m = -nominalFocusZ_m;
 
     //ifAtten_m
     sectionKey = inputSection_m;
@@ -242,12 +240,11 @@ bool ScanData::loadListings(const std::string &delim, ALMAConstants::InvertPhase
         break;
     }
 
-    if (rotateFF)
-        cout << "Pol " << pol_m << " " << getScanTypeString() << ": rotating scans.<br>" << endl;
-
-    if (invertPhase)
-        // we now expect the nominal focus to be at positive Z:
-        nominalFocusZ_m = -nominalFocusZ_m;
+    if (rotateFF || invertPhase)
+        cout << "Pol " << pol_m << " " << getScanTypeString() << " FF: "
+        << (rotateFF ? "Rotating scans. " : "")
+        << (invertPhase ? "Inverting phase." : "")
+        << endl;
 
     // create raster objects and load each file which is specified:
     if (!filenameNF_m.empty()) {
