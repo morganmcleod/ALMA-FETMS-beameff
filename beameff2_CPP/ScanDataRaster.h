@@ -130,8 +130,8 @@ public:
     bool unwrapPhase();
     ///< unwraps the phase array
 
-    float calcPhaseEfficiency(float p[], float azNominal, float elNominal,
-                              bool approx = false, bool reduceSubreflector = false) const;
+    double calcPhaseEfficiency(double p[], float azNominal, float elNominal,
+                               bool approx = false, bool reduceSubreflector = false) const;
     ///< calculate phase efficiency for the given phase center model p[].
     ///< called from within FitPhase()
     ///< @param p: array giving phase phase center guess in radians {delta_x, delta_y, delta_z}.
@@ -140,7 +140,7 @@ public:
     ///< @param reduceSubreflector:  if true, reduce the subreflector radius to calculate over.
     ///< @return phase efficiency in 0-1.
 
-    float calcAmplitudeEfficiency(float p[], float azActual, float elActual) const;
+    double calcAmplitudeEfficiency(double p[], float azActual, float elActual) const;
     ///< calculate amplitude efficiency at the given amplitude fit model p[].
     ///< called from within FitAmplitude()
     ///< @param p: array giving amplitude fit model

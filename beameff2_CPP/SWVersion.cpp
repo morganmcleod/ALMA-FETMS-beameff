@@ -21,12 +21,15 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.16b3");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.16b4");
 
 //*******                        Be sure to update resource.rc!
 
 
 // Version history
+// 2.0.16b4: From https://github.com/chmunozpardo/ALMA-FETMS-beameff/tree/phase_fit_dev 20acf80,
+//           converted to double-precision: nr, ScanDataRaster::calcPhaseEfficiency, calcAmplitudeEfficiency, FitPhase.cpp vars and functions.
+//           But other changes not taken from that branch: sign inversions, initial linear Z search.
 // 2.0.16b3: Using positive probe Z distance as nominalFocusZ
 //           FitPhase uses linear search between 3D searches
 //           Print pointing and invert phase options during load.
