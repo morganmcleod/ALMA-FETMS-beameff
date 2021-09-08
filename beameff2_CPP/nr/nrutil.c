@@ -3,7 +3,10 @@
    file nrutil.c that is supplied in the 'misc' subdirectory.
    *That* file is the one from the book, and contains both ANSI and
    traditional K&R versions, along with #ifdef macros to select the
-   correct version.  *This* file contains only ANSI C.               */
+   correct version.  *This* file contains only ANSI C.
+
+   See README-nr.txt for more information.
+*/
 
 #include <stdio.h>
 #include <stddef.h>

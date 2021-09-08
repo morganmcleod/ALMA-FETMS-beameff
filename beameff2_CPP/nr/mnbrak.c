@@ -8,6 +8,12 @@
 
 void mnbrak(double *ax, double *bx, double *cx, double *fa, double *fb, double *fc,
 	double (*func)(double))
+/* Given a function func, and given distinct initial points ax and bx, this routine searches in
+the downhill direction (defined by the function as evaluated at the initial points) and returns
+new points ax, bx, cx that bracket a minimum of the function. Also returned are the function
+values at the three points, fa, fb, and fc.
+See README-nr.txt for more information.
+*/
 {
 	double ulim,u,r,q,fu,dum;
 

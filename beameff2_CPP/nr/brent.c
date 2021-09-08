@@ -9,6 +9,13 @@
 
 double brent(double ax, double bx, double cx, double (*f)(double), double tol,
 	double *xmin)
+/* Given a function f, and given a bracketing triplet of abscissas ax, bx, cx (such that bx is
+between ax and cx, and f(bx) is less than both f(ax) and f(cx)), this routine isolates
+the minimum to a fractional precision of about tol using Brent’s method. The abscissa of
+the minimum is returned as xmin, and the minimum function value is returned as brent, the
+returned function value.
+See README-nr.txt for more information.
+*/
 {
 	int iter;
 	char errmesg[100];

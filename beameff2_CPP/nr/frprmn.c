@@ -11,6 +11,13 @@ void linmin(double p[], double xi[], int n, double *fret, double (*func)(double 
 
 void frprmn(double *p, int n, double ftol, int *iter, double *fret,
 	double (*func)(double []), void (*dfunc)(double [], double []))
+/* Given a starting point p[1..n], Fletcher-Reeves-Polak-Ribiere minimization is performed on a
+function func, using its gradient as calculated by a routine dfunc. The convergence tolerance
+on the function value is input as ftol. Returned quantities are p (the location of the minimum),
+iter (the number of iterations that were performed), and fret (the minimum value of the
+function). The routine linmin is called to perform line minimizations.
+See README-nr.txt for more information.
+*/
 {
 	int j,its;
 	double gg,gam,fp,dgg;

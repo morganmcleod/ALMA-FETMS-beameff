@@ -23,7 +23,8 @@
 
 #include "dictionary.h"
 #include "ALMAConstants.h"
-#include <math.h>
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <string>
 
 class ScanDataRaster;

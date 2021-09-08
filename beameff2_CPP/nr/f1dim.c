@@ -6,6 +6,9 @@ extern int ncom;
 extern double *pcom,*xicom,(*nrfunc)(double []);
 
 double f1dim(double x)
+/* Must accompany linmin.
+See README-nr.txt for more information.
+*/
 {
 	int j;
 	double f,*xt;

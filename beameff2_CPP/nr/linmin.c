@@ -8,6 +8,13 @@ int ncom;
 double *pcom,*xicom,(*nrfunc)(double []);
 
 void linmin(double p[], double xi[], int n, double *fret, double (*func)(double []))
+/* Given an n-dimensional point p[1..n] and an n-dimensional direction xi[1..n], moves and
+resets p to where the function func(p) takes on a minimum along the direction xi from p,
+and replaces xi by the actual vector displacement that p was moved. Also returns as fret
+the value of func at the returned location p. This is actually all accomplished by calling the
+routines mnbrak and brent.
+See README-nr.txt for more information.
+*/
 {
 	double brent(double ax, double bx, double cx,
 		double (*f)(double), double tol, double *xmin);
