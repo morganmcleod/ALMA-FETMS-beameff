@@ -30,6 +30,7 @@ const std::string BEAMEFF_SW_VERSION_STRING("2.0.17");
 //           Added nr/README-nr.txt
 //           64-bit Build using msys64-mingw64 GCC 10.3.0
 //           Release build with optimization enabled
+//           Fixed parameter mismatch between nr.h and frmprn.c, linmin.c (was causing 32-bit crash)
 // 2.0.16b4: From https://github.com/chmunozpardo/ALMA-FETMS-beameff/tree/phase_fit_dev 20acf80,
 //           converted to double-precision: nr, ScanDataRaster::calcPhaseEfficiency, calcAmplitudeEfficiency, FitPhase.cpp vars and functions.
 //           But other changes not taken from that branch: sign inversions, initial linear Z search.

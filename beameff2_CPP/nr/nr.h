@@ -199,7 +199,7 @@ void fred2(int n, float a, float b, float t[], float f[], float w[],
 float fredin(float x, int n, float a, float b, float t[], float f[], float w[],
 	float (*g)(float), float (*ak)(float, float));
 void frenel(float x, float *s, float *c);
-void frprmn(double *p, int n, float ftol, int *iter, double *fret,
+void frprmn(double *p, int n, double ftol, int *iter, double *fret,
 	double (*func)(double []), void (*dfunc)(double [], double []));
 
 void ftest(float data1[], unsigned long n1, float data2[], unsigned long n2,
@@ -265,8 +265,8 @@ void lfit(float x[], float y[], float sig[], int ndat, float a[], int ia[],
 	int ma, float **covar, float *chisq, void (*funcs)(float, float [], int));
 void linbcg(unsigned long n, double b[], double x[], int itol, double tol,
 	 int itmax, int *iter, double *err);
-void linmin(double p[], float xi[], int n, float *fret,
-	float (*func)(float []));
+void linmin(double p[], double xi[], int n, double *fret,
+        double (*func)(double []));
 void lnsrch(int n, float xold[], float fold, float g[], float p[], float x[],
 	 float *f, float stpmax, int *check, float (*func)(float []));
 void load(float x1, float v[], float y[]);
