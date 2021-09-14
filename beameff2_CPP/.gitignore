@@ -6,3 +6,5 @@ testdata_local/
 *.png
 output.txt
 /Release/
+/Debug32/
+/Release32/
