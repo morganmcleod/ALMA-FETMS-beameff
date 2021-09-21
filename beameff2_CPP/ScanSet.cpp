@@ -1213,6 +1213,10 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     fprintf(f, "plot [0:2*pi] %f+%.2f*sin(t),%f+%.2f*cos(t) title 'subreflector'",
                 azNominal, subreflectorRadius, elNominal, subreflectorRadius);
 
+    // plot the 5 mrad circle:
+    fprintf(f, ", %f+%.2f*sin(t),%f+%.2f*cos(t) title '5 mrad'",
+                azNominal, 0.005 * ALMAConstants::RAD_TO_DEG, elNominal, 0.005 * ALMAConstants::RAD_TO_DEG);
+
     // plot the nominal pointing angle:
     fprintf(f, ", %f,%f with points lw 1 pt 1 ", azNominal, elNominal);
 

@@ -21,11 +21,12 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.17");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.17.1");
 
 //*******                        Be sure to update resource.rc!
 
 // Version history
+// 2.0.17.1: Added 5 mrad circle to pointing angles plot.
 // 2.0.17:   Added comments to all nr files describing their origin and purpose.
 //           Added nr/README-nr.txt
 //           64-bit Build using msys64-mingw64 GCC 10.3.0
