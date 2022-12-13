@@ -150,7 +150,10 @@ bool ScanSet::loadScan(const dictionary *dict, const std::string inputSection,
         return true;
 }
 
-bool ScanSet::calcEfficiencies(ALMAConstants::PointingOptions pointingOption, bool unwrapPhaseOption) {
+bool ScanSet::calcEfficiencies(ALMAConstants::PointingOptions pointingOption,
+                               ALMAConstants::SquintOptions squintOption,
+                               bool unwrapPhaseOption)
+{
     bool ret = true;
 
     // save the pointing and unwrap phase options specified:
@@ -181,7 +184,7 @@ bool ScanSet::calcEfficiencies(ALMAConstants::PointingOptions pointingOption, bo
     ret = ret && calcEfficiencies_impl2(CopolPol1_m, XpolPol1_m, Pol1Eff_m);
 
     // calculate beam squint:
-    ret = ret && calcSquint_impl();
+    ret = ret && calcSquint_impl(squintOption);
     return ret;
 }
 
@@ -326,7 +329,7 @@ bool ScanSet::analyzeCopol_impl(ScanData *copolScan, float &azPointing, float &e
     return true;
 }
 
-bool ScanSet::calcSquint_impl() {
+bool ScanSet::calcSquint_impl(ALMAConstants::SquintOptions squintOption) {
 
     // check that both pol data sets are available:
     if (!CopolPol0_m && CopolPol1_m)
@@ -420,8 +423,14 @@ bool ScanSet::calcSquint_impl() {
         //  Otherwise it was -90."
 
         bool positive90 = false;
-        if ((x_diff * y_diff * abs_diff) < 0)
+        if (squintOption == ALMAConstants::SQUINT_DEFAULT) {
+            if ((x_diff * y_diff * abs_diff) < 0)
+                positive90 = true;
+        } else if (squintOption == ALMAConstants::SQUINT_PLUS90) {
             positive90 = true;
+        } else if (squintOption == ALMAConstants::SQUINT_MINUS90) {
+            positive90 = false;
+        }
 
         //compute x_corr and y_corr:
         if (positive90) {

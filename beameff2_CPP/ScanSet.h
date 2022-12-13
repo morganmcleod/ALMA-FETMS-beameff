@@ -60,7 +60,9 @@ public:
     ///< @param invertPhaseOption: option for when to invert phase and rotate FF scans on load
     ///< @return true if no errors loading and parsing the section.
 
-    bool calcEfficiencies(ALMAConstants::PointingOptions pointingOption, bool unwrapPhaseOption);
+    bool calcEfficiencies(ALMAConstants::PointingOptions pointingOption,
+                          ALMAConstants::SquintOptions squintOption,
+                          bool unwrapPhaseOption);
     ///< calculate beam efficiencies, etc. from the loaded data.
     ///< @return true if no errors during calculation.
 
@@ -107,7 +109,7 @@ private:
     bool analyzeCopol_impl(ScanData *copol, float &azPointing, float &elPointing);
     ///< implementation of copol analysis, reused for copol and copol180 data sets.
 
-    bool calcSquint_impl();
+    bool calcSquint_impl(ALMAConstants::SquintOptions squintOption);
     ///< calculate beam squint for both polarizations plus a third 180-degree scan.
 
     bool updateCopolSection(dictionary *dict, const std::string &section, const ScanData *copol, const EfficiencyData::OnePol &eff);

@@ -48,6 +48,10 @@ public:
       { return invertPhaseOption_m; }
     ///< @return the invert phase option specified in the input file.
 
+    ALMAConstants::SquintOptions getSquintOption() const
+      { return squintOption_m; }
+    ///< @return the squint calculation option specified in the input file.
+
     bool getUnwrapPhaseOption() const
       { return unwrapPhaseOption_m; }
     ///< @return whether to unwrap phase before the phase fit
@@ -116,6 +120,9 @@ private:
 
     ALMAConstants::InvertPhaseOptions invertPhaseOption_m;
                                         ///< invert phase and rotate FF scan option sepecified in the [settings] section.
+
+    ALMAConstants::SquintOptions squintOption_m;
+                                        ///< option to control how squint is calculated
 
     bool unwrapPhaseOption_m;           ///< unwrap FF phase before phase fit
 

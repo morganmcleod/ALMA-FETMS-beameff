@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
             cout << "ERROR: failed to load scanSet: " << scanSet << endl;
         else {
             // calculate beam efficiencies:
-            SS.calcEfficiencies(inFile.getPointingOption(), inFile.getUnwrapPhaseOption());
+            SS.calcEfficiencies(inFile.getPointingOption(), inFile.getSquintOption(), inFile.getUnwrapPhaseOption());
 
             // Create the output directory in case it does not exist:
             string cmd = "mkdir " + inFile.getOuputDirectory();

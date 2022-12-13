@@ -46,6 +46,13 @@ namespace ALMAConstants {
         INVERT_NONE // never invert phase nor rotate FF scan.
     };
 
+    /// Options to override default squint calculation method:
+    enum SquintOptions {
+        SQUINT_DEFAULT, // default behavior: detect whether the 90-degree scan is + or - degrees from the zero scan
+        SQUINT_PLUS90,  // force calcuation assuming that the 90-degree scan is + degrees from the zero scan
+        SQUINT_MINUS90  // "                                               " is - degrees from the zero scan
+    };
+
     void getAntennaParameters(PointingOptions pointing,
                               float &M, float &psi_o, float &psi_m,
                               float &plateFactor, float &dishDiameter);
