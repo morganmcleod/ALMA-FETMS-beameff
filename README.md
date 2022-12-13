@@ -11,6 +11,16 @@ Beam efficiency calculator for the ALMA Front End Test and Measurement System
 http://stackoverflow.com/questions/3796927/how-to-git-clone-including-submodules 
 
 Recent version history:
+
+* 2.0.18:  Added [settings] SquintOption to input file
+           Release build with optimization enabled
+* 2.0.17:  Added 5 mrad circle to pointing angles plot.
+           Added comments to all nr files describing their origin and purpose.
+           Added nr/README-nr.txt
+           64-bit Build using msys64-mingw64 GCC 10.3.0
+           Release build with optimization enabled
+* 2.0.16:  converted to double-precision: nr, ScanDataRaster::calcPhaseEfficiency, calcAmplitudeEfficiency, FitPhase.cpp vars and functions.
+           Look for GNUPLOT_BIN in environment if not specified in input file.
 * 2.0.15:  When using pointingOption::ACTUAL, use the weighted average of the pol0, pol1 beam direction in the phase fit model.
            Moved call to calcCenterOfMass() from ScanData::AnalyzeBeams() to ScanSet::loadScan() so both pols are precomputed before the first call to FitPhase.
 * 2.0.14:  FitPhase: ftol=1.19e-7, reduceSubReflector=true for first pass, no z linear searches
