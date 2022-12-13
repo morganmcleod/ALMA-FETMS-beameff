@@ -217,9 +217,12 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
         pval = iniparser_getstring(dict_m, "settings:squintoption", "default");
         if (!stricmp(pval, "plus90")) {
             squintOption_m = ALMAConstants::SQUINT_PLUS90;
+            cout << "Squint option: Plus90 <br>" << endl;
         } else if (!stricmp(pval, "minus90")) {
             squintOption_m = ALMAConstants::SQUINT_MINUS90;
+            cout << "Squint option: Minus90 <br>" << endl;
         }
+        cout << "Squint option: Default <br>" << endl;
         // Load all the scanset and section metadata:
         loadScanSetIds();
     }
