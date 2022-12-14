@@ -24,7 +24,7 @@ BEGIN
       VALUE "InternalName", "beam_eff2"
       VALUE "LegalCopyright", "2021 NRAO"
       VALUE "OriginalFilename", "beam_eff2.exe"
-      VALUE "ProductName", "FALMA FETMS Beam Efficiency Calculator"
+      VALUE "ProductName", "ALMA FETMS Beam Efficiency Calculator"
       VALUE "ProductVersion", "2.0.18"
     END
   END

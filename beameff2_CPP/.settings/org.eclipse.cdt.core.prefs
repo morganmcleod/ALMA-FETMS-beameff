@@ -15,6 +15,9 @@ environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891.39095
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/GNUPLOT_BIN/delimiter=;
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/GNUPLOT_BIN/operation=append
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/GNUPLOT_BIN/value=C\:\\gnuplot\\bin\\gnuplot.exe
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/MINGW_HOME/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/MINGW_HOME/operation=replace
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/MINGW_HOME/value=C\:\\msys64\\mingw64
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/append=true
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.debug.1367052891/appendContributed=true
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252.468703813/GNUPLOT_BIN/delimiter=;
@@ -28,5 +31,8 @@ environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252.4687
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/GNUPLOT_BIN/delimiter=;
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/GNUPLOT_BIN/operation=append
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/GNUPLOT_BIN/value=C\:\\gnuplot\\bin\\gnuplot.exe
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/MINGW_HOME/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/MINGW_HOME/operation=replace
+environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/MINGW_HOME/value=C\:\\msys64\\mingw64
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/append=true
 environment/project/cdt.managedbuild.config.gnu.mingw.exe.release.444088252/appendContributed=true
