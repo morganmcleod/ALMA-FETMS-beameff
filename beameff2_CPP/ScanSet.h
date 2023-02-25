@@ -70,10 +70,11 @@ public:
     ///< save the calcualted efficiency results into the given dictionary and then to the specified output file name
     ///< @return true if no errors writing the results
 
-    bool makePlots(const std::string &outputDirectory, const std::string &gnuplotPath);
+    bool makePlots(const std::string &outputDirectory, const std::string &gnuplotPath, const std::string &gnuplotVersion);
     ///< produce the output amplitude, phase, and pointing angle plots
     ///< @param outputDirectory: where to create the plots and temporary data files
     ///< @param gnuplotPath: full path to the system gnuplot command, from the input file.
+    ///< @param gnuplotVersion: gnuplot version string.  "set colorsequence classic" if < 5.0.
     ///< @return true if no errors occurred producing the plot.  TODO: doesn't trap gnuplot errors.
 
     void print(int indent = 0);
@@ -152,7 +153,7 @@ private:
     ///< Parameters are a subset of those to makeOnePlot()
 
     bool makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
-                                std::string &fileNamePlot);
+                                const std::string &gnuplotVersion, std::string &fileNamePlot);
     ///< private helper to make the pointing angles plot showing both FF copol scans in this ScanSet.
 
     const std::string &getMeasInfoLabel(std::string &toFill, const ScanData &scan) const;

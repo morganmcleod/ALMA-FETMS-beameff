@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
             std::system(cmd.c_str());
 
             // Generate all the plots:
-            SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath());
+            SS.makePlots(inFile.getOuputDirectory(), inFile.getGnuplotPath(), inFile.getGnuplotVersion());
 
     //        SS.print();
     //        cout << "----" << endl;

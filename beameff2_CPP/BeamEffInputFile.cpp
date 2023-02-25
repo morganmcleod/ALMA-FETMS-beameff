@@ -201,6 +201,10 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
         pval = iniparser_getstring(dict_m, "settings:gnuplot", "");
         gnuplotPath_m = pval;
 
+        // Read the gnuplot version, default 4.9:
+        pval = iniparser_getstring(dict_m, "settings:gnuplot", "4.9");
+        gnuplotVersion_m = pval;
+
         // Read it from environment variable if it was not specified:
         if (gnuplotPath_m.empty()) {
             cout << "Gnuplot not specified in input file.";

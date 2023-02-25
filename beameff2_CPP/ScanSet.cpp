@@ -673,7 +673,10 @@ void ScanSet::updateDictionary(dictionary *dict, const std::string &section, con
 }
 
 
-bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &gnuplotPath) {
+bool ScanSet::makePlots(const std::string &outputDirectory,
+                        const std::string &gnuplotPath,
+                        const std::string &gnuplotVersion)
+{
     string fileNameFF, fileNameNF;
     bool ret = true;
 
@@ -815,7 +818,7 @@ bool ScanSet::makePlots(const std::string &outputDirectory, const std::string &g
         }
     }
     // Make the pointing angles plot:
-    ret = ret && makePointingAnglesPlot(outputDirectory, gnuplotPath, CombinedEff_m.FFPointingPlot);
+    ret = ret && makePointingAnglesPlot(outputDirectory, gnuplotPath, gnuplotVersion, CombinedEff_m.FFPointingPlot);
 
     return ret;
 }
@@ -1124,7 +1127,7 @@ bool ScanSet::makePhaseFitPlot(const std::string &outputDirectory, const std::st
 }
 
 bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const std::string &gnuplotPath,
-                                     std::string &fileNamePlot)
+                                     const std::string &gnuplotVersion, std::string &fileNamePlot)
 {
     fileNamePlot.clear();
     if (!CopolPol0_m || !CopolPol1_m)
@@ -1176,6 +1179,10 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
     fprintf(f, "set terminal png size 800, 800 crop\r\n");
     fprintf(f, "set output '%s'\r\n", fileNamePlot.c_str());
     fprintf(f, "set title '%s'\r\n", title.c_str());
+
+    if (gnuplotVersion.find("4.") != std::string::npos) {
+        fprintf(f, "set colorsequence classic\r\n");
+    }
 
     // X and Y axis labels:
     fprintf(f, "set xlabel 'Az(deg)'\r\n");

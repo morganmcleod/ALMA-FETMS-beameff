@@ -21,11 +21,12 @@
 
 #include "SWVersion.h"
 
-const std::string BEAMEFF_SW_VERSION_STRING("2.0.18");
+const std::string BEAMEFF_SW_VERSION_STRING("2.0.19");
 
 //*******                        Be sure to update resource.rc!
 
 // Version history
+// 2.0.19: Added [settings] gnuplotver option to input file.
 // 2.0.18: Added [settings] SquintOption to input file
 // 2.0.17.2: Don't limit to 2 decimal places in pointing angles plot.
 // 2.0.17.1: Added 5 mrad circle to pointing angles plot.

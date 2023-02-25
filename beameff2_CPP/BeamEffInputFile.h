@@ -72,6 +72,10 @@ public:
       { return gnuplotPath_m; }
     ///< @return the path to gnuplot from the ini file
 
+    const std::string &getGnuplotVersion() const
+      { return gnuplotVersion_m; }
+    ///< @return the gnuplot version string
+
     const dictionary* getDict() const
       { return dict_m; }
     ///< @return const access to the ini file dictionary.
@@ -111,6 +115,7 @@ private:
     std::string outputDir_m;            ///< path to the output directory.
     std::string outputFile_m;           ///< name of the output text file to create.
     std::string gnuplotPath_m;          ///< path to gnuplot executable.
+    std::string gnuplotVersion_m;       ///< Gnuplot version string.
     std::string delim_m;                ///< delimiter specified in the input file [settings] section.
     dictionary *dict_m;                 ///< dictionary holds contents loaded from the input file.
     scanSetList *scanSets_m;            ///< implementation class for scanset and section metadata.
