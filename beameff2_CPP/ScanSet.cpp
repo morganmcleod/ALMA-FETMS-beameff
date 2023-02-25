@@ -1177,12 +1177,10 @@ bool ScanSet::makePointingAnglesPlot(const std::string &outputDirectory, const s
 
     // 800x800 pixel .png files.  crop=no blank space around plot:
     fprintf(f, "set terminal png size 800, 800 crop\r\n");
+    if (gnuplotVersion >= string("5.0"))
+        fprintf(f, "set colorsequence classic\r\n");
     fprintf(f, "set output '%s'\r\n", fileNamePlot.c_str());
     fprintf(f, "set title '%s'\r\n", title.c_str());
-
-    if (gnuplotVersion.find("4.") != std::string::npos) {
-        fprintf(f, "set colorsequence classic\r\n");
-    }
 
     // X and Y axis labels:
     fprintf(f, "set xlabel 'Az(deg)'\r\n");
