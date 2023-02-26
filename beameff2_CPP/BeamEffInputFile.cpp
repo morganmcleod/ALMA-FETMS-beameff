@@ -201,10 +201,6 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
         pval = iniparser_getstring(dict_m, "settings:gnuplot", "");
         gnuplotPath_m = pval;
 
-        // Read the gnuplot version, default 4.9:
-        pval = iniparser_getstring(dict_m, "settings:gnuplot", "4.9");
-        gnuplotVersion_m = pval;
-
         // Read it from environment variable if it was not specified:
         if (gnuplotPath_m.empty()) {
             cout << "Gnuplot not specified in input file.";
@@ -215,6 +211,11 @@ BeamEffInputFile::BeamEffInputFile(const std::string &inputfile)
             }
             cout << " <br>" << endl;
         }
+        
+        // Read the gnuplot version, default 4.9:
+        pval = iniparser_getstring(dict_m, "settings:gnuplotver", "4.9");
+        gnuplotVersion_m = pval;
+        cout << "Gnuplot version: " << gnuplotVersion_m << "<br>" << endl;
 
         // Read the switch to force +90 or -90 for squint calculation
         squintOption_m = ALMAConstants::SQUINT_DEFAULT;
